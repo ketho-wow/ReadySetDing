@@ -1,11 +1,10 @@
 -------------------------------------------
---- AddOn: ReadySetDing					---
 --- Author: Ketho (EU-Boulderfist)		---
---- Created: 2010.01.10					---
 --- License: Public Domain				---
---- Version: v0.93	[2011.10.18]		---
+--- Created: 2009.09.01					---
+--- Version: 0.94 [2012.02.09]			---
 -------------------------------------------
---- Curse			http://wow.curse.com/downloads/wow-addons/details/readysetding.aspx
+--- Curse			http://www.curse.com/addons/wow/readysetding
 --- WoWInterface	http://www.wowinterface.com/downloads/info16220-ReadySetDing.html
 
 --- To Do:
@@ -14,16 +13,19 @@
 -- "frontend" frame with info
 -- Optimization: purge non-existing characters
 -- clean up, move stuff into individual files
+-- custom achievements; use custom achiev lib
 
-local VERSION = 0.93
-local FILETYPE = "Release"
+local NAME, S = ...
+local VERSION = 0.94
+local BUILD = "Release"
 
 ReadySetDing = LibStub("AceAddon-3.0"):NewAddon("ReadySetDing", "AceEvent-3.0", "AceTimer-3.0", "AceConsole-3.0")
 local RSD = ReadySetDing
 local ACR = LibStub("AceConfigRegistry-3.0")
 local ACD = LibStub("AceConfigDialog-3.0")
-local L = LibStub("AceLocale-3.0"):GetLocale("ReadySetDing", true)
 local LDB = LibStub("LibDataBroker-1.1")
+
+local L = S.L
 
 local _G = _G
 -- Lua APIs
@@ -70,8 +72,8 @@ local TPM_total2, TPM_current2			-- backup event vars
 local levelTime							-- accurate time on Levelup
 local currentTime, totalTime = 0, 0		-- estimated Time
 
-local filterPlayed						-- used for filtering ReadySetDing's /played requests
 local isStopwatch						-- eligible for using the Blizzard Stopwatch
+local filterPlayed						-- used for filtering ReadySetDing's /played requests
 
 local timeLogin = time()
 local lastPlayed = time()				-- timestamp of last /played request
@@ -416,8 +418,8 @@ local defaults = {
 		GuildMemberDings = true,
 		partyAnnounce = true,
 		dingMsg = {
-			L["Ding! Level [LEVEL] in [TIME]"],
-			L["Ding! Level [LEVEL] in [TIME]"],
+			L.MSG_PLAYER_DING,
+			L.MSG_PLAYER_DING,
 			"Ding!",
 			"Ding ^^",                
 			"Ding [LEVEL]!",
@@ -471,11 +473,13 @@ local defaults = {
 
 local options = {
 	type = "group",
-	name = "",
+	childGroups = "tab",
+	name = " |cffADFF2FReadySet|r|cffFFFFFFDing|r |cffB6CA00v"..VERSION.."|r",
+	--name = " |cffADFF2FReadySet|r|cffFFFFFFDing|r |cffB6CA00v"..VERSION.."|r |TInterface\\AddOns\\ReadySetDing\\Images\\ReadySet7:16:64:330:0|t",
 	args = {
 		Main = {
-			type = "group",
-			name = " |cffADFF2FReadySet|r|cffFFFFFFDing|r |cffB6CA00v"..VERSION.."|r |TInterface\\AddOns\\ReadySetDing\\Images\\ReadySet7:16:64:330:0|t",
+			type = "group", order = 1,
+			name = "Main",
 			handler = RSD,
 			args = {
 				groupShow = {
@@ -638,8 +642,8 @@ local options = {
 			},
 		},
 		Advanced = {
-			type = "group",
-			name = "",
+			type = "group", order = 2,
+			name = "Advanced",
 			handler = RSD,
 			args = {
 				selectOutputFrame = {
@@ -751,8 +755,8 @@ local options = {
 			},
 		},
 		GuildMemberDings = {
-			type = "group",
-			name = "|cff40FF40"..GUILD.." Member|r Dings",
+			type = "group", order = 3,
+			name = GUILD,
 			handler = RSD,
 			args = {
 				toggleGuildMemberAnnounce = {
@@ -865,8 +869,8 @@ local options = {
 			},
 		},
 		Screenshot = {
-			type = "group",
-			name = "|cffFFFFFFDing|r "..L["Screenshot"],
+			type = "group", order = 4,
+			name = "Screenshot",
 			handler = RSD,
 			args = {
 				toggleScreenshot = {
@@ -914,8 +918,9 @@ local options = {
 			},
 		},
 		Sound = {
-			type = "group",
-			name = " |TInterface\\Icons\\INV_Misc_Bell_01:16:16:0:3"..cropped.."|t  |cffFFFFFFDing|r Sound",
+			type = "group", order = 5,
+			name = "Ding Sound",
+			--name = " |TInterface\\Icons\\INV_Misc_Bell_01:16:16:0:3"..cropped.."|t  |cffFFFFFFDing|r Sound",
 			handler = RSD,
 			args = {
 				inputCustomSound = {
@@ -963,8 +968,8 @@ local options = {
 			},
 		},
 		AutoGratz = {
-			type = "group",
-			name = "|cffFFFFFF"..L["Auto Gratz"].."|r",
+			type = "group", order = 6,
+			name = "Auto Gratz",
 			handler = RSD,
 			args = {
 				toggleAutoGratz = {
@@ -1142,8 +1147,8 @@ local options = {
 			},
 		},
 		Stats = {
-			type = "group",
-			name = "",
+			type = "group", order = 7,
+			name = "Stats",
 			handler = RSD,
 			args = {
 				groupInline = {
@@ -1295,198 +1300,201 @@ local options = {
 				},
 			},
 		},
-		RandomMessage = {
-			type = "group",
-			name = "|TInterface\\AddOns\\ReadySetDing\\Images\\Awesome:24:24:0:5|t  Random Messages",
-			handler = RSD,
-			args = {
-				input1 = {
-					type = "input",
-					order = 1,
-					width = "full",
-					name = "  Note: This part is kinda experimental, I'm a noob with frames / AceGUI ...",
-					usage = legend,
-					get = function(i) return profile.dingMsg[2] end,
-					set = function(i, v) profile.dingMsg[2] = v
-						if #strtrim(v) == 0 then profile.dingMsg[2] = defaults.profile.dingMsg[2] end
-						RSD:ValidateMessage(v)
-					end,
-					disabled = "OptionsDisabled",
-				},
-				description1 = {
-					type = "description",
-					order = 2,
-					name = function() return "   "..RSD:ReplaceText(profile.dingMsg[2], true) end,
-				},
-				input2 = {
-					type = "input",
-					order = 3,
-					width = "full",
-					name = " ",
-					usage = legend,
-					get = function(i) return profile.dingMsg[3] end,
-					set = function(i, v) profile.dingMsg[3] = v
-						if #strtrim(v) == 0 then profile.dingMsg[3] = defaults.profile.dingMsg[3] end
-						RSD:ValidateMessage(v)
-					end,
-					disabled = "OptionsDisabled",
-				},
-				description2 = {
-					type = "description",
-					order = 4,
-					name = function() return "   "..RSD:ReplaceText(profile.dingMsg[3], true) end,
-				},
-				input3 = {
-					type = "input",
-					order = 5,
-					width = "full",
-					name = " ",
-					usage = legend,
-					get = function(i) return profile.dingMsg[4] end,
-					set = function(i, v) profile.dingMsg[4] = v
-						if #strtrim(v) == 0 then profile.dingMsg[4] = defaults.profile.dingMsg[4] end
-						RSD:ValidateMessage(v)
-					end,
-					disabled = "OptionsDisabled",
-				},
-				description3 = {
-					type = "description",
-					order = 6,
-					name = function() return "   "..RSD:ReplaceText(profile.dingMsg[4], true) end,
-				},
-				input4 = {
-					type = "input",
-					order = 7,
-					width = "full",
-					name = " ",
-					usage = legend,
-					get = function(i) return profile.dingMsg[5] end,
-					set = function(i, v) profile.dingMsg[5] = v
-						if #strtrim(v) == 0 then profile.dingMsg[5] = defaults.profile.dingMsg[5] end
-						RSD:ValidateMessage(v)
-					end,
-					disabled = "OptionsDisabled",
-				},
-				description4 = {
-					type = "description",
-					order = 8,
-					name = function() return "   "..RSD:ReplaceText(profile.dingMsg[5], true) end,
-				},
-				input5 = {
-					type = "input",
-					order = 9,
-					width = "full",
-					name = " ",
-					usage = legend,
-					get = function(i) return profile.dingMsg[6] end,
-					set = function(i, v) profile.dingMsg[6] = v
-						if #strtrim(v) == 0 then profile.dingMsg[6] = defaults.profile.dingMsg[6] end
-						RSD:ValidateMessage(v)
-					end,
-					disabled = "OptionsDisabled",
-				},
-				description5 = {
-					type = "description",
-					order = 10,
-					name = function() return "   "..RSD:ReplaceText(profile.dingMsg[6], true) end,
-				},
+	},
+}
+
+local extraoptions = {
+	RandomMessage = {
+		type = "group",
+		name = "|TInterface\\AddOns\\ReadySetDing\\Images\\Awesome:24:24:0:5|t  Random Messages",
+		handler = RSD,
+		args = {
+			input1 = {
+				type = "input",
+				order = 1,
+				width = "full",
+				name = "  Note: This part is kinda experimental, I'm a noob with frames / AceGUI ...",
+				usage = legend,
+				get = function(i) return profile.dingMsg[2] end,
+				set = function(i, v) profile.dingMsg[2] = v
+					if #strtrim(v) == 0 then profile.dingMsg[2] = defaults.profile.dingMsg[2] end
+					RSD:ValidateMessage(v)
+				end,
+				disabled = "OptionsDisabled",
+			},
+			description1 = {
+				type = "description",
+				order = 2,
+				name = function() return "   "..RSD:ReplaceText(profile.dingMsg[2], true) end,
+			},
+			input2 = {
+				type = "input",
+				order = 3,
+				width = "full",
+				name = " ",
+				usage = legend,
+				get = function(i) return profile.dingMsg[3] end,
+				set = function(i, v) profile.dingMsg[3] = v
+					if #strtrim(v) == 0 then profile.dingMsg[3] = defaults.profile.dingMsg[3] end
+					RSD:ValidateMessage(v)
+				end,
+				disabled = "OptionsDisabled",
+			},
+			description2 = {
+				type = "description",
+				order = 4,
+				name = function() return "   "..RSD:ReplaceText(profile.dingMsg[3], true) end,
+			},
+			input3 = {
+				type = "input",
+				order = 5,
+				width = "full",
+				name = " ",
+				usage = legend,
+				get = function(i) return profile.dingMsg[4] end,
+				set = function(i, v) profile.dingMsg[4] = v
+					if #strtrim(v) == 0 then profile.dingMsg[4] = defaults.profile.dingMsg[4] end
+					RSD:ValidateMessage(v)
+				end,
+				disabled = "OptionsDisabled",
+			},
+			description3 = {
+				type = "description",
+				order = 6,
+				name = function() return "   "..RSD:ReplaceText(profile.dingMsg[4], true) end,
+			},
+			input4 = {
+				type = "input",
+				order = 7,
+				width = "full",
+				name = " ",
+				usage = legend,
+				get = function(i) return profile.dingMsg[5] end,
+				set = function(i, v) profile.dingMsg[5] = v
+					if #strtrim(v) == 0 then profile.dingMsg[5] = defaults.profile.dingMsg[5] end
+					RSD:ValidateMessage(v)
+				end,
+				disabled = "OptionsDisabled",
+			},
+			description4 = {
+				type = "description",
+				order = 8,
+				name = function() return "   "..RSD:ReplaceText(profile.dingMsg[5], true) end,
+			},
+			input5 = {
+				type = "input",
+				order = 9,
+				width = "full",
+				name = " ",
+				usage = legend,
+				get = function(i) return profile.dingMsg[6] end,
+				set = function(i, v) profile.dingMsg[6] = v
+					if #strtrim(v) == 0 then profile.dingMsg[6] = defaults.profile.dingMsg[6] end
+					RSD:ValidateMessage(v)
+				end,
+				disabled = "OptionsDisabled",
+			},
+			description5 = {
+				type = "description",
+				order = 10,
+				name = function() return "   "..RSD:ReplaceText(profile.dingMsg[6], true) end,
 			},
 		},
-		RandomMessageGuild = {
-			type = "group",
-			name = "|TInterface\\AddOns\\ReadySetDing\\Images\\Awesome:24:24:0:5|t  Random |cff40FF40"..GUILD.."|r Messages",
-			handler = RSD,
-			args = {
-				input1 = {
-					type = "input",
-					order = 1,
-					width = "full",
-					name = " ",
-					usage = legend2,
-					get = function(i) return profile.guildMemberDingMsg[2] end,
-					set = function(i, v) profile.guildMemberDingMsg[2] = v
-						if #strtrim(v) == 0 then profile.guildMemberDingMsg[2] = defaults.profile.guildMemberDingMsg[2] end
-						RSD:ValidateMessage(v)
-					end,
-					disabled = "OptionsDisabled",
-				},
-				description1 = {
-					type = "description",
-					order = 2,
-					name = function() return RSD:GetGuildExampleMsg(2) end,
-				},
-				input2 = {
-					type = "input",
-					order = 3,
-					width = "full",
-					name = " ",
-					usage = legend2,
-					get = function(i) return profile.guildMemberDingMsg[3] end,
-					set = function(i, v) profile.guildMemberDingMsg[3] = v
-						if #strtrim(v) == 0 then profile.guildMemberDingMsg[3] = defaults.profile.guildMemberDingMsg[3] end
-						RSD:ValidateMessage(v)
-					end,
-					disabled = "OptionsDisabled",
-				},
-				description2 = {
-					type = "description",
-					order = 4,
-					name = function() return RSD:GetGuildExampleMsg(3) end,
-				},
-				input3 = {
-					type = "input",
-					order = 5,
-					width = "full",
-					name = " ",
-					usage = legend2,
-					get = function(i) return profile.guildMemberDingMsg[4] end,
-					set = function(i, v) profile.guildMemberDingMsg[4] = v
-						if #strtrim(v) == 0 then profile.guildMemberDingMsg[4] = defaults.profile.guildMemberDingMsg[4] end
-						RSD:ValidateMessage(v)
-					end,
-					disabled = "OptionsDisabled",
-				},
-				description3 = {
-					type = "description",
-					order = 6,
-					name = function() return RSD:GetGuildExampleMsg(4) end,
-				},
-				input4 = {
-					type = "input",
-					order = 7,
-					width = "full",
-					name = " ",
-					usage = legend2,
-					get = function(i) return profile.guildMemberDingMsg[5] end,
-					set = function(i, v) profile.guildMemberDingMsg[5] = v
-						if #strtrim(v) == 0 then profile.guildMemberDingMsg[5] = defaults.profile.guildMemberDingMsg[5] end
-						RSD:ValidateMessage(v)
-					end,
-					disabled = "OptionsDisabled",
-				},
-				description4 = {
-					type = "description",
-					order = 8,
-					name = function() return RSD:GetGuildExampleMsg(5) end,
-				},
-				input5 = {
-					type = "input",
-					order = 9,
-					width = "full",
-					name = " ",
-					usage = legend2,
-					get = function(i) return profile.guildMemberDingMsg[6] end,
-					set = function(i, v) profile.guildMemberDingMsg[6] = v
-						if #strtrim(v) == 0 then profile.guildMemberDingMsg[6] = defaults.profile.guildMemberDingMsg[6] end
-						RSD:ValidateMessage(v)
-					end,
-					disabled = "OptionsDisabled",
-				},
-				description5 = {
-					type = "description",
-					order = 10,
-					name = function() return RSD:GetGuildExampleMsg(6) end,
-				},
+	},
+	RandomMessageGuild = {
+		type = "group",
+		name = "|TInterface\\AddOns\\ReadySetDing\\Images\\Awesome:24:24:0:5|t  Random |cff40FF40"..GUILD.."|r Messages",
+		handler = RSD,
+		args = {
+			input1 = {
+				type = "input",
+				order = 1,
+				width = "full",
+				name = " ",
+				usage = legend2,
+				get = function(i) return profile.guildMemberDingMsg[2] end,
+				set = function(i, v) profile.guildMemberDingMsg[2] = v
+					if #strtrim(v) == 0 then profile.guildMemberDingMsg[2] = defaults.profile.guildMemberDingMsg[2] end
+					RSD:ValidateMessage(v)
+				end,
+				disabled = "OptionsDisabled",
+			},
+			description1 = {
+				type = "description",
+				order = 2,
+				name = function() return RSD:GetGuildExampleMsg(2) end,
+			},
+			input2 = {
+				type = "input",
+				order = 3,
+				width = "full",
+				name = " ",
+				usage = legend2,
+				get = function(i) return profile.guildMemberDingMsg[3] end,
+				set = function(i, v) profile.guildMemberDingMsg[3] = v
+					if #strtrim(v) == 0 then profile.guildMemberDingMsg[3] = defaults.profile.guildMemberDingMsg[3] end
+					RSD:ValidateMessage(v)
+				end,
+				disabled = "OptionsDisabled",
+			},
+			description2 = {
+				type = "description",
+				order = 4,
+				name = function() return RSD:GetGuildExampleMsg(3) end,
+			},
+			input3 = {
+				type = "input",
+				order = 5,
+				width = "full",
+				name = " ",
+				usage = legend2,
+				get = function(i) return profile.guildMemberDingMsg[4] end,
+				set = function(i, v) profile.guildMemberDingMsg[4] = v
+					if #strtrim(v) == 0 then profile.guildMemberDingMsg[4] = defaults.profile.guildMemberDingMsg[4] end
+					RSD:ValidateMessage(v)
+				end,
+				disabled = "OptionsDisabled",
+			},
+			description3 = {
+				type = "description",
+				order = 6,
+				name = function() return RSD:GetGuildExampleMsg(4) end,
+			},
+			input4 = {
+				type = "input",
+				order = 7,
+				width = "full",
+				name = " ",
+				usage = legend2,
+				get = function(i) return profile.guildMemberDingMsg[5] end,
+				set = function(i, v) profile.guildMemberDingMsg[5] = v
+					if #strtrim(v) == 0 then profile.guildMemberDingMsg[5] = defaults.profile.guildMemberDingMsg[5] end
+					RSD:ValidateMessage(v)
+				end,
+				disabled = "OptionsDisabled",
+			},
+			description4 = {
+				type = "description",
+				order = 8,
+				name = function() return RSD:GetGuildExampleMsg(5) end,
+			},
+			input5 = {
+				type = "input",
+				order = 9,
+				width = "full",
+				name = " ",
+				usage = legend2,
+				get = function(i) return profile.guildMemberDingMsg[6] end,
+				set = function(i, v) profile.guildMemberDingMsg[6] = v
+					if #strtrim(v) == 0 then profile.guildMemberDingMsg[6] = defaults.profile.guildMemberDingMsg[6] end
+					RSD:ValidateMessage(v)
+				end,
+				disabled = "OptionsDisabled",
+			},
+			description5 = {
+				type = "description",
+				order = 10,
+				name = function() return RSD:GetGuildExampleMsg(6) end,
 			},
 		},
 	},
@@ -1526,8 +1534,12 @@ function RSD:OnInitialize()
 	self:RefreshConfig()
 
 	self.db.global.version = VERSION
-	self.db.global.fileType = FILETYPE
+	self.db.global.build = BUILD
 
+	options.args.profiles = LibStub("AceDBOptions-3.0"):GetOptionsTable(self.db)
+	options.args.profiles.order = 8
+	
+	ACR:RegisterOptionsTable("ReadySetDing_Parent", options)
 	ACR:RegisterOptionsTable("ReadySetDing_Main", options.args.Main)
 	ACR:RegisterOptionsTable("ReadySetDing_Advanced", options.args.Advanced)
 	ACR:RegisterOptionsTable("ReadySetDing_GuildMemberDings", options.args.GuildMemberDings)
@@ -1535,11 +1547,12 @@ function RSD:OnInitialize()
 	ACR:RegisterOptionsTable("ReadySetDing_Sound", options.args.Sound)
 	ACR:RegisterOptionsTable("ReadySetDing_AutoGratz", options.args.AutoGratz)
 	ACR:RegisterOptionsTable("ReadySetDing_Stats", options.args.Stats)
-	ACR:RegisterOptionsTable("ReadySetDing_Profiles", LibStub("AceDBOptions-3.0"):GetOptionsTable(self.db))
-	ACR:RegisterOptionsTable("ReadySetDing_RandomMessage", options.args.RandomMessage)
-	ACR:RegisterOptionsTable("ReadySetDing_RandomMessageGuild", options.args.RandomMessageGuild)
+	ACR:RegisterOptionsTable("ReadySetDing_Profiles", options.args.profiles)
+	ACR:RegisterOptionsTable("ReadySetDing_RandomMessage", extraoptions.RandomMessage)
+	ACR:RegisterOptionsTable("ReadySetDing_RandomMessageGuild", extraoptions.RandomMessageGuild)
 
-	optionsFrame.Main = ACD:AddToBlizOptions("ReadySetDing_Main", titleName)
+	ACD:AddToBlizOptions("ReadySetDing_Parent", titleName)
+	optionsFrame.Main = ACD:AddToBlizOptions("ReadySetDing_Main", "|TInterface\\AddOns\\ReadySetDing\\Images\\Awesome:16:16:2:0|t  Main", titleName)
 	optionsFrame.Advanced = ACD:AddToBlizOptions("ReadySetDing_Advanced", "|TInterface\\Icons\\Trade_Engineering:16:16:1:0"..cropped.."|t  "..ADVANCED, titleName)
 	optionsFrame.GuildMemberDings = ACD:AddToBlizOptions("ReadySetDing_GuildMemberDings", "|TInterface\\GuildFrame\\GuildLogo-NoLogo:16:16:1:0:64:64:14:51:14:51|t  "..L["Guild Members"], titleName)
 	optionsFrame.Screenshot = ACD:AddToBlizOptions("ReadySetDing_Screenshot", "|TInterface\\Icons\\inv_misc_spyglass_03:16:16:1:0"..cropped.."|t  "..L["Screenshot"], titleName)
@@ -1609,10 +1622,14 @@ function RSD:OnEnable()
 	-- wait 7 sec for other AddOns first that want to request /played
 	self:ScheduleTimer(function()
 		if TPM_total == 0 then
-			filterPlayed = true
+			if profile.filterPlayed then
+				filterPlayed = false
+			else
+				filterPlayed = true
+			end
 			RequestTimePlayed()
 		end
-	end, 7)
+	end, 10)
 
 	self:ScheduleRepeatingTimer(function()
 		GuildRoster() -- Update Guild Members
@@ -1659,36 +1676,37 @@ function RSD:OptionsDisabled()
 	return not self:IsEnabled()
 end
 
-function RSD:SlashCommand(input)
-	if #strtrim(input) == 0 then
-		InterfaceOptionsFrame_OpenToCategory(optionsFrame.Main)
-	elseif input == "enable" or input == "on" or input == "1" then
-		if not profile.enableAddOn then
-			self:Enable()
-			profile.enableAddOn = true
-			self:Print("|cffADFF2FEnabled|r")
-		else
-			self:Print("Already |cffADFF2FEnabled|r")
-		end
-		self:NotifyChange()
-	elseif input == "disable" or input == "off" or input == "0" then
-		if profile.enableAddOn then
-			self:Disable()
-			profile.enableAddOn = false
-			self:Print("|cffFF2424Disabled|r")
-		else
-			self:Print("Already |cffFF2424Disabled|r")
-		end
-		self:NotifyChange()
+local enable = {
+	["1"] = true,
+	["on"] = true,
+	["enable"] = true,
+}
 
-	-- dunno if someone would actually, if ever, use these shortcuts ..
-	elseif input == "stats" or input == "stat" then
-		InterfaceOptionsFrame_OpenToCategory(optionsFrame.Stats)
+local disable = {
+	["0"] = true,
+	["off"] = true,
+	["disable"] = true,
+}
+
+
+function RSD:SlashCommand(input)
+	if strtrim(input) == "" then
+		--InterfaceOptionsFrame_OpenToCategory(optionsFrame.Main)
+		ACD:Open("ReadySetDing_Parent")
+	elseif enable[input] then
+		self:Enable()
+		self:Print("|cffADFF2FEnabled|r")
+		self:NotifyChange()
+	elseif disable[input] then
+		self:Disable()
+		self:Print("|cffFF2424Disabled|r")
+		self:NotifyChange()
 	elseif input == "export" or input == "exp" or input == "xp" then
 		self:ExportData(true)
-
 	else
-		print("|cff2E9AFE/rsd|r |cffADFF2Fon|r: Enable AddOn\n|cff2E9AFE/rsd|r |cffFF2424off|r: Disable AddOn\n|cff2E9AFE/rsd|r |cffFFFF00stats|r: Open Stats\n|cff2E9AFE/rsd|r |cff71D5FFexport|r: Export to |cffFFFF00"..SLASH_SAY2.."|r (|cffFF2424SPAM!|r)")
+		print(format([[|cff2E9AFE/rsd|r |cffADFF2Fon|r: Enable AddOn
+|cff2E9AFE/rsd|r |cffFF2424off|r: Disable AddOn
+|cff2E9AFE/rsd|r |cff71D5FFexport|r: Export to |cffFFFF00%s|r (|cffFF2424SPAM!|r)]], SLASH_SAY2))
 	end
 end
 
@@ -2119,6 +2137,7 @@ function RSD:PLAYER_LEVEL_UP(event, level)
 end
 
 function RSD:TIME_PLAYED_MSG(event, ...)
+	--Spew(event, ...)
 --	these variables should be file-local scope -> vararg
 	TPM_total, TPM_current = ...
 	lastPlayed = time()
@@ -2291,14 +2310,15 @@ function RSD:FRIENDLIST_UPDATE(event, ...)
 	end
 	if profile.RealID_Dings then
 		for i = 1, select(2, BNGetNumFriends()) do
-			local presenceID, firstname, surname = BNGetFriendInfo(i)
-			local _, name, _, realm, _, _, race, class, _, _, level = BNGetToonInfo(i)
+			local presenceID, firstname, surname, toonName, toonID = BNGetFriendInfo(i)
+			local _, name, _, realm, _, _, race, class, _, _, level = BNGetToonInfo(presenceID)
 			-- stupid starcraft 2; and just why is level a string type
 			level = tonumber(level)
 			local fullName = firstname.." "..surname
 			local classColor = GetClassColor(revLOCALIZED_CLASS_NAMES[class] or "PRIEST")
 			-- BNplayer might taint whatever it calls on rightclick
-			local playerLink = format("|cff82C5FF|HBNplayer:%s:%s|h[%s]|r (|TInterface\\ChatFrame\\UI-ChatIcon-WOW:14:14:0:1|t|cff%s%s|h|r|cff82C5FF)|r", fullName, presenceID, fullName, classColor, name)
+			local playerLink = format("[%s] (|TInterface\\ChatFrame\\UI-ChatIcon-WOW:14:14:0:1|t|cff%s%s|h|r|cff82C5FF)|r", fullName, classColor, name)
+			--local playerLink = format("|cff82C5FF|HBNplayer:%s:%s|h[%s]|r (|TInterface\\ChatFrame\\UI-ChatIcon-WOW:14:14:0:1|t|cff%s%s|h|r|cff82C5FF)|r", fullName, presenceID, fullName, classColor, name)
 			if friendsBnet[name] and level and friendsBnet[name] > 0 and level > friendsBnet[name] then
 				self:OutputFrame(format("|TInterface\\FriendsFrame\\UI-Toast-ToastIcons.tga:16:16:0:0:128:64:2:29:34:61|t%s dinged %s |cffADFF2F%s|r", playerLink, LEVEL, level))
 			end
@@ -2492,7 +2512,7 @@ local function TimetoMilitaryTime(value)
 	elseif hours > 0 then
 		return format("%s:%02.f:%02.f", hours, minutes, seconds)
 	else
-		return format("%02.f:%02.f   ", minutes, seconds)
+		return format("%02.f:%02.f", minutes, seconds)
 	end
 end
 
@@ -2504,10 +2524,10 @@ local oldChatFrame_DisplayTimePlayed = ChatFrame_DisplayTimePlayed
 
 function ChatFrame_DisplayTimePlayed(...)
 	-- using /played manually should still work
-	if not filterPlayed or not profile.filterPlayed then
+	if filterPlayed then
 		oldChatFrame_DisplayTimePlayed(...)
 	end
-	filterPlayed = false
+	filterPlayed = true
 end
 
 	---------------------
@@ -2530,10 +2550,10 @@ local dataobject = {
 		if IsModifierKeyDown() then
 			RSD:SlashCommand(RSD:IsEnabled() and "0" or "1")
 		else
-			if InterfaceOptionsFrame:IsShown() and strfind(InterfaceOptionsFramePanelContainer.displayedPanel.name, "ReadySet|cffFFFFFFDing|r") then
-				InterfaceOptionsFrame:Hide()
+			if ACD.OpenFrames["ReadySetDing_Parent"] then
+				ACD:Close("ReadySetDing_Parent")
 			else
-				InterfaceOptionsFrame_OpenToCategory(optionsFrame.Main)
+				ACD:Open("ReadySetDing_Parent")
 			end
 		end
 	end,

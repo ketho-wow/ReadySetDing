@@ -1,8 +1,8 @@
-## Interface: 40200
-## Version: @project-version@
+## Interface: 40300
+## Version: 0.94
 ## Title: ReadySetDing
-## Author: Ketho @ EU-Boulderfist
 ## Notes: Ding!
+## Author: Ketho @ EU-Boulderfist
 ## SavedVariables: ReadySetDingDB
 ## OptionalDeps: Ace3
 ## X-Embeds: Ace3
@@ -16,22 +16,11 @@ Libs\AceEvent-3.0\AceEvent-3.0.xml
 Libs\AceTimer-3.0\AceTimer-3.0.xml
 Libs\AceDB-3.0\AceDB-3.0.xml
 Libs\AceDBOptions-3.0\AceDBOptions-3.0.xml
-Libs\AceLocale-3.0\AceLocale-3.0.xml
 Libs\AceConsole-3.0\AceConsole-3.0.xml
 Libs\AceGUI-3.0\AceGUI-3.0.xml
 Libs\AceConfig-3.0\AceConfig-3.0.xml
 #@end-no-lib-strip@
-
 Libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
 
-Locales\enUS.lua
-Locales\deDE.lua
-Locales\esES.lua
-Locales\esMX.lua
-Locales\frFR.lua
-Locales\koKR.lua
-Locales\ruRU.lua
-Locales\zhCN.lua
-Locales\zhTW.lua
-
+Locales.lua
 ReadySetDing.lua

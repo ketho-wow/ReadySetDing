@@ -60,7 +60,7 @@ S.defaults = {
 			TUTORIAL_TITLE55,
 			PLAYER_LEVEL_UP.."!",
 			"Ding! "..LEVEL.." <LEVEL>",
-			L.REACHED_LEVEL,
+			L.MSG_PLAYER_DING2,
 		},
 		
 		ShowOutput = 2,

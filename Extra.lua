@@ -268,7 +268,6 @@ local AchievementBlacklist = {
 	------------------
 
 function RSD:CHAT_MSG(event, msg, name)
-	print(event)
 	local throttle, chan
 	
 	if event == "CHAT_MSG_PARTY" then

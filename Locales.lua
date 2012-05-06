@@ -7,7 +7,7 @@ local L = {
 	},
 	enUS = {
 		MSG_PLAYER_DING = "Ding! "..LEVEL.." <LEVEL> in <TIME>",
-		REACHED_LEVEL = "I've reached "..LEVEL.." <LEVEL>!",
+		MSG_PLAYER_DING2 = "I've reached "..LEVEL.." <LEVEL>!",
 		
 		TIME_FORMAT = "Time Format",
 		TIME_FORMAT_LEGACY = "Legacy Time Format",

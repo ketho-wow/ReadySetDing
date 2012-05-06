@@ -2,7 +2,7 @@
 --- Author: Ketho (EU-Boulderfist)		---
 --- License: Public Domain				---
 --- Created: 2009.09.01					---
---- Version: 0.96 [2012.05.06]			---
+--- Version: 0.97 [2012.05.06]			---
 -------------------------------------------
 --- Curse			http://www.curse.com/addons/wow/readysetding
 --- WoWInterface	http://www.wowinterface.com/downloads/info16220-ReadySetDing.html
@@ -14,7 +14,7 @@
 -- "frontend" frame with info; "backend" module/library, grab info every level, like: Item Level, Player Stats, etc
 
 local NAME, S = ...
-S.VERSION = 0.96
+S.VERSION = 0.97
 S.BUILD = "Beta"
 
 ReadySetDing = LibStub("AceAddon-3.0"):NewAddon("ReadySetDing", "AceEvent-3.0", "AceTimer-3.0", "AceConsole-3.0")

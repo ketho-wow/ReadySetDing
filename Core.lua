@@ -17,9 +17,8 @@ S.lastPlayed = time()
 S.totalTPM, S.curTPM = 0, 0
 local curTPM2, totalTPM2
 
---local unpack = unpack
---local pairs, ipairs = pairs, ipairs
---local format, gsub = format, gsub
+local pairs, ipairs = pairs, ipairs
+local format, gsub = format, gsub
 
 	---------------------------
 	--- Ace3 Initialization ---
@@ -31,7 +30,6 @@ local appKey = {
 	"ReadySetDing_GuildMember",
 	"ReadySetDing_AutoGratz",
 	"ReadySetDing_Screenshot",
-	"ReadySetDing_Sound",
 }
 
 local appValue = {
@@ -40,7 +38,7 @@ local appValue = {
 	ReadySetDing_GuildMember = options.args.guildmember,
 	ReadySetDing_AutoGratz = options.args.autogratz,
 	ReadySetDing_Screenshot = options.args.screenshot,
-	ReadySetDing_Sound = options.args.sound,
+	ReadySetDing_Data = options.args.data,
 }
 
 local slashCmds = {"rsd", "readyset", "readysetding"}
@@ -58,7 +56,7 @@ function RSD:OnInitialize()
 	
 	ACR:RegisterOptionsTable("ReadySetDing_Parent", options)
 	ACD:AddToBlizOptions("ReadySetDing_Parent", NAME)
-	ACD:SetDefaultSize("ReadySetDing_Parent", 700, 575)
+	ACD:SetDefaultSize("ReadySetDing_Parent", 650, 575)
 	
 	for _, v in ipairs(appKey) do
 		ACR:RegisterOptionsTable(v, appValue[v])
@@ -66,7 +64,8 @@ function RSD:OnInitialize()
 	end
 	
 	options.args.profiles = LibStub("AceDBOptions-3.0"):GetOptionsTable(self.db)
-	options.args.profiles.order = 7
+	options.args.profiles.order = 6
+	options.args.profiles.name = "|TInterface\\Icons\\INV_Misc_Note_01:16:16:-2:-1"..S.crop.."|t "..options.args.profiles.name
 	ACR:RegisterOptionsTable("ReadySetDing_Profiles", options.args.profiles)
 	ACD:AddToBlizOptions("ReadySetDing_Profiles", options.args.profiles.name, NAME)
 	
@@ -74,18 +73,47 @@ function RSD:OnInitialize()
 		self:RegisterChatCommand(v, "SlashCommand")
 	end
 	
-	-- define saved variables
+	-----------------------------
+	--- Custom SavedVariables ---
+	-----------------------------
+	
 	char.LevelTimeList = char.LevelTimeList or {}
 	char.TotalTimeList = char.TotalTimeList or {}
 	char.DateStampList = char.DateStampList or {}
 	char.UnixTimeList = char.UnixTimeList or {}
-	char.LevelSummary = char.LevelSummary or {}
 	self.db.global.maxxp = self.db.global.maxxp or {}
 	
 	-- level 1 init
 	if player.level == 1 then
 		char.DateStampList[1] = char.DateStampList[1] or date("%Y.%m.%d %H:%M:%S")
 		char.UnixTimeList[1] = char.UnixTimeList[1] or time()
+	end
+	
+	-- "backwards compatibility" with v0.95 data; prefer capitalization for SavedVars
+	if char.levelTimeList then
+		for k, v in pairs(char.levelTimeList) do
+			char.LevelTimeList[k] = v
+		end
+		char.levelTimeList = nil
+		
+		for k, v in pairs(char.totalTimeList) do
+			char.TotalTimeList[k] = v
+		end
+		char.totalTimeList = nil
+		
+		for k, v in pairs(char.dateStampList) do
+			char.DateStampList[k] = v
+		end
+		char.dateStampList = nil
+		
+		for k, v in pairs(char.unixTimeList) do
+			char.UnixTimeList[k] = v
+		end
+		char.unixTimeList = nil
+		
+		-- can just build it straight from LevelTimeList
+		char.levelSummary = nil
+		char.experienceList = nil
 	end
 end
 
@@ -411,14 +439,8 @@ function RSD:TIME_PLAYED_MSG(event, ...)
 			self:UpdateGraph(levelg, totalg)
 		end
 		
-	---------------------
-	--- Level Summary ---
-	---------------------
-		
-		tinsert(char.LevelSummary, format(" %s |cffF6ADC6%s|r - |cff71D5FF%s|r:  |cffB6CA00%s|r        %s:  |cff71D5FF%s|r",
-			LEVEL, level-1, level, self:TimeString(char.LevelTimeList[level], true), L.TOTAL, self:TimeString(char.TotalTimeList[level], true)))
 	else
-		-- StopwatchFrame is not yet loaded at start actually but we're delayed anyway
+		-- Blizzard_TimeManager is not yet loaded, but we're being delayed anyway
 		if profile.Stopwatch and S.CanUseStopwatch(S.curTPM) then
 			S.StopwatchStart(S.curTPM)
 		end
@@ -567,10 +589,10 @@ function RSD:GUILD_ROSTER_UPDATE(event)
 				else
 					-- level changed while user was offline
 					realm[name][level] = false -- don't got time & date
-					if profile.LevelChangesLogin then
+					if profile.GuildMemberLevelDiff then
 						if not showedHeader and char.LastCheck then
 							showedHeader = true
-							self:Print(format("|cffF6ADC6[%s]|r - |cffADFF2F[%s]|r", char.lastCheck, date("%Y.%m.%d %H:%M:%S")))
+							self:Print(format("|cffF6ADC6[%s]|r - |cffADFF2F[%s]|r", char.LastCheck, date("%Y.%m.%d %H:%M:%S")))
 						end
 						print(format("|cff%s|Hplayer:%s|h[%s]|h|r %s |cffF6ADC6%s|r - |cffADFF2F%s|r (+|cff71D5FF%s|r)", S.classCache[englishClass], name, name, LEVEL, realm[name][1], level, level-realm[name][1]))
 					end

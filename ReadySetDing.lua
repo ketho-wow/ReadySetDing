@@ -2,7 +2,7 @@
 --- Author: Ketho (EU-Boulderfist)		---
 --- License: Public Domain				---
 --- Created: 2009.09.01					---
---- Version: 0.97 [2012.05.06]			---
+--- Version: 0.98 [2012.05.09]			---
 -------------------------------------------
 --- Curse			http://www.curse.com/addons/wow/readysetding
 --- WoWInterface	http://www.wowinterface.com/downloads/info16220-ReadySetDing.html
@@ -14,8 +14,8 @@
 -- "frontend" frame with info; "backend" module/library, grab info every level, like: Item Level, Player Stats, etc
 
 local NAME, S = ...
-S.VERSION = 0.97
-S.BUILD = "Beta"
+S.VERSION = 0.98
+S.BUILD = "Release"
 
 ReadySetDing = LibStub("AceAddon-3.0"):NewAddon("ReadySetDing", "AceEvent-3.0", "AceTimer-3.0", "AceConsole-3.0")
 local RSD = ReadySetDing
@@ -162,10 +162,16 @@ function RSD:TimeString(v, full)
 	end
 end
 
--- sanitize for SendChatMessage if SecondsToTime is used by removing pipe characters
--- also for e.g. 0 sec afk time: 1) SecondsToTime(0) == ""; 2) GetText returns nil instead of an empty string
-function RSD:Time(v, full)
-	return profile.LegacyTime and self:TimeString(v, full) or b:GetText(b:SetText(self:SecondsTime(v))) or ""
+function RSD:Time(v)
+	if profile.LegacyTime then
+		return self:TimeString(v, not profile.TimeOmitZero)
+	else
+		-- sanitize for SendChatMessage by removing pipe characters, if SecondsToTime is used
+		-- 1) SecondsToTime(0) == ""
+		-- 2) b:GetText() will then return nil instead of an empty string
+		local blizzTime = b:GetText(b:SetText(self:SecondsTime(v))) or ""
+		return profile.TimeLowerCase and blizzTime:lower() or blizzTime
+	end
 end
 
 -- singular hour
@@ -186,6 +192,8 @@ do
 	}
 	
 	S.LegacyTime = S.TimeUnits[2]
+	
+	S.TimeOmitZero = 3600*thour
 end
 
 	-----------------
@@ -224,7 +232,6 @@ S.sounds = {
 	"Sound\\Spells\\AchievmentSound1.ogg",
 	"Sound\\Spells\\Resurrection.ogg",
 	"Sound\\Doodad\\BellTollAlliance.ogg",
-	"Sound\\Doodad\\BellTollHorde.ogg",
 	"sound\\CREATURE\\MANDOKIR\\VO_ZG2_MANDOKIR_LEVELUP_EVENT_01.ogg",
 	"sound\\CREATURE\\JINDO\\VO_ZG2_JINDO_MANDOKIR_LEVELS_UP_01.ogg",
 	"Sound\\character\\BloodElf\\BloodElfFemaleCongratulations02.ogg",
@@ -234,7 +241,6 @@ S.sounds = {
 	"Sound\\Creature\\Paletress\\AC_Paletress_Death01.ogg",
 	"Sound\\character\\Orc\\OrcVocalMale\\OrcMaleCheer01.ogg",
 	"Sound\\creature\\Peon\\PeonPissed3.ogg",
-	"Sound\\Creature\\Rabbit\\RabbitDeathA.ogg",
 	"Sound\\creature\\HoodWolf\\HoodWolfTransformPlayer01.ogg",
 	"Sound\\creature\\Illidan\\BLACK_Illidan_04.ogg",
 	"Sound\\creature\\LichKing\\IC_Lich King_FMAttack01.ogg",
@@ -244,7 +250,6 @@ S.sounds = {
 	"Sound\\Music\\Musical Moments\\angelic\\angelic01.mp3",
 	"Sound\\Music\\WorldEvents\\AllianceFirepole.mp3",
 	"Sound\\Music\\ZoneMusic\\TavernDwarf\\RA_DwarfTavern1A.mp3",
-	"Sound\\Music\\ZoneMusic\\DMF_L70ETC01.mp3",
 }
 
 	--------------
@@ -379,10 +384,16 @@ S.RACE_ICON_TCOORDS_256 = { -- GlueXML\CharacterCreate.lua L25 (4.3.3.15354)
 
 S.sexremap = {nil, "MALE", "FEMALE"}
 
+local raceIconCache = setmetatable({}, {__index = function(t, k)
+	local coords = strjoin(":", unpack(S.RACE_ICON_TCOORDS_256[k]))
+	local v = format("|T%s:16:16:%%s:%%s:256:512:%s|t", S.racePath, coords)
+	rawset(t, k, v)
+	return v
+end})
+
+-- x and y vary so we can't cache that
 function S.GetRaceIcon(k, x, y)
-	local raceCoords = strjoin(":", unpack(S.RACE_ICON_TCOORDS_256[k]))
-	local raceIcon = format("|T%s:16:16:"..x..":"..y..":256:512:%s|t", S.racePath, raceCoords)
-	return raceIcon
+	return format(raceIconCache[k], x, y)
 end
 
 	-------------------
@@ -399,10 +410,15 @@ for k1, v1 in pairs(S.CLASS_ICON_TCOORDS_256) do
 	end
 end
 
+local classIconCache = setmetatable({}, {__index = function(t, k)
+	local coords = strjoin(":", unpack(S.CLASS_ICON_TCOORDS_256[k]))
+	local v = format("|T%s:16:16:%%s:%%s:256:256:%s|t", S.classPath, coords)
+	rawset(t, k, v)
+	return v
+end})
+
 function S.GetClassIcon(k, x, y)
-	local classCoords = strjoin(":", unpack(S.CLASS_ICON_TCOORDS_256[k]))
-	local classIcon = format("|T%s:16:16:"..x..":"..y..":256:256:%s|t", S.classPath, classCoords)
-	return classIcon
+	return format(classIconCache[k], x, y)
 end
 
 	--------------------
@@ -422,18 +438,14 @@ end
 	--- Stats ---
 	-------------
 
-local GS = GetStatistic
-
 -- http://www.wowhead.com/achievements=2
 function RSD:AchievStat(info)
-	local questsTotal, questsDaily, totalDeaths
-
 	if info == "quest" then
-		questsTotal = (GS(98) == "--") and 0 or GS(98) -- 98 = Quests completed
-		questsDaily = (GS(97) == "--") and 0 or GS(97) -- 97 = Daily quests completed
+		local questsTotal = GetStatistic(98); questsTotal = (questsTotal == "--") and 0 or questsTotal -- 98 = Quests completed
+		local questsDaily = GetStatistic(97); questsDaily = (questsDaily == "--") and 0 or questsDaily -- 97 = Daily quests completed
 		return questsTotal - questsDaily -- thank you aldon@wowhead
 	elseif info == "death" then
-		totalDeaths = (GS(60) == "--") and 0 or GS(60) -- 60 = Total Deaths
+		local totalDeaths = GetStatistic(60); totalDeaths = (totalDeaths == "--") and 0 or totalDeaths -- 60 = Total Deaths
 		return totalDeaths
 	end
 end

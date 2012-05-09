@@ -17,6 +17,7 @@ end
 
 local time = time
 local gsub = gsub
+local random = random
 
 local AchievementBlacklist = {
 -- General
@@ -271,13 +272,13 @@ function RSD:CHAT_MSG(event, msg, name)
 	local throttle, chan
 	
 	if event == "CHAT_MSG_PARTY" then
-		throttle, chan = cd.gratzParty, "PARTY"
+		throttle, chan = cd.gzParty, "PARTY"
 	elseif event == "CHAT_MSG_GUILD" then
-		throttle, chan = cd.gratzGuild, "GUILD"
+		throttle, chan = cd.gzGuild, "GUILD"
 	end
 	
 	if profile.AutoGratz and name ~= player.name and strfind(msg:lower(), "ding") and strlen(msg) <= 10 and time() > (throttle or 0) then
-		cd.gratzParty = time() + profile.GratzCooldown		
+		cd.gzParty = time() + profile.GratzCooldown		
 		self:AutoGratz(chan, name)
 	end
 end
@@ -286,10 +287,10 @@ function RSD:CHAT_MSG_GUILD_ACHIEVEMENT(event, msg, name)
 	-- don't gratz if player is afk
 	if profile.GratzAFK and UnitIsAFK("player") then return end
 	
-	if profile.AutoGratz and name ~= player.name and time() > (cd.gratzGuild or 0) then
-		if (not profile.AnyAchiev and strfind(msg, LEVEL)) or profile.gratzGuild then
+	if profile.AutoGratz and name ~= player.name and time() > (cd.gzGuild or 0) then
+		if (not profile.AnyAchiev and strfind(msg, LEVEL)) or profile.gzGuild then
 			if ((profile.FilterAchiev and not AchievementBlacklist[tonumber(msg:match("achievement:(%d+)"))]) or not profile.FilterAchiev) then
-				cd.gratzGuild = time() + profile.GratzCooldown
+				cd.gzGuild = time() + profile.GratzCooldown
 				self:AutoGratz("GUILD", name)
 			end
 		end
@@ -337,7 +338,7 @@ function RSD:PLAYER_LEAVING_WORLD(event)
 	end
 	
 	-- time/date at logout for showing levelDiffs
-	char.lastCheck = date("%Y.%m.%d %H:%M")
+	char.LastCheck = date("%Y.%m.%d %H:%M:%S")
 end
 
 	--------------

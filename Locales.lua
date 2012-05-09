@@ -9,45 +9,43 @@ local L = {
 		MSG_PLAYER_DING = "Ding! "..LEVEL.." <LEVEL> in <TIME>",
 		MSG_PLAYER_DING2 = "I've reached "..LEVEL.." <LEVEL>!",
 		
+		LEVEL_TIME = "Level Time",
+		TOTAL_TIME = "Total Time",
+		TIMESTAMP = "Timestamp",
+		
+		TOTAL = "Total",
+		DATA = "Data",
+		COOLDOWN = "Cooldown",
+		DELAY = "Delay",
+		
+		RANDOM_MESSAGE = "Random Message",
+		DISABLE_AFK = DISABLE.." when "..AFK,
+		
 		TIME_FORMAT = "Time Format",
 		TIME_FORMAT_LEGACY = "Legacy Time Format",
+		TIME_OMIT_ZERO_VALUE = "Omit Zero Value",
 		TIME_MAX_UNITS = "Max time units",
 		TIME_OMIT_SECONDS = "Omit "..SECONDS,
+		TIME_LOWER_CASE = "Lower Case",
 		TIME_ABBREVIATE = "Abbreviate",
 		
+		LEVEL_GRAPH = LEVEL.." Graph",
 		FILTER_PLAYED_MESSAGE = FILTER.." |cffF6ADC6/played|r Message",
 		NOT_FILTER_OTHER_ADDONS = "|cffFF0000Note:|r Does not filter /played when it's called by other AddOns",
 		GUILDMEMBER_LEVEL_DIFF_LOGIN = "|cff40FF40"..GUILD.."|r Member "..LEVEL.." Diff on Login",
-		LEVEL_GRAPH = LEVEL.." Graph",
+		LEVEL_SPEED = "Level Speed",
 		
 		ANNOUNCE_GUILDMEMBER_LEVELUP = CHAT_ANNOUNCE.." |cff40FF40"..GUILD.."|r Member "..PLAYER_LEVEL_UP,
 		FILTER_LEVEL_ACHIEVEMENTS = FILTER.." "..LEVEL.." |cffFFFF00"..ACHIEVEMENTS.."|r",
 		MINIMUM_LEVEL_FILTER = MINIMUM.." "..LEVEL.." "..FILTER,
 		
 		AUTO_GRATZ = "Auto Gratz",
-		
 		SCREENSHOT_HIDE_UI = HIDE.." "..BUG_CATEGORY5,
-		
 		SOUND_PATH = SOUND_LABEL.." Path",
+		EXAMPLES = "Examples",
 		
 		BROKER_CLICK = "|cffFFFFFFClick|r to open the options menu",
 		BROKER_SHIFT_CLICK = "|cffFFFFFFShift-click|r to toggle this AddOn",
-		
-		DISABLE_AFK = DISABLE.." when "..AFK,
-		RANDOM_MESSAGE = "Random Message",
-		
-		ARE_YOU_SURE = "Are you sure?",
-		COOLDOWN = "Cooldown",
-		DELAY = "Delay",
-		EXAMPLES = "Examples",
-		SOUNDS = "Sounds",
-		TEST = "Test",
-		TOTAL = "Total",
-		
-		LEVEL_TIME = "Level Time",
-		TOTAL_TIME = "Total Time",
-		LEVEL_SPEED = "Level Speed",
-		TIMESTAMP = "Timestamp",
 	},
 	esES = {
 	},

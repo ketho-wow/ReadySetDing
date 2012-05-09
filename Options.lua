@@ -21,6 +21,8 @@ function RSD:RefreshDB2()
 end
 
 local time = time
+local unpack = unpack
+local pairs, ipairs = pairs, ipairs
 local format, gsub = format, gsub
 
 	---------------------
@@ -40,6 +42,8 @@ local MINUTES_ABBR2 = gsub(MINUTES_ABBR, "%%d ", "")
 local HOURS_ABBR2 = gsub(HOURS_ABBR, "%%d ", "")
 local DAYS_ABBR2 = gsub(DAYS_ABBR, "%%d ", "")
 
+local arrow = "|cffF6ADC6->|r"
+
 	----------------
 	--- Defaults ---
 	----------------
@@ -51,10 +55,10 @@ S.defaults = {
 		ShowGuild = true,
 		ShowFriend = true,
 		ShowRealID = true,
-		ChatParty = true,
-		
 		ShowMsg = "<ICON> [<CHAN>] [<NAME>]: Level <LEVEL>",
 		
+		ChatParty = true,
+		NumRandomDing = 5,
 		DingMsg = {
 			L.MSG_PLAYER_DING,
 			TUTORIAL_TITLE55,
@@ -66,20 +70,18 @@ S.defaults = {
 		ShowOutput = 2,
 		Language = 1,
 		DingDelay = 0,
-		NumRandomDing = 5,
 		
 		LegacyTime = true,
 		TimeMaxCount = 2,
 		
+		LevelGraph = true,
 		FilterPlayed = true,
 		GuildMemberLevelDiff = true,
-		LevelGraph = true,
 		
 		GuildAFK = true,
 		FilterLevelAchiev = true,
 		MinLevelFilter = 10,
 		NumRandomGuild = 5,
-		
 		GuildMsg = {
 			GUILD_NEWS_FORMAT6A,
 			"<NAME> is now "..LEVEL.." <LEVEL>!",
@@ -93,7 +95,6 @@ S.defaults = {
 		GratzDelay = 0,
 		GratzCooldown = 300,
 		NumRandomGratz = 9,
-		
 		GratzMsg = {
 			[1] = "<GZ>",
 			[4] = "<GZ>!",
@@ -109,10 +110,10 @@ S.defaults = {
 		ScreenshotDelay = 1,
 		
 		LibSharedMediaSound = true,
-		SoundDelay = 4,
+		SoundWidget = LSM:GetDefault(LSM.MediaType.SOUND),
 		CustomSound = S.sounds[2],
 		ExampleSound = 2,
-		SoundWidget = LSM:GetDefault(LSM.MediaType.SOUND),
+		SoundDelay = 4,
 	}
 }
 
@@ -125,11 +126,11 @@ local defaults = S.defaults
 S.options = {
 	type = "group",
 	childGroups = "tab",
-	name = format("|TInterface\\AddOns\\ReadySetDing\\Images\\Windows7_Logo:16:16:0:2|t %s |cffADFF2Fv%s|r |cffFFFFFF(|r|cff57A3FFBeta|r|cffFFFFFF)|r", NAME, S.VERSION),
+	name = format("%s |cffADFF2Fv%s|r", NAME, S.VERSION),
 	args = {
 		main = {
 			type = "group", order = 1,
-			name = GAMEOPTIONS_MENU,
+			name = "|TInterface\\AddOns\\ReadySetDing\\Images\\Windows7_Logo:16:16:-2:1|t "..GAMEOPTIONS_MENU,
 			handler = RSD,
 			get = "GetValue",
 			set = "SetValue",
@@ -260,23 +261,31 @@ S.options = {
 					},
 				},
 				spacing1 = {type = "description", order = 3, name = ""},
-				LevelSummary = {
+				Summary = {
 					type = "description", order = 4,
 					fontSize = "medium",
 					name = function()
-						local revt = S.recycle[1]; wipe(revt)
-						local tsize = #char.LevelSummary + 1
-						for i, v in pairs(char.LevelSummary) do
-							revt[tsize-i] = v
+						local t = S.recycle[1]; wipe(t)
+						for i = player.maxlevel, 2, -1 do
+							if char.LevelTimeList[i] then
+								tinsert(t, format("  %s |cffF6ADC6%s|r - |cff71D5FF%s|r: |cffB6CA00%s|r  --  %s: |cff71D5FF%s|r",
+									LEVEL, i-1, i, RSD:Time(char.LevelTimeList[i]), L.TOTAL, RSD:Time(char.TotalTimeList[i])))
+							end
 						end
-						return strjoin("\n", unpack(revt))
+						return strjoin("\n", unpack(t))
 					end,
+				},
+				spacing1 = {type = "description", order = 5, name = ""},
+				Data = {
+					type = "execute", order = 6,
+					name = "|TInterface\\Icons\\INV_Misc_Note_01:16:16:1:-1"..S.crop.."|t  |cffFFFFFF"..L.DATA.."|r",
+					func = function() RSD:DataFrame() end,
 				},
 			},
 		},
 		advanced = {
 			type = "group", order = 2,
-			name = ADVANCED_LABEL,
+			name = "|TInterface\\Icons\\Trade_Engineering:16:16:-2:-1"..S.crop.."|t "..ADVANCED_LABEL,
 			handler = RSD,
 			get = "GetValue",
 			set = "SetValue",
@@ -352,28 +361,43 @@ S.options = {
 					args = {
 						LegacyTime = {
 							type = "toggle", order = 1,
-							width = "full",
-							desc = function() return "|cffF6ADC6"..RSD:TimeString(S.LegacyTime).."|r" end,
+							desc = function() return (profile.LegacyTime and "|cffF6ADC6"..RSD:TimeString(S.LegacyTime).."|r" or "") end,
 							name = function() return (profile.LegacyTime and "" or "|cff979797")..L.TIME_FORMAT_LEGACY end,
 						},
+						TimeOmitZero = {
+							type = "toggle", order = 2,
+							width = "full",
+							desc = format("%s %s %s", RSD:TimeString(S.TimeOmitZero, true), arrow, RSD:TimeString(S.TimeOmitZero, false)),
+							name = L.TIME_OMIT_ZERO_VALUE,
+							hidden = function() return not profile.LegacyTime end,
+						},
 						TimeMaxCount = {
-							type = "range", order = 2,
-							desc = function() return "|cffF6ADC6"..SecondsToTime(S.TimeUnits[profile.TimeMaxCount], profile.TimeOmitSec, not profile.TimeAbbrev, profile.TimeMaxCount).."|r" end,
+							type = "range", order = 3,
+							desc = function() return "|cffF6ADC6"..RSD:Time(S.TimeUnits[profile.TimeMaxCount]).."|r" end,
 							name = "   "..L.TIME_MAX_UNITS,
 							min = 1,
 							max = 4,
 							step = 1,
 							hidden = function() return profile.LegacyTime end,
 						},
+						newline1 = {type = "description", order = 4, name = ""},
 						TimeOmitSec = {
-							type = "toggle", order = 3,
-							desc = SECONDS.." -> |cffFF0000"..NOT_APPLICABLE.."|r",
+							type = "toggle", order = 5,
+							desc = SECONDS.." "..arrow.." |cffFF0000"..NOT_APPLICABLE.."|r",
 							name = L.TIME_OMIT_SECONDS,
 							hidden = function() return profile.LegacyTime end,
 						},
+						TimeLowerCase = {
+							type = "toggle", order = 6,
+							desc = format("%s %s %s",
+								HOURS, arrow, HOURS:lower()),
+							name = L.TIME_LOWER_CASE,
+							hidden = function() return profile.LegacyTime end,
+						},
 						TimeAbbrev = {
-							type = "toggle", order = 4,
-							desc = format("%s -> %s\n%s -> %s\n%s -> %s\n%s -> %s", SECONDS, SECONDS_ABBR2, MINUTES, MINUTES_ABBR2, HOURS, HOURS_ABBR2, DAYS, DAYS_ABBR2),
+							type = "toggle", order = 7,
+							desc = format("%s %s %s\n%s %s %s\n%s %s %s\n%s %s %s",
+								SECONDS, arrow, SECONDS_ABBR2, MINUTES, arrow, MINUTES_ABBR2, HOURS, arrow, HOURS_ABBR2, DAYS, arrow, DAYS_ABBR2),
 							name = L.TIME_ABBREVIATE,
 							hidden = function() return profile.LegacyTime end,
 						},
@@ -426,7 +450,7 @@ S.options = {
 		},
 		guildmember = {
 			type = "group", order = 3,
-			name = GUILD,
+			name = "|TInterface\\GuildFrame\\GuildLogo-NoLogo:16:16:-2:-1:64:64:14:51:14:51|t "..GUILD,
 			handler = RSD,
 			get = "GetValue",
 			set = "SetValue",
@@ -501,9 +525,9 @@ S.options = {
 					fontSize = "medium",
 					name = function() return RSD:PreviewGuild(1) end,
 				},
-				spacing1 = {type = "description", order = -2, name = " "},
+				spacing1 = {type = "description", order = -4, name = " "},
 				GuildMemberLevelSpeed = {
-					type = "execute", order = -1,
+					type = "execute", order = -3,
 					name = "|TInterface\\Icons\\INV_Misc_Note_01:16:16:1:-1"..S.crop.."|t |cffFFFFFF"..L.LEVEL_SPEED.."|r",
 					func = function()
 						local list = S.recycle[1]; wipe(list)
@@ -534,11 +558,19 @@ S.options = {
 					end,
 					hidden = function() return not IsInGuild() end,
 				},
+				ReadySet7 = {
+					type = "description", order = -2,
+					name = "|TInterface\\AddOns\\ReadySetDing\\Images\\ReadySet7:32:128:9:-3|t"
+				},
+				Windows7Awesome = {
+					type = "description", order = -1,
+					name = " |TInterface\\AddOns\\ReadySetDing\\Images\\Windows7_Logo:64:64:0:0|t    |TInterface\\AddOns\\ReadySetDing\\Images\\Awesome:64:64:0:0|t"
+				},
 			},
 		},
 		autogratz = {
 			type = "group", order = 4,
-			name = L.AUTO_GRATZ,
+			name = "|TInterface\\Icons\\INV_Misc_Gift_05:16:16:-2:-1"..S.crop.."|t "..L.AUTO_GRATZ,
 			handler = RSD,
 			get = "GetValue",
 			set = "SetValue",
@@ -636,7 +668,7 @@ S.options = {
 		},
 		screenshot = {
 			type = "group", order = 5,
-			name = BINDING_NAME_SCREENSHOT,
+			name = "|TInterface\\Icons\\inv_misc_spyglass_03:16:16:-2:-1"..S.crop.."|t "..BINDING_NAME_SCREENSHOT,
 			handler = RSD,
 			get = "GetValue",
 			set = "SetValue",
@@ -668,61 +700,23 @@ S.options = {
 						},
 					},
 				},
-				ReadySet7 = {
-					type = "description", order = 3,
-					name = "|TInterface\\AddOns\\ReadySetDing\\Images\\ReadySet7:32:128:9:-3|t"
-				},
-				Windows7Awesome = {
-					type = "description", order = 4,
-					name = " |TInterface\\AddOns\\ReadySetDing\\Images\\Windows7_Logo:64:64:0:0|t    |TInterface\\AddOns\\ReadySetDing\\Images\\Awesome:64:64:0:0|t"
-				},
-				spacing1 = {type = "description", order = 5, name = " "},
-				PrintSummary = {
-					type = "execute", order = 6,
-					name = "|TInterface\\Icons\\INV_Misc_Note_01:16:16:1:-1"..S.crop.."|t  |cffFFFFFFSummary|r",
-					func = function()
-						for i = 2, player.maxlevel do
-							if char.LevelTimeList[i] then
-								print(format("%s |cffF6ADC6%d|r - |cff71D5FF%d|r: |cffB6CA00%s|r ; %s: |cff71D5FF%s|r",
-									LEVEL, i-1, i, RSD:Time(char.LevelTimeList[i], true), L.TOTAL, RSD:Time(char.TotalTimeList[i], true)))
-							end
-						end
-					end,
-				},
-				newline1 = {type = "description", order = 7, name = ""},
-				ExportPrint = {
-					type = "execute", order = 8,
-					name = "|TInterface\\Icons\\Trade_Engineering:16:16:1:-1"..S.crop.."|t  |cffFFFFFFExport to |cff71D5FFprint|r|r",
-					func = function() RSD:ExportData(print) end,
-				},
-				newline2 = {type = "description", order = 9, name = ""},
-				ExportSay = {
-					type = "execute", order = 10,
-					name = "|TInterface\\Icons\\Trade_Engineering:16:16:1:-1"..S.crop.."|t  |cffFFFFFFExport to|r |cffFFFF00"..SLASH_SAY2.."|r",
-					confirm = true, confirmText = L.ARE_YOU_SURE.." (|cffFF0000"..BNET_REPORT_SPAM.."|r)",
-					func = function() RSD:ExportData(SendChatMessage) end,
-				},
-			},
-		},
-		sound = {
-			type = "group", order = 6,
-			name = SOUND_LABEL,
-			handler = RSD,
-			get = "GetValue",
-			set = "SetValue",
-			args = {
+				spacing1 = {type = "description", order = 3, name = " "},
+				header1 = {type = "header", order = 4, name = ""},
 				Sound = {
-					type = "toggle", order = 1,
+					type = "toggle", order = 5,
 					width = "full", descStyle = "",
 					name = "|TInterface\\Icons\\INV_Misc_Bell_01:16:16:1:0"..S.crop.."|t  "..SOUND_LABEL,
 				},
 				LibSharedMediaSound = {
-					type = "toggle", order = 2,
+					type = "toggle", order = 6,
 					width = "full", descStyle = "",
-					name = "|TInterface\\Common\\VOICECHAT-SPEAKER:20:20:4:0|t |cff4E96F7LibSharedMedia|r "..SOUND_LABEL,
+					name = function()
+						local colorName = profile.LibSharedMediaSound and "|cff4E96F7LibSharedMedia|r "..SOUND_LABEL or "|cff979797LibSharedMedia "..SOUND_LABEL.."|r"
+						return "|TInterface\\Common\\VOICECHAT-SPEAKER:20:20:4:0|t "..colorName
+					end,
 				},
-				inline1 = {
-					type = "group", order = 3,
+				inline2 = {
+					type = "group", order = 7,
 					name = " ",
 					inline = true,
 					disabled = function() return not profile.Sound end,
@@ -766,8 +760,8 @@ S.options = {
 					},
 				},
 				TestSound = {
-					type = "execute", order = 4,
-					name = L.TEST,
+					type = "execute", order = 8,
+					name = SLASH_STOPWATCH_PARAM_PLAY1, -- "play"
 					width = "half",
 					func = function()
 						-- would be kinda annoying if someone accidentally spammed
@@ -929,10 +923,9 @@ end
 function RSD:ValidateLength(msg)
 	-- my patterns. just. suck. ><
 	local msg = self:ReplaceArgs(msg, args)
-	msg = msg:gsub("|cff......", "")
-	msg = msg:gsub("|r", "")
+	msg = msg:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
 	msg = msg:gsub("|T.-|t", "{rtN}")
-
+	
 	-- notify if message length exceeds 127 or 255 chars
 	local len = strlen(msg)-2 -- account for the two prepending blank spaces in preview
 	if len > 127 and profile.ChatBroadcast then
@@ -1040,8 +1033,11 @@ hooksecurefunc(ACD, "Open", function(self, app)
 end)
 
 do
-	local t1, t2 = {}, {}
+	local startCoord = {0, 0}
+	local levelColor = {.68, 1, .18, .7}
+	local totalColor = {.44, .84, 1, .7}
 	
+	-- maybe make graphs customizable in some way in the future
 	function RSD:UpdateGraph(level, total)
 		local XWidth = table.maxn(char.LevelTimeList) - 1
 		local XRealWidth = min(XWidth * 25, 400)
@@ -1052,7 +1048,8 @@ do
 		local YLevelHeight = 0
 		local YTotalHeight = char.TotalTimeList[table.maxn(char.TotalTimeList)]
 		
-		wipe(t1); t1[1] = {0, 0}
+		local t1 = S.recycle[1]; wipe(t1)
+		t1[1] = startCoord
 		for i = 2, player.maxlevel do
 			local levelTime = char.LevelTimeList[i]
 			if levelTime then
@@ -1060,15 +1057,16 @@ do
 				YLevelHeight = levelTime > YLevelHeight and levelTime or YLevelHeight
 			end
 		end
-		level:AddDataSeries(t1, {.68, 1, .18, .7})
+		level:AddDataSeries(t1, levelColor)
 		
-		wipe(t2); t2[1] = {0, 0}
+		local t2 = S.recycle[2]; wipe(t2)
+		t2[1] = startCoord
 		for i = 2, player.maxlevel do
 			if char.TotalTimeList[i] then
 				tinsert(t2, {i-1, char.TotalTimeList[i]})
 			end
 		end
-		total:AddDataSeries(t2, {.44, .84, 1, .7})
+		total:AddDataSeries(t2, totalColor)
 		
 		level.XMin = 0; level.XMax = XWidth
 		level.YMin = 0; level.YMax = YLevelHeight
@@ -1080,96 +1078,129 @@ do
 	end
 end
 
-	--------------
-	--- Export ---
-	--------------
+	------------
+	--- Data ---
+	------------
 
-do
-	-- a = delay; b = coloring for print; c = header
-	local a, b, c = {}, {}, {}
-	
-	-- try to avoid spamming the server
-	function RSD:ExportData(sink)
+-- I peeked into Prat's CopyChat code <.<
+function RSD:DataFrame()
+	if not ReadySetDingData then
+		local f = CreateFrame("Frame", "ReadySetDingData", UIParent, "DialogBoxFrame")
+		f:SetPoint("CENTER"); f:SetSize(600, 500)
+		f:SetMovable(true); f:EnableMouse(true)
 		
-		-- why is there a throttle here anyway ... button bashers? spammers? xD
-		if time() > (cd.export or 0) then
-			cd.export = time() + 3
-			
-			if sink == print then
-				for i = 1, 5 do
-					a[i] = 0.5 * (i-1) -- 0, 0.5, 1, 1.5, 2.0
-				end
-				b[1], b[2], b[3], b[4], b[5] = "|r", "|cffF6ADC6", "|cffB6CA00", "|cff71D5FF", "|cffFFFF00"
-				
-			elseif sink == SendChatMessage and time() > (cd.exportsay or 0) then
-				-- try to make sure LoggingChat will be correctly set to it's previous value after the delay
-				cd.exportsay = time() + 17
-				for i = 1, 5 do
-					a[i] = 4 * (i-1) -- 0, 4, 8, 12, 16
-					b[i] = ""
-				end
-				
-				local isLogging = LoggingChat()
-				LoggingChat(true) -- start logging
-				
-				self:ScheduleTimer(function()
-					LoggingChat(isLogging) -- revert to original
-					self:Print("Logged Data to |cff71D5FF...\\Logs\\WoWChatLog.txt|r")
-				end, 17)
+		f:SetBackdrop({
+			bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
+			edgeFile = "Interface\\PVPFrame\\UI-Character-PVP-Highlight", -- this one is neat
+			edgeSize = 16,
+			insets = { left = 8, right = 8, top = 8, bottom = 8 },
+		})
+		f:SetBackdropBorderColor(0, .44, .87, 0.5)
+		
+		f:SetScript("OnMouseDown", function(self, button)
+			if button == "LeftButton" then
+				self:StartMoving()
 			end
-			
-			-- Level Time
-			self:ScheduleTimer(function()
-				for i = 2, player.maxlevel do
-					if char.LevelTimeList[i] then
-						if not c[1] then sink("# "..L.LEVEL_TIME); c[1] = true end
-						sink(format("%s%d%s-%s%d%s: %s%s%s", b[2], i-1, b[1], b[3], i, b[1], b[4], char.LevelTimeList[i], b[1]))
-					end
-				end
-			end, a[1])
-			
-			-- Total Time
-			self:ScheduleTimer(function()
-				for i = 2, player.maxlevel do
-					if char.TotalTimeList[i] then
-						if not c[2] then sink("# "..L.TOTAL_TIME); c[2] = true end
-						sink(format("%s%d%s-%s%d%s: %s%s%s", b[2], 1, b[1], b[3], i, b[1], b[4], char.TotalTimeList[i], b[1]))
-					end
-				end
-			end, a[2])
-						
-			-- Unix Timestamp
-			self:ScheduleTimer(function()
-				for i = 1, player.maxlevel do
-					if char.UnixTimeList[i] then
-						if not c[3] then sink("# Unix "..L.TIMESTAMP); c[3] = true end
-						sink(format("%s%d%s: %s%s%s", b[3], i, b[1], b[4], char.UnixTimeList[i], b[1]))
-					end
-				end
-				wipe(c) -- reset headers
-			end, a[3])
-			
-			-- Timestamp
-			self:ScheduleTimer(function()
-				for i = 1, player.maxlevel do
-					if char.DateStampList[i] then
-						if not c[4] then sink("# "..L.TIMESTAMP); c[4] = true end
-						sink(format("%s%d%s: %s%s%s", b[3], i, b[1], b[4], char.DateStampList[i], b[1]))
-					end
-				end
-			end, a[4])
-			
-			-- Experience / Hour
-			self:ScheduleTimer(function()
-				for i = 2, player.maxlevel do
-					-- global.maxxp is added in v0.96
-					if char.LevelTimeList[i] and self.db.global.maxxp[i-1] then
-						if not c[5] then sink(format("# %s/%s (%s%s%s)", XP, S.HOUR, b[5], MAXIMUM.." "..XP, b[1])); c[5] = true end
-						sink(format("%s%d%s-%s%d%s: %s%s%s (%s%s%s)",
-							b[2], i-1, b[1], b[3], i, b[1], b[4], floor(self.db.global.maxxp[i-1] / (char.LevelTimeList[i]/3600)), b[1], b[5], self.db.global.maxxp[i-1], b[1]))
-					end
-				end
-			end, a[5])
+		end)
+		
+		f:SetScript("OnMouseUp", function(self, button)
+			self:StopMovingOrSizing()
+		end)
+		
+		local sf = CreateFrame("ScrollFrame", "ReadySetDingDataScrollFrame", ReadySetDingData, "UIPanelScrollFrameTemplate")
+		sf:SetPoint("TOP", -5, -17)
+		sf:SetPoint("BOTTOM", ReadySetDingDataButton, "TOP", 0, 5)
+		sf:SetSize(540, 0)
+		
+		local eb = CreateFrame("EditBox", "ReadySetDingDataEditBox", ReadySetDingDataScrollFrame)
+		eb:SetSize(540, 0)
+		eb:SetMultiLine(true)
+		eb:SetFontObject("ChatFontNormal")
+		
+		eb:SetScript("OnEscapePressed", function(self)
+			ReadySetDingData:Hide()
+		end)
+		
+		sf:SetScrollChild(eb)
+		f:Show()
+	else
+		ReadySetDingData:Show()
+	end
+	
+	if ACD.OpenFrames.ReadySetDing_Parent then
+		-- the ACD window's Strata is "FULLSCREEN_DIALOG", and changing FrameLevels seems troublesome
+		ReadySetDingData:SetFrameStrata("TOOLTIP")
+	end
+	
+	ReadySetDingDataEditBox:SetText(self:GetData())
+	GameTooltip:Hide() -- most likely the popup frame will prevent the GameTooltip's OnLeave script from firing
+end
+
+function RSD:GetData()
+	local t = S.recycle[1]; wipe(t)
+	local s = S.recycle[2]; wipe(s)
+	
+	for i = 1, 6 do
+		t[i] = S.recycle[i+2]; wipe(t[i])
+	end
+	
+	-- Summary
+	t[1][1] = "# "..ACHIEVEMENT_SUMMARY_CATEGORY
+	for i = 2, player.maxlevel do
+		if char.LevelTimeList[i] then
+			-- use tinsert in the (likely) case of holes in the SavedVars tables
+			tinsert(t[1], format("%s |cffF6ADC6%d|r - |cff71D5FF%d|r: |cffB6CA00%s|r - %s: |cff71D5FF%s|r",
+				LEVEL, i-1, i, RSD:Time(char.LevelTimeList[i]), L.TOTAL, RSD:Time(char.TotalTimeList[i])))
 		end
 	end
+	
+	-- Level Time
+	t[2][1] = "# "..L.LEVEL_TIME
+	for i = 2, player.maxlevel do
+		if char.LevelTimeList[i] then
+			tinsert(t[2], format("|cffF6ADC6%d|r-|cffB6CA00%d|r: |cff71D5FF%s|r", i-1, i, char.LevelTimeList[i]))
+		end
+	end
+	
+	-- Total Time
+	t[3][1] = "# "..L.TOTAL_TIME
+	for i = 2, player.maxlevel do
+		if char.TotalTimeList[i] then
+			tinsert(t[3], format("|cffB6CA00%d|r: |cff71D5FF%s|r", i, char.TotalTimeList[i]))
+		end
+	end
+		
+	-- Timestamp
+	t[4][1] = "# "..L.TIMESTAMP
+	for i = 1, player.maxlevel do
+		if char.DateStampList[i] then
+			tinsert(t[4], format("|cffB6CA00%d|r: |cff71D5FF%s|r", i, char.DateStampList[i]))
+		end
+	end
+	
+	-- Unix Timestamp
+	t[5][1] = "# Unix "..L.TIMESTAMP
+	for i = 1, player.maxlevel do
+		if char.UnixTimeList[i] then
+			tinsert(t[5], format("|cffB6CA00%d|r: |cff71D5FF%s|r", i, char.UnixTimeList[i]))
+		end
+	end
+	
+	-- Experience / Hour
+	t[6][1] = format("# %s / %s", XP, S.HOUR)
+	for i = 2, player.maxlevel do
+		-- global.maxxp is added in v0.96
+		if char.LevelTimeList[i] and self.db.global.maxxp[i-1] then
+			local maxxp = self.db.global.maxxp[i-1]
+			local levelTime = char.LevelTimeList[i] / 3600
+			tinsert(t[6], format("|cffF6ADC6%d|r-|cffB6CA00%d|r: |cffFFFF00%s|r / |cff0070DD%.2f|r = |cff71D5FF%s|r", i-1, i, maxxp, levelTime, floor(maxxp / levelTime)))
+		end
+	end
+	
+	for i = 1, #t do
+		s[i] = strjoin("\n", unpack(t[i]))
+	end
+	
+	-- I suppose the color codes make the string kinda long -- gsub("|", "||")
+	return strjoin("\n\n", unpack(s))
 end

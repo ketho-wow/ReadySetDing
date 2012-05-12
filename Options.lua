@@ -298,11 +298,11 @@ S.options = {
 						ShowOutput = {
 							type = "select", order = 1,
 							descStyle = "",
-							name = "   Output",
+							name = "",
 							values = function()
 								local c = "|cff2E9AFE"
 								local t = {
-									c.."#|r  "..(SHOW_COMBAT_TEXT == "0" and "|cff979797" or "")..COMBAT_TEXT_LABEL, -- new
+									c.."#|r  "..(SHOW_COMBAT_TEXT == "0" and "|cff979797" or "")..COMBAT_TEXT_LABEL,
 									c.."#|r  RaidWarningFrame",
 									c.."#|r  RaidBossEmoteFrame",
 									c.."#|r  UIErrorsFrame",
@@ -459,6 +459,7 @@ S.options = {
 					type = "toggle", order = 1,
 					width = "full", descStyle = "",
 					name = "|TINTERFACE\\ICONS\\achievement_guildperk_fasttrack_rank2:16:16:1:1"..S.crop.."|t  "..L.ANNOUNCE_GUILDMEMBER_LEVELUP,
+					set = "SetValueShow",
 				},
 				inline1 = {
 					type = "group", order = 2,
@@ -796,18 +797,19 @@ function RSD:SetValue(i, v)
 	profile[i[#i]] = v
 end
 
+-- refresh individual option
 function RSD:SetValueShow(i, v)
 	profile[i[#i]] = v
-
-	-- require both ShowParty and ShowRaid being disabled, in order to unregister UNIT_LEVEL
+	
+	-- requires for example, both ShowParty and ShowRaid being disabled, in order to unregister UNIT_LEVEL
 	local event = S.levelremap[i[#i]]
-	v = (event == "UNIT_LEVEL") and S.ShowGroup() or v
-	self[v and "RegisterEvent" or "UnregisterEvent"](self, event)
+	v = S[event] and S[event]() or v
 end
 
+-- refresh all options
 function RSD:RefreshShowEvents()
 	for option, event in pairs(S.levelremap) do
-		local v = (event == "UNIT_LEVEL") and S.ShowGroup() or profile[option]
+		local v = S[event] and S[event]() or profile[option]
 		self[v and "RegisterEvent" or "UnregisterEvent"](self, event)
 	end
 end

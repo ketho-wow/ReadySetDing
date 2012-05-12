@@ -160,10 +160,10 @@ function RSD:OnEnable()
 	-- this kinda defeats the purpose of registering/unregistering events according to options <.<
 	self:ScheduleRepeatingTimer(function()
 		-- the returns of UnitLevel() aren't yet updated on UNIT_LEVEL
-		if profile.ShowParty or profile.ShowRaid then
+		if S.UNIT_LEVEL() then
 			self:UNIT_LEVEL("UNIT_LEVEL")
 		end
-		if profile.ShowGuild then
+		if S.GUILD_ROSTER_UPDATE() then
 			GuildRoster() -- fires GUILD_ROSTER_UPDATE
 		end
 		-- FRIENDLIST_UPDATE doesn't fire on actual friend levelups
@@ -555,10 +555,10 @@ function RSD:GUILD_ROSTER_UPDATE(event)
 			local name, rank, _, level, class, zone, _, _, _, _, englishClass = GetGuildRosterInfo(i)
 			
 			-- sanity checks
-			if name and realm[name] and level > realm[name] and name ~= player.name then
+			if name and realm[name] and level > realm[name][1] and name ~= player.name then
 				if showedDiffs then
 					local realtime = 0
-					if level-1 ~= 1 and type(realm[name][level-1]) == "table" then
+					if level-1 ~= 1 and realm[name][level-1] then
 						realtime = time() - realm[name][level-1][1]
 					end
 					
@@ -567,6 +567,10 @@ function RSD:GUILD_ROSTER_UPDATE(event)
 					args.chan = chan
 					args.name = format("|cff%s|Hplayer:%s|h%s|h|r", S.classCache[englishClass], name, name)
 					args.level = "|cffADFF2F"..level.."|r"
+					-- hidden args
+					args.class = class
+					args.rank = rank
+					args.zone = zone
 					args.realtime = realtime
 					
 					if profile.ShowGuild then
@@ -579,8 +583,7 @@ function RSD:GUILD_ROSTER_UPDATE(event)
 						local achiev = profile.FilterLevelAchiev and not S.Levels[level] or not profile.FilterLevelAchiev
 						
 						if afk and achiev then
-							local text = self:ChatGuild(name, level, class, rank, zone, realtime)
-							SendChatMessage(text, "GUILD")
+							SendChatMessage(self:ChatGuild(name, level, class, rank, zone, realtime), "GUILD")
 						end
 					end
 					
@@ -588,14 +591,15 @@ function RSD:GUILD_ROSTER_UPDATE(event)
 					realm[name][level] = {time(), date("%Y.%m.%d %H:%M:%S")}
 				else
 					-- level changed while user was offline
-					realm[name][level] = false -- don't got time & date
 					if profile.GuildMemberLevelDiff then
 						if not showedHeader and char.LastCheck then
-							showedHeader = true
 							self:Print(format("|cffF6ADC6[%s]|r - |cffADFF2F[%s]|r", char.LastCheck, date("%Y.%m.%d %H:%M:%S")))
+							showedHeader = true; char.LastCheck = nil
 						end
 						print(format("|cff%s|Hplayer:%s|h[%s]|h|r %s |cffF6ADC6%s|r - |cffADFF2F%s|r (+|cff71D5FF%s|r)", S.classCache[englishClass], name, name, LEVEL, realm[name][1], level, level-realm[name][1]))
 					end
+					-- don't got time & date
+					realm[name][level] = false
 				end
 			end
 			realm[name] = realm[name] or {}

@@ -2,7 +2,7 @@
 --- Author: Ketho (EU-Boulderfist)		---
 --- License: Public Domain				---
 --- Created: 2009.09.01					---
---- Version: 0.98 [2012.05.09]			---
+--- Version: 0.99 [2012.05.12]			---
 -------------------------------------------
 --- Curse			http://www.curse.com/addons/wow/readysetding
 --- WoWInterface	http://www.wowinterface.com/downloads/info16220-ReadySetDing.html
@@ -11,10 +11,9 @@
 -- guild member levels scroll window
 -- more advanced graphs, guildmember graphs
 -- custom achievements; use custom achiev lib
--- "frontend" frame with info; "backend" module/library, grab info every level, like: Item Level, Player Stats, etc
 
 local NAME, S = ...
-S.VERSION = 0.98
+S.VERSION = 0.99
 S.BUILD = "Release"
 
 ReadySetDing = LibStub("AceAddon-3.0"):NewAddon("ReadySetDing", "AceEvent-3.0", "AceTimer-3.0", "AceConsole-3.0")
@@ -88,13 +87,19 @@ S.levelremap = {
 	ShowParty = "UNIT_LEVEL",
 	ShowRaid = "UNIT_LEVEL",
 	ShowGuild = "GUILD_ROSTER_UPDATE",
+	AnnGuildMember = "GUILD_ROSTER_UPDATE",
 	ShowFriend = "FRIENDLIST_UPDATE",
 	ShowRealID = "BN_FRIEND_INFO_CHANGED",
 }
 
--- determine if any of the ShowGroup options are enabled
-function S.ShowGroup()
+-- determine if any of the UNIT_LEVEL options are enabled
+function S.UNIT_LEVEL()
 	return profile.ShowParty or profile.ShowRaid
+end
+
+-- determine if any of the GUILD_ROSTER_UPDATE options are enabled
+function S.GUILD_ROSTER_UPDATE()
+	return profile.ShowGuild or profile.AnnGuildMember
 end
 
 	--------------
@@ -143,12 +148,11 @@ function RSD:TimeString(v, full)
 	local hour = floor(v/3600) % 24
 	local day = floor(v/86400)
 	
-	-- sanitize for SendChatMessage
-	local fsec = b:GetText(b:SetFormattedText(D_SECONDS, sec))
-	local fmin = b:GetText(b:SetFormattedText(D_MINUTES, minute))
-	local fhour = b:GetText(b:SetFormattedText(D_HOURS, hour))
-	local fday = b:GetText(b:SetFormattedText(D_DAYS, day))
-
+	local fsec = format(D_SECONDS, sec)
+	local fmin = format(D_MINUTES, minute)
+	local fhour = format(D_HOURS, hour)
+	local fday =format(D_DAYS, day)
+	
 	if v >= 86400 then
 		return (hour > 0 or full) and format("%s, %s", fday, fhour) or fday
 	elseif v >= 3600 then
@@ -163,15 +167,15 @@ function RSD:TimeString(v, full)
 end
 
 function RSD:Time(v)
+	local t
 	if profile.LegacyTime then
-		return self:TimeString(v, not profile.TimeOmitZero)
+		t = self:TimeString(v, not profile.TimeOmitZero)
 	else
-		-- sanitize for SendChatMessage by removing pipe characters, if SecondsToTime is used
-		-- 1) SecondsToTime(0) == ""
-		-- 2) b:GetText() will then return nil instead of an empty string
-		local blizzTime = b:GetText(b:SetText(self:SecondsTime(v))) or ""
-		return profile.TimeLowerCase and blizzTime:lower() or blizzTime
+		t = self:SecondsTime(v)
+		t = profile.TimeLowerCase and t:lower() or t
 	end
+	-- sanitize for SendChatMessage by removing any pipe characters
+	return b:GetText(b:SetText(t)) or ""
 end
 
 -- singular hour

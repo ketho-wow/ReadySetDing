@@ -2,7 +2,7 @@
 --- Author: Ketho (EU-Boulderfist)		---
 --- License: Public Domain				---
 --- Created: 2009.09.01					---
---- Version: 0.99 [2012.05.12]			---
+--- Version: 1.00 [2012.05.12]			---
 -------------------------------------------
 --- Curse			http://www.curse.com/addons/wow/readysetding
 --- WoWInterface	http://www.wowinterface.com/downloads/info16220-ReadySetDing.html
@@ -13,7 +13,7 @@
 -- custom achievements; use custom achiev lib
 
 local NAME, S = ...
-S.VERSION = 0.99
+S.VERSION = "1.00"
 S.BUILD = "Release"
 
 ReadySetDing = LibStub("AceAddon-3.0"):NewAddon("ReadySetDing", "AceEvent-3.0", "AceTimer-3.0", "AceConsole-3.0")
@@ -86,8 +86,11 @@ S.events = {
 S.levelremap = {
 	ShowParty = "UNIT_LEVEL",
 	ShowRaid = "UNIT_LEVEL",
+	
 	ShowGuild = "GUILD_ROSTER_UPDATE",
 	AnnGuildMember = "GUILD_ROSTER_UPDATE",
+	GuildMemberDiff = "GUILD_ROSTER_UPDATE",
+	
 	ShowFriend = "FRIENDLIST_UPDATE",
 	ShowRealID = "BN_FRIEND_INFO_CHANGED",
 }
@@ -99,7 +102,7 @@ end
 
 -- determine if any of the GUILD_ROSTER_UPDATE options are enabled
 function S.GUILD_ROSTER_UPDATE()
-	return profile.ShowGuild or profile.AnnGuildMember
+	return profile.ShowGuild or profile.AnnGuildMember or profile.GuildMemberDiff
 end
 
 	--------------
@@ -151,7 +154,7 @@ function RSD:TimeString(v, full)
 	local fsec = format(D_SECONDS, sec)
 	local fmin = format(D_MINUTES, minute)
 	local fhour = format(D_HOURS, hour)
-	local fday =format(D_DAYS, day)
+	local fday = format(D_DAYS, day)
 	
 	if v >= 86400 then
 		return (hour > 0 or full) and format("%s, %s", fday, fhour) or fday

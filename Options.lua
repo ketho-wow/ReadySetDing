@@ -29,8 +29,8 @@ local format, gsub = format, gsub
 	--- GlobalStrings ---
 	---------------------
 
--- "[NAME] has reached level [LEVEL]!"
-local GUILD_NEWS_FORMAT6A = GUILD_NEWS_FORMAT6:gsub("%%s", "[NAME]"):gsub("%%d", "[LEVEL]")
+-- "<NAME> has reached level <LEVEL>!"
+local GUILD_NEWS_FORMAT6A = GUILD_NEWS_FORMAT6:gsub("%%s", "<NAME>"):gsub("%%d", "<LEVEL>")
 
 -- coloring
 local TIME_PLAYED_TOTAL2 = gsub(TIME_PLAYED_TOTAL, "%%s", "|cff71D5FF%%s|r")
@@ -61,10 +61,10 @@ S.defaults = {
 		NumRandomDing = 5,
 		DingMsg = {
 			L.MSG_PLAYER_DING,
-			TUTORIAL_TITLE55,
-			PLAYER_LEVEL_UP.."!",
-			"Ding! "..LEVEL.." <LEVEL>",
+			TUTORIAL_TITLE55.." <LEVEL>",
 			L.MSG_PLAYER_DING2,
+			PLAYER_LEVEL_UP.."! <LEVEL>",
+			L.MSG_PLAYER_DING3,
 		},
 		
 		ShowOutput = 2,
@@ -76,7 +76,7 @@ S.defaults = {
 		
 		LevelGraph = true,
 		FilterPlayed = true,
-		GuildMemberLevelDiff = true,
+		GuildMemberDiff = true,
 		
 		GuildAFK = true,
 		FilterLevelAchiev = true,
@@ -84,9 +84,9 @@ S.defaults = {
 		NumRandomGuild = 5,
 		GuildMsg = {
 			GUILD_NEWS_FORMAT6A,
-			"<NAME> is now "..LEVEL.." <LEVEL>!",
-			"<NAME> dinged "..LEVEL.." <LEVEL>",
-			"<NAME> leveled up to <LEVEL>!",
+			L.MSG_GUILD_DING,
+			L.MSG_GUILD_DING2,
+			L.MSG_GUILD_DING3,
 			"<NAME>: <LEVEL> [<ZONE>]",
 		},
 		
@@ -139,7 +139,7 @@ S.options = {
 					type = "group", order = 1,
 					name = "|cff3FBF3F"..SHOW.."|r",
 					inline = true,
-					set = "SetValueShow",
+					set = "SetValueEvent",
 					args = {
 						ShowParty = {
 							type = "toggle", order = 1,
@@ -279,7 +279,7 @@ S.options = {
 				Data = {
 					type = "execute", order = 6,
 					name = "|TInterface\\Icons\\INV_Misc_Note_01:16:16:1:-1"..S.crop.."|t  |cffFFFFFF"..L.DATA.."|r",
-					func = function() RSD:DataFrame() end,
+					func = "DataFrame",
 				},
 			},
 		},
@@ -441,10 +441,11 @@ S.options = {
 					end,
 					name = "|TInterface\\Icons\\Spell_Holy_Silence:16:16:1:0"..S.crop.."|t  "..L.FILTER_PLAYED_MESSAGE,
 				},
-				GuildMemberLevelDiff = {
+				GuildMemberDiff = {
 					type = "toggle", order = 8,
 					width = "full", descStyle = "",
 					name = "|TInterface\\Icons\\INV_Misc_Book_07:16:16:1:0"..S.crop.."|t  "..L.GUILDMEMBER_LEVEL_DIFF_LOGIN,
+					set = "SetValueEvent",
 				},
 			},
 		},
@@ -459,7 +460,7 @@ S.options = {
 					type = "toggle", order = 1,
 					width = "full", descStyle = "",
 					name = "|TINTERFACE\\ICONS\\achievement_guildperk_fasttrack_rank2:16:16:1:1"..S.crop.."|t  "..L.ANNOUNCE_GUILDMEMBER_LEVELUP,
-					set = "SetValueShow",
+					set = "SetValueEvent",
 				},
 				inline1 = {
 					type = "group", order = 2,
@@ -798,16 +799,17 @@ function RSD:SetValue(i, v)
 end
 
 -- refresh individual option
-function RSD:SetValueShow(i, v)
+function RSD:SetValueEvent(i, v)
 	profile[i[#i]] = v
 	
 	-- requires for example, both ShowParty and ShowRaid being disabled, in order to unregister UNIT_LEVEL
 	local event = S.levelremap[i[#i]]
 	v = S[event] and S[event]() or v
+	self[v and "RegisterEvent" or "UnregisterEvent"](self, event)
 end
 
 -- refresh all options
-function RSD:RefreshShowEvents()
+function RSD:RefreshEvents()
 	for option, event in pairs(S.levelremap) do
 		local v = S[event] and S[event]() or profile[option]
 		self[v and "RegisterEvent" or "UnregisterEvent"](self, event)
@@ -978,7 +980,7 @@ function RSD:PreviewGuild(i)
 		if not name then return ERROR_CAPS end -- sanity check
 		
 		local args = args
-		args.level = "|cffADFF2F"..((level == player.maxlevel) and level or level+1).."|r" -- fix level 86
+		args.level = "|cffADFF2F"..(level == player.maxlevel and level or level+1).."|r" -- fix level 86
 		args["level-"] = "|cffF6ADC6"..level.."|r"
 		args.realtime = "|cff71D5FF"..self:Time(random(600, 7200)).."|r"
 		args.name = "|cff71D5FF"..name.."|r"
@@ -1120,7 +1122,7 @@ function RSD:DataFrame()
 		eb:SetFontObject("ChatFontNormal")
 		
 		eb:SetScript("OnEscapePressed", function(self)
-			ReadySetDingData:Hide()
+			f:Hide()
 		end)
 		
 		sf:SetScrollChild(eb)
@@ -1151,8 +1153,8 @@ function RSD:GetData()
 	for i = 2, player.maxlevel do
 		if char.LevelTimeList[i] then
 			-- use tinsert in the (likely) case of holes in the SavedVars tables
-			tinsert(t[1], format("%s |cffF6ADC6%d|r - |cff71D5FF%d|r: |cffB6CA00%s|r - %s: |cff71D5FF%s|r",
-				LEVEL, i-1, i, RSD:Time(char.LevelTimeList[i]), L.TOTAL, RSD:Time(char.TotalTimeList[i])))
+			tinsert(t[1], format("%s |cffF6ADC6%d|r - |cff71D5FF%d|r: |cffB6CA00%s|r -- %s: |cff71D5FF%s|r",
+				LEVEL, i-1, i, self:Time(char.LevelTimeList[i]), L.TOTAL, self:Time(char.TotalTimeList[i])))
 		end
 	end
 	

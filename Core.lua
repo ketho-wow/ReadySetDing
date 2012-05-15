@@ -216,7 +216,7 @@ function RSD:RefreshDB()
 		self["SetupRandom"..v](self, profile["NumRandom"..v])
 	end
 	
-	self:RefreshShowEvents() -- register/unregister level events according to options
+	self:RefreshEvents() -- register/unregister level events according to options
 	
 	-- stopwatch (only on changing profiles; it's not yet initialized at start)
 	-- but don't hide stopwatch, we'd want a library for that lol
@@ -278,14 +278,6 @@ function RSD:PLAYER_LEVEL_UP(event, ...)
 	RequestTimePlayed() -- TIME_PLAYED_MSG
 end
 
-local LSM_Sound = LSM:HashTable(LSM.MediaType.SOUND)
-
-local instances = {
-	none = true,
-	party = true,
-	raid = true,
-}
-
 function RSD:TIME_PLAYED_MSG(event, ...)
 	-- using vargarg for file-local scope
 	S.totalTPM, S.curTPM = ...
@@ -317,9 +309,9 @@ function RSD:TIME_PLAYED_MSG(event, ...)
 			self:ScheduleTimer(function()
 				local sound
 				if profile.LibSharedMediaSound then
-					sound = LSM_Sound[profile.SoundWidget]
+					sound = LSM:HashTable(LSM.MediaType.SOUND)[profile.SoundWidget]
 				else
-					sound = profile.CustomSound == S.sounds[2] and S.sounds[random(3, #S.sounds)] or profile.CustomSound
+					sound = (profile.CustomSound == S.sounds[2]) and S.sounds[random(3, #S.sounds)] or profile.CustomSound
 				end
 				PlaySoundFile(sound, "Master")
 			end, profile.SoundDelay)
@@ -336,12 +328,9 @@ function RSD:TIME_PLAYED_MSG(event, ...)
 		local text = self:ChatDing(levelTime)
 		
 		-- Party/Raid Announce
-		local inst = select(2, IsInInstance())
 		if profile.ChatParty then
-			local chan
-			if instances[inst] then
-				chan = GetNumRaidMembers() > 0 and "RAID" or GetNumPartyMembers() > 0 and "PARTY" or "SAY"
-			elseif inst == "pvp" then
+			local chan = GetNumRaidMembers() > 0 and "RAID" or GetNumPartyMembers() > 0 and "PARTY" or "SAY"
+			if select(2, IsInInstance()) == "pvp" then
 				chan = "BATTLEGROUND"
 			end
 			self:ScheduleTimer(function()
@@ -591,7 +580,7 @@ function RSD:GUILD_ROSTER_UPDATE(event)
 					realm[name][level] = {time(), date("%Y.%m.%d %H:%M:%S")}
 				else
 					-- level changed while user was offline
-					if profile.GuildMemberLevelDiff then
+					if profile.GuildMemberDiff then
 						if not showedHeader and char.LastCheck then
 							self:Print(format("|cffF6ADC6[%s]|r - |cffADFF2F[%s]|r", char.LastCheck, date("%Y.%m.%d %H:%M:%S")))
 							showedHeader = true; char.LastCheck = nil
@@ -740,8 +729,8 @@ function RSD:Output(msg, args)
 	else
 		for i = 1, NUM_CHAT_WINDOWS do
 			if i == v-4 then
-				msg = msg or NAME..": |cff71D5FF"..i..". "..GetChatWindowInfo(i).."|r"
-				_G["ChatFrame"..i]:AddMessage(msg)
+				_G["ChatFrame"..i]:AddMessage(msg or NAME..": |cff71D5FF"..i..". "..GetChatWindowInfo(i).."|r")
+				break
 			end
 		end
 	end

@@ -220,9 +220,9 @@ function RSD:RefreshDB()
 	
 	-- stopwatch (only on changing profiles; it's not yet initialized at start)
 	-- but don't hide stopwatch, we'd want a library for that lol
-	local t = S.curTPM + time() - S.lastPlayed
-	if profile.Stopwatch and S.curTPM > 0 and S.CanUseStopwatch(t) then
-		S.StopwatchStart(t)
+	local v = S.curTPM + time() - S.lastPlayed
+	if profile.Stopwatch and S.curTPM > 0 and S.CanUseStopwatch(v) then
+		S.StopwatchStart(v)
 	end
 	
 	-- graphs
@@ -272,14 +272,13 @@ local playerDinged
 
 function RSD:PLAYER_LEVEL_UP(event, ...)
 	local level = ...
-	player.level = level -- UnitLevel is not yet updated
+	player.level = level -- on another note, UnitLevel is not yet updated
 	playerDinged = true
 	S.filterPlayed = profile.FilterPlayed and true or false
 	RequestTimePlayed() -- TIME_PLAYED_MSG
 end
 
 function RSD:TIME_PLAYED_MSG(event, ...)
-	-- using vargarg for file-local scope
 	S.totalTPM, S.curTPM = ...
 	S.lastPlayed = time()
 	
@@ -292,7 +291,7 @@ function RSD:TIME_PLAYED_MSG(event, ...)
 			-- TotalTime @ Ding - TotalTime @ previous Ding
 			levelTime = S.totalTPM - prevTime
 		else
-			-- last undinged LevelTime + (dinged TotalTime - last undinged TotalTime)
+			-- undinged LevelTime + (dinged TotalTime - undinged TotalTime)
 			levelTime = curTPM2 + (S.totalTPM - totalTPM2)
 		end
 		
@@ -566,7 +565,7 @@ function RSD:GUILD_ROSTER_UPDATE(event)
 						self:Output(profile.ShowMsg, args)
 					end
 					
-					if profile.AnnGuildMember then
+					if profile.GuildMemberDing then
 						-- filters
 						local afk = profile.GuildAFK and not UnitIsAFK("player") or not profile.GuildAFK
 						local achiev = profile.FilterLevelAchiev and not S.Levels[level] or not profile.FilterLevelAchiev

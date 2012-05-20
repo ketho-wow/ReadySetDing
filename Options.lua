@@ -456,7 +456,7 @@ S.options = {
 			get = "GetValue",
 			set = "SetValue",
 			args = {
-				AnnGuildMember = {
+				GuildMemberDing = {
 					type = "toggle", order = 1,
 					width = "full", descStyle = "",
 					name = "|TINTERFACE\\ICONS\\achievement_guildperk_fasttrack_rank2:16:16:1:1"..S.crop.."|t  "..L.ANNOUNCE_GUILDMEMBER_LEVELUP,
@@ -466,7 +466,7 @@ S.options = {
 					type = "group", order = 2,
 					name = " ",
 					inline = true,
-					disabled = function() return not profile.AnnGuildMember end,
+					disabled = function() return not profile.GuildMemberDing end,
 					args = {
 						GuildAFK = {
 							type = "toggle", order = 1,
@@ -946,7 +946,7 @@ end
 
 function RSD:PreviewDing(i)
 	local args = args
-	args.level = "|cffADFF2F"..player.level + (player.level == player.maxlevel and 0 or 1).."|r"
+	args.level = "|cffADFF2F"..(player.level == player.maxlevel and player.level or player.level + 1).."|r"
 	args["level-"] = "|cffF6ADC6"..player.level.."|r"
 	args["level#"] = "|cffF6ADC6"..player.maxlevel.."|r"
 	args["level%"] = "|cffF6ADC6"..player.maxlevel - (player.level + 1).."|r"
@@ -980,7 +980,7 @@ function RSD:PreviewGuild(i)
 		if not name then return ERROR_CAPS end -- sanity check
 		
 		local args = args
-		args.level = "|cffADFF2F"..(level == player.maxlevel and level or level+1).."|r" -- fix level 86
+		args.level = "|cffADFF2F"..(level == 85 and level or level + 1).."|r" -- fix level 86
 		args["level-"] = "|cffF6ADC6"..level.."|r"
 		args.realtime = "|cff71D5FF"..self:Time(random(600, 7200)).."|r"
 		args.name = "|cff71D5FF"..name.."|r"
@@ -1015,14 +1015,14 @@ end
 
 -- AceConfigDialog frames are created on opening
 hooksecurefunc(ACD, "Open", function(self, app)
-	if not next(char.LevelTimeList) or not profile.LevelGraph then return end
+	if not profile.LevelGraph or not next(char.LevelTimeList) then return end
 	
 	-- also gets called by Blizard Options Panel
 	if app == "ReadySetDing_Parent" and ACD.OpenFrames.ReadySetDing_Parent then
 		if not ReadySetDing_LevelGraph then
 			-- if there are multiple ACD frames shown, this seems to parent to the first one instead, when the second one is opened
 			local level = LG:CreateGraphLine("ReadySetDing_LevelGraph", ACD.OpenFrames.ReadySetDing_Parent.frame, "TOPLEFT", "TOPRIGHT", 5, -65, 0, 200)
-			local total = LG:CreateGraphLine("ReadySetDing_TotalGraph", ReadySetDing_LevelGraph, "TOPLEFT", "BOTTOMLEFT", 0, -40, 0, 200)
+			local total = LG:CreateGraphLine("ReadySetDing_TotalGraph", ReadySetDing_LevelGraph, "TOPLEFT", "BOTTOMLEFT", 0, -20, 0, 200)
 			RSD:UpdateGraph(level, total)
 			
 			-- ACD frames get "recycled", so the graphs could possibly show up next to another addon as well
@@ -1037,14 +1037,17 @@ hooksecurefunc(ACD, "Open", function(self, app)
 end)
 
 do
-	local startCoord = {0, 0}
+	-- there sometimes seems to be a bug with LibGraph if startCoord1 is reused for the second graph
+	local startCoord1 = {0, 0}
+	local startCoord2 = {0, 0}
+	
 	local levelColor = {.68, 1, .18, .7}
 	local totalColor = {.44, .84, 1, .7}
 	
 	-- maybe make graphs customizable in some way in the future
 	function RSD:UpdateGraph(level, total)
 		local XWidth = table.maxn(char.LevelTimeList) - 1
-		local XRealWidth = min(XWidth * 25, 400)
+		local XRealWidth = min(XWidth * 25, 375)
 		
 		level:SetWidth(XRealWidth)
 		total:SetWidth(XRealWidth)
@@ -1053,7 +1056,7 @@ do
 		local YTotalHeight = char.TotalTimeList[table.maxn(char.TotalTimeList)]
 		
 		local t1 = S.recycle[1]; wipe(t1)
-		t1[1] = startCoord
+		t1[1] = startCoord1
 		for i = 2, player.maxlevel do
 			local levelTime = char.LevelTimeList[i]
 			if levelTime then
@@ -1064,7 +1067,7 @@ do
 		level:AddDataSeries(t1, levelColor)
 		
 		local t2 = S.recycle[2]; wipe(t2)
-		t2[1] = startCoord
+		t2[1] = startCoord2
 		for i = 2, player.maxlevel do
 			if char.TotalTimeList[i] then
 				tinsert(t2, {i-1, char.TotalTimeList[i]})
@@ -1091,7 +1094,6 @@ function RSD:DataFrame()
 	if not ReadySetDingData then
 		local f = CreateFrame("Frame", "ReadySetDingData", UIParent, "DialogBoxFrame")
 		f:SetPoint("CENTER"); f:SetSize(600, 500)
-		f:SetMovable(true); f:EnableMouse(true)
 		
 		f:SetBackdrop({
 			bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
@@ -1101,12 +1103,12 @@ function RSD:DataFrame()
 		})
 		f:SetBackdropBorderColor(0, .44, .87, 0.5)
 		
+		f:SetMovable(true); f:EnableMouse(true)
 		f:SetScript("OnMouseDown", function(self, button)
 			if button == "LeftButton" then
 				self:StartMoving()
 			end
 		end)
-		
 		f:SetScript("OnMouseUp", function(self, button)
 			self:StopMovingOrSizing()
 		end)
@@ -1120,7 +1122,6 @@ function RSD:DataFrame()
 		eb:SetSize(540, 0)
 		eb:SetMultiLine(true)
 		eb:SetFontObject("ChatFontNormal")
-		
 		eb:SetScript("OnEscapePressed", function(self)
 			f:Hide()
 		end)
@@ -1194,9 +1195,10 @@ function RSD:GetData()
 	t[6][1] = format("# %s / %s", XP, S.HOUR)
 	for i = 2, player.maxlevel do
 		-- global.maxxp is added in v0.96
-		if char.LevelTimeList[i] and self.db.global.maxxp[i-1] then
-			local maxxp = self.db.global.maxxp[i-1]
-			local levelTime = char.LevelTimeList[i] / 3600
+		local levelTime = char.LevelTimeList[i]
+		local maxxp = self.db.global.maxxp[i-1]
+		if levelTime and maxxp then
+			levelTime = levelTime / 3600
 			tinsert(t[6], format("|cffF6ADC6%d|r-|cffB6CA00%d|r: |cffFFFF00%s|r / |cff0070DD%.2f|r = |cff71D5FF%s|r", i-1, i, maxxp, levelTime, floor(maxxp / levelTime)))
 		end
 	end

@@ -2,12 +2,16 @@ local NAME, S = ...
 local RSD = ReadySetDing
 local ACD = LibStub("AceConfigDialog-3.0")
 
+local time = time
+local floor = floor
+local format = format
+
 local L = S.L
 local player = S.player
 
-	---------------------
-	--- LibDataBroker ---
-	---------------------
+	------------
+	--- Time ---
+	------------
 
 local function MilitaryTime(v)
 	local sec = floor(v) % 60
@@ -24,6 +28,13 @@ local function MilitaryTime(v)
 	end
 end
 
+local TIME_PLAYED_LEVEL2 = gsub(TIME_PLAYED_LEVEL, "%%s", "")
+local TIME_PLAYED_TOTAL2 = gsub(TIME_PLAYED_TOTAL, "%%s", "")
+
+	------------------
+	--- Experience ---
+	------------------
+
 local function PlayerXP()
 	local curxp = UnitXP("player")
 	local maxxp = UnitXPMax("player")
@@ -36,8 +47,9 @@ local function RestedXP()
 	return format("|cffF6ADC6+%d|r / |cff71D5FF%d|r = |cffF6ADC6+%.1f%%|r", restedxp, maxxp, restedxp/maxxp * 100)
 end
 
-local TIME_PLAYED_LEVEL2 = gsub(TIME_PLAYED_LEVEL, "%%s", "")
-local TIME_PLAYED_TOTAL2 = gsub(TIME_PLAYED_TOTAL, "%%s", "")
+	---------------------
+	--- LibDataBroker ---
+	---------------------
 
 local dataobject = {
 	type = player.level < player.maxlevel and "data source" or "launcher",
@@ -46,12 +58,7 @@ local dataobject = {
 		if IsModifierKeyDown() then
 			RSD:SlashCommand(RSD:IsEnabled() and "0" or "1")
 		else
-			if ACD.OpenFrames.ReadySetDing_Parent then
-				ACD:Close("ReadySetDing_Parent")
-			else
-				ACD:Open("ReadySetDing_Parent")
-			end
-			
+			ACD[ACD.OpenFrames.ReadySetDing_Parent and "Close" or "Open"](ACD, "ReadySetDing_Parent")
 		end
 	end,
 	OnTooltipShow = function(tt)
@@ -70,10 +77,36 @@ local dataobject = {
 	end,
 }
 
+	------------
+	--- Text ---
+	------------
+
+local percent = ""
+
+local function DataText()
+	dataobject.text = format("%s - |cffFFFFFF%.1f%%|r", MilitaryTime(S.curTPM + time() - S.lastPlayed), percent)
+end
+
+	------------------
+	--- Percentage ---
+	------------------
+
+local function OnEvent(self, event, ...)
+	percent = UnitXP("player") / UnitXPMax("player") * 100
+	DataText() -- don't wait for timer to update
+end
+
+local f = CreateFrame("Frame")
+f:RegisterEvent("PLAYER_ENTERING_WORLD")
+f:RegisterEvent("PLAYER_XP_UPDATE")
+f:SetScript("OnEvent", OnEvent)
+
+	-------------
+	--- Timer ---
+	-------------
+
 if player.level < player.maxlevel then
-	RSD:ScheduleRepeatingTimer(function()
-		dataobject.text = MilitaryTime(S.curTPM + time() - S.lastPlayed)
-	end, 1)
+	RSD:ScheduleRepeatingTimer(DataText, 1)
 else
 	dataobject.text = NAME
 end

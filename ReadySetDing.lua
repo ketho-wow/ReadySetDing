@@ -2,7 +2,7 @@
 --- Author: Ketho (EU-Boulderfist)		---
 --- License: Public Domain				---
 --- Created: 2009.09.01					---
---- Version: 1.00 [2012.05.12]			---
+--- Version: 1.01 [2012.05.20]			---
 -------------------------------------------
 --- Curse			http://www.curse.com/addons/wow/readysetding
 --- WoWInterface	http://www.wowinterface.com/downloads/info16220-ReadySetDing.html
@@ -13,11 +13,12 @@
 -- custom achievements; use custom achiev lib
 
 local NAME, S = ...
-S.VERSION = "1.00"
+S.VERSION = 1.01
 S.BUILD = "Release"
 
 ReadySetDing = LibStub("AceAddon-3.0"):NewAddon("ReadySetDing", "AceEvent-3.0", "AceTimer-3.0", "AceConsole-3.0")
 local RSD = ReadySetDing
+RSD.S = S -- make S accessible through ReadySetDing for debug purpose
 
 local ACR = LibStub("AceConfigRegistry-3.0")
 local ACD = LibStub("AceConfigDialog-3.0")
@@ -88,7 +89,7 @@ S.levelremap = {
 	ShowRaid = "UNIT_LEVEL",
 	
 	ShowGuild = "GUILD_ROSTER_UPDATE",
-	AnnGuildMember = "GUILD_ROSTER_UPDATE",
+	GuildMemberDing = "GUILD_ROSTER_UPDATE",
 	GuildMemberDiff = "GUILD_ROSTER_UPDATE",
 	
 	ShowFriend = "FRIENDLIST_UPDATE",
@@ -102,7 +103,7 @@ end
 
 -- determine if any of the GUILD_ROSTER_UPDATE options are enabled
 function S.GUILD_ROSTER_UPDATE()
-	return profile.ShowGuild or profile.AnnGuildMember or profile.GuildMemberDiff
+	return profile.ShowGuild or profile.GuildMemberDing or profile.GuildMemberDiff
 end
 
 	--------------
@@ -130,6 +131,7 @@ function RSD:SecondsTime(v)
 	return SecondsToTime(v, profile.TimeOmitSec, not profile.TimeAbbrev, profile.TimeMaxCount)
 end
 
+-- not capitalized
 local D_SECONDS = strlower(D_SECONDS)
 local D_MINUTES = strlower(D_MINUTES)
 local D_HOURS = strlower(D_HOURS)
@@ -170,15 +172,15 @@ function RSD:TimeString(v, full)
 end
 
 function RSD:Time(v)
-	local t
+	local s
 	if profile.LegacyTime then
-		t = self:TimeString(v, not profile.TimeOmitZero)
+		s = self:TimeString(v, not profile.TimeOmitZero)
 	else
-		t = self:SecondsTime(v)
-		t = profile.TimeLowerCase and t:lower() or t
+		s = self:SecondsTime(v)
+		s = profile.TimeLowerCase and s:lower() or s
 	end
 	-- sanitize for SendChatMessage by removing any pipe characters
-	return b:GetText(b:SetText(t)) or ""
+	return b:GetText(b:SetText(s)) or ""
 end
 
 -- singular hour
@@ -223,7 +225,7 @@ function S.StopwatchEnd()
 end
 
 function S.CanUseStopwatch(v)
-	return S.player.level < 85 and v < MAX_TIMER_SEC
+	return player.level < player.maxlevel and v < MAX_TIMER_SEC
 end
 
 	--------------
@@ -317,21 +319,6 @@ do
 	end
 	
 	S.RaidTargetIcons = strjoin("\n", unpack(t))
-end
-
-	----------------------
-	--- Filter /played ---
-	----------------------
-
-local oldChatFrame_DisplayTimePlayed = ChatFrame_DisplayTimePlayed
-
-function ChatFrame_DisplayTimePlayed(...)
-	-- using /played manually should still work, including when it's called by other addons
-	-- when filterPlayed is true it will just only filter the next upcoming /played message
-	if not S.filterPlayed then
-		oldChatFrame_DisplayTimePlayed(...)
-	end
-	S.filterPlayed = false
 end
 
 	--------------------
@@ -468,3 +455,18 @@ function RSD:LevelSpeed(d)
 	return levelTime[player.level] and levelTime[player.level] + S.curTPM + time() - S.lastPlayed or L.NO_DATA
 end
 ]]
+
+	----------------------
+	--- Filter /played ---
+	----------------------
+
+local old = ChatFrame_DisplayTimePlayed
+
+function ChatFrame_DisplayTimePlayed(...)
+	-- using /played manually should still work, including when it's called by other addons
+	-- when filterPlayed is true it will just only filter the next upcoming /played message
+	if not S.filterPlayed then
+		old(...)
+	end
+	S.filterPlayed = false
+end

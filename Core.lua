@@ -627,10 +627,9 @@ function RSD:FRIENDLIST_UPDATE(event)
 			local name, level, class = GetFriendInfo(i)
 			if name then -- name is sometimes nil
 				if friend[name] and level > friend[name] then
-					local classIcon = S.GetClassIcon(S.revLOCALIZED_CLASS_NAMES[class], 1, 1)
-					args.icon = (profile.IconSize > 1 and not isChat) and classIcon or ""
+					args.icon = S.GetClassIcon(S.revLOCALIZED_CLASS_NAMES[class], 1, 1)
 					args.chan = chan
-					args.name = (not isChat) and format("|cff%s|Hplayer:%s|h%s|h|r", S.classCache[S.revLOCALIZED_CLASS_NAMES[class]], name, name) or name
+					args.name = format("|cff%s|Hplayer:%s|h%s|h|r", S.classCache[S.revLOCALIZED_CLASS_NAMES[class]], name, name)
 					args.level = "|cffADFF2F"..level.."|r"
 					self:Output(profile.ShowMsg, args)
 				end
@@ -662,8 +661,7 @@ function RSD:BN_FRIEND_INFO_CHANGED(event)
 			if client == BNET_CLIENT_WOW then
 				level = tonumber(level) -- why is level a string type
 				if toonName and bnet[toonName] and bnet[toonName] > 0 and level and level > bnet[toonName] then
-					local classIcon = S.GetClassIcon(S.revLOCALIZED_CLASS_NAMES[class], 1, 1)
-					args.icon = (profile.IconSize > 1 and not isChat) and classIcon or ""
+					args.icon = S.GetClassIcon(S.revLOCALIZED_CLASS_NAMES[class], 1, 1)
 					
 					args.chan = chan
 					
@@ -715,11 +713,13 @@ local sinks = {
 
 function RSD:Output(msg, args)
 	local v = profile.ShowOutput
-	msg = msg and self:ReplaceArgs(msg, args) or sinks[v] -- fallback to example
+	msg = msg and self:ReplaceArgs(msg, args) or sinks[v] -- fallback to example; does not include chat windows
 	
 	if v == 1 then
 		CombatText_AddMessage(msg, COMBAT_TEXT_SCROLL_FUNCTION, 1, 1, 1)
 	elseif v == 2 then
+		-- RaidWarningFrame / RaidBossEmoteFrame shows max 2 messages at the same time
+		-- they're called "slots" as in "RaidWarningFrameSlot1"
 		RaidNotice_AddMessage(RaidWarningFrame, msg, {r=1, g=1, b=1})
 	elseif v == 3 then
 		RaidNotice_AddMessage(RaidBossEmoteFrame, msg, {r=1, g=1, b=1})
@@ -728,7 +728,7 @@ function RSD:Output(msg, args)
 	else
 		for i = 1, NUM_CHAT_WINDOWS do
 			if i == v-4 then
-				_G["ChatFrame"..i]:AddMessage(msg or NAME..": |cff71D5FF"..i..". "..GetChatWindowInfo(i).."|r")
+				_G["ChatFrame"..i]:AddMessage(msg or (NAME..": |cff71D5FF"..i..". "..GetChatWindowInfo(i).."|r"))
 				break
 			end
 		end

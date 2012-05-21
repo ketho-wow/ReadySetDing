@@ -493,7 +493,7 @@ S.options = {
 							descStyle = "",
 							name = " "..L.MINIMUM_LEVEL_FILTER,
 							min = 2,
-							max = 85,
+							max = MAX_PLAYER_LEVEL_TABLE[#MAX_PLAYER_LEVEL_TABLE],
 							step = 1,
 						},
 						NumRandomGuild = {

@@ -203,15 +203,12 @@ S.options = {
 							type = "toggle", order = 2,
 							descStyle = "",
 							name = function()
-								local emblem
 								if IsInGuild() and GuildFrameTabardEmblem and time() > (cd.emblem or 0) then
 									cd.emblem = time() + 60
-									char.GuildEmblem = {GuildFrameTabardEmblem:GetTexCoord()}
-									emblem = format("|TInterface\\GuildFrame\\GuildEmblemsLG_01:30:30:-3:1:32:32:%s:%s:%s:%s|t", char.guildTexCoord[1]*32, char.guildTexCoord[7]*32, char.guildTexCoord[2]*32, char.guildTexCoord[8]*32)
-								else
-									emblem = "|TInterface\\GuildFrame\\GuildLogo-NoLogo:30:30:-3:1|t"
+									local emblem = {GuildFrameTabardEmblem:GetTexCoord()}
+									char.GuildEmblem = format("|TInterface\\GuildFrame\\GuildEmblemsLG_01:30:30:-3:1:32:32:%s:%s:%s:%s|t", emblem[1]*32, emblem[7]*32, emblem[2]*32, emblem[8]*32)
 								end
-								return emblem.."|cff40FF40"..GUILD.."|r"
+								return (char.GuildEmblem or "|TInterface\\GuildFrame\\GuildLogo-NoLogo:30:30:-3:1|t").."|cff40FF40"..GUILD.."|r"
 							end,
 						},
 						DingRandom = {
@@ -928,7 +925,7 @@ function RSD:ValidateLength(msg)
 	-- my patterns. just. suck. ><
 	local msg = self:ReplaceArgs(msg, args)
 	msg = msg:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
-	msg = msg:gsub("|T.-|t", "{rtN}")
+	msg = msg:gsub("|T.-|t", "{rtN}") -- maybe in the future pass the message without the raid targets preview
 	
 	-- notify if message length exceeds 127 or 255 chars
 	local len = strlen(msg)-2 -- account for the two prepending blank spaces in preview

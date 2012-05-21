@@ -203,12 +203,16 @@ S.options = {
 							type = "toggle", order = 2,
 							descStyle = "",
 							name = function()
-								if IsInGuild() and GuildFrameTabardEmblem and time() > (cd.emblem or 0) then
-									cd.emblem = time() + 60
-									local emblem = {GuildFrameTabardEmblem:GetTexCoord()}
-									char.GuildEmblem = format("|TInterface\\GuildFrame\\GuildEmblemsLG_01:30:30:-3:1:32:32:%s:%s:%s:%s|t", emblem[1]*32, emblem[7]*32, emblem[2]*32, emblem[8]*32)
+								if IsInGuild() and GuildFrameTabardEmblem then
+									if time() > (cd.emblem or 0) then
+										cd.emblem = time() + 60
+										local emblem = {GuildFrameTabardEmblem:GetTexCoord()}
+										char.GuildEmblem = format("|TInterface\\GuildFrame\\GuildEmblemsLG_01:32:32:-2:3:32:32:%s:%s:%s:%s|t", emblem[1]*32, emblem[7]*32, emblem[2]*32, emblem[8]*32)
+									end
+								else
+									char.GuildEmblem = "|TInterface\\GuildFrame\\GuildLogo-NoLogo:32:32:-2:3|t"
 								end
-								return (char.GuildEmblem or "|TInterface\\GuildFrame\\GuildLogo-NoLogo:30:30:-3:1|t").."|cff40FF40"..GUILD.."|r"
+								return char.GuildEmblem.."|cff40FF40"..GUILD.."|r"
 							end,
 						},
 						DingRandom = {
@@ -224,7 +228,7 @@ S.options = {
 						ChatBroadcast = {
 							type = "toggle", order = 5,
 							desc = BN_BROADCAST_TOOLTIP,
-							name = "|TInterface\\FriendsFrame\\PlusManz-BattleNet:24|t  |cff82C5FF"..BATTLENET_FRIEND.."|r",
+							name = "|TInterface\\FriendsFrame\\PlusManz-BattleNet:24:24:1:1|t  |cff82C5FF"..BATTLENET_FRIEND.."|r",
 						},
 						NumRandomDing = {
 							type = "range", order = 6,

@@ -727,23 +727,22 @@ S.options = {
 						SoundWidget = {
 							type = "select", order = 1,
 							descStyle = "",
-							values = LSM:HashTable("sound"),
+							values = LSM:HashTable(LSM.MediaType.SOUND),
 							dialogControl = "LSM30_Sound",
 							name = "",
 							hidden = function() return not profile.LibSharedMediaSound end,
 						},
 						CustomSound = {
 							type = "input", order = 2,
-							width = "full",
-							desc = "|cffFF0000Note:|r Client Restart is required for loading custom sound files",
-							name = "   "..L.SOUND_PATH,
+							width = "full", descStyle = "",
+							name = "",
 							set = function(i, v) profile.CustomSound = (strtrim(v) == "") and defaults.profile.CustomSound or v end,
 							hidden = function() return profile.LibSharedMediaSound end,
 						},
 						ExampleSound = {
 							type = "select", order = 3,
 							width = "full", descStyle = "",
-							name = "   "..L.EXAMPLES,
+							name = "",
 							values = S.sounds,
 							set = function(i, v)
 								profile.ExampleSound = v

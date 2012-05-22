@@ -1,5 +1,5 @@
 ## Interface: 40300
-## Version: 1.04
+## Version: 1.05alpha1
 ## Title: ReadySetDing
 ## Notes: Ding!
 ## Author: Ketho @ EU-Boulderfist

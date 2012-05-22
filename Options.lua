@@ -61,10 +61,10 @@ S.defaults = {
 		NumRandomDing = 5,
 		DingMsg = {
 			L.MSG_PLAYER_DING,
-			TUTORIAL_TITLE55.." <LEVEL>",
 			L.MSG_PLAYER_DING2,
-			PLAYER_LEVEL_UP.."! <LEVEL>",
 			L.MSG_PLAYER_DING3,
+			TUTORIAL_TITLE55.." <LEVEL>",
+			PLAYER_LEVEL_UP.."! <LEVEL>",
 		},
 		
 		ShowOutput = 2,
@@ -87,7 +87,7 @@ S.defaults = {
 			L.MSG_GUILD_DING,
 			L.MSG_GUILD_DING2,
 			L.MSG_GUILD_DING3,
-			"<NAME>: <LEVEL> [<ZONE>]",
+			"<NAME>: "..LEVEL.." <LEVEL> [<ZONE>]",
 		},
 		
 		GratzAFK = true,
@@ -445,7 +445,7 @@ S.options = {
 				GuildMemberDiff = {
 					type = "toggle", order = 8,
 					width = "full", descStyle = "",
-					name = "|TInterface\\Icons\\INV_Misc_Book_07:16:16:1:0"..S.crop.."|t  "..L.GUILDMEMBER_LEVEL_DIFF_LOGIN,
+					name = "|TInterface\\Icons\\INV_Misc_Book_07:16:16:1:0"..S.crop.."|t  "..L.GUILDMEMBER_LEVEL_DIFF,
 					set = "SetValueEvent",
 				},
 			},

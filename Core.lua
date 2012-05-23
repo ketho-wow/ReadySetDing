@@ -11,7 +11,7 @@ local player = S.player
 local cd = S.cd
 local args = S.args
 
-local profile, realm, char, stats
+local profile, realm, char
 
 S.lastPlayed = time()
 S.totalTPM, S.curTPM = 0, 0
@@ -115,6 +115,11 @@ function RSD:OnInitialize()
 		char.levelSummary = nil
 		char.experienceList = nil
 	end
+	
+	-- renamed/removed in v1.05
+	if char.stats then
+		char.stats = nil
+	end
 end
 
 local f = CreateFrame("Frame")
@@ -199,12 +204,9 @@ function RSD:RefreshDB()
 	realm = self.db.realm
 	
 	-- character specific
-	char.stats = char.stats or {}
-	stats = char.stats
-	
-	stats.timeAFK = stats.timeAFK or 0
-	stats.totalAFK = stats.totalAFK or 0
-	stats.death = stats.death or 0
+	char.timeAFK = char.timeAFK or 0
+	char.totalAFK = char.totalAFK or 0
+	char.death = char.death or 0
 	
 	-- update table references in other files
 	for i = 1, 3 do
@@ -412,7 +414,7 @@ function RSD:TIME_PLAYED_MSG(event, ...)
 		end
 		
 		-- reset current level specific data
-		stats.timeAFK, stats.death = 0, 0
+		char.timeAFK, char.death = 0, 0
 		
 	--------------
 	--- Graphs ---
@@ -458,9 +460,9 @@ function RSD:ChatDing(levelTime)
 	args.total = self:Time(S.totalTPM)
 	args.date = date("%Y.%m.%d %H:%M:%S")
 	args.date2 = date("%m/%d/%y %H:%M:%S")
-	args.afk = self:Time(stats.timeAFK)
-	args["afk+"] = self:Time(stats.totalAFK)
-	args.death = stats.death
+	args.afk = self:Time(char.timeAFK)
+	args["afk+"] = self:Time(char.totalAFK)
+	args.death = char.death
 	args["death+"] = self:AchievStat("death")
 	args.quest = self:AchievStat("quest")
 	args.rt = "{rt"..random(8).."}"

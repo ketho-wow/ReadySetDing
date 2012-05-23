@@ -2,7 +2,7 @@
 --- Author: Ketho (EU-Boulderfist)		---
 --- License: Public Domain				---
 --- Created: 2009.09.01					---
---- Version: 1.04.2 [2012.05.22]		---
+--- Version: 1.05 [2012.05.22]			---
 -------------------------------------------
 --- Curse			http://www.curse.com/addons/wow/readysetding
 --- WoWInterface	http://www.wowinterface.com/downloads/info16220-ReadySetDing.html
@@ -13,8 +13,8 @@
 -- custom achievements; use custom achiev lib
 
 local NAME, S = ...
-S.VERSION = "1.04.2"
-S.BUILD = "Alpha"
+S.VERSION = 1.05
+S.BUILD = "Release"
 
 ReadySetDing = LibStub("AceAddon-3.0"):NewAddon("ReadySetDing", "AceEvent-3.0", "AceTimer-3.0", "AceConsole-3.0")
 local RSD = ReadySetDing
@@ -25,13 +25,12 @@ local ACD = LibStub("AceConfigDialog-3.0")
 
 local L = S.L
 
-local profile, realm, char, stats
+local profile, realm, char
 
 function RSD:RefreshDB1()
 	profile = self.db.profile
 	realm = self.db.realm
 	char = self.db.char
-	stats = char.stats
 end
 
 S.crop = ":64:64:4:60:4:60"

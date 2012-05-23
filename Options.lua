@@ -11,13 +11,12 @@ local player = S.player
 local legend = S.legend
 local args = S.args
 
-local profile, realm, char, stats
+local profile, realm, char
 
 function RSD:RefreshDB2()
 	profile = self.db.profile
 	realm = self.db.realm
 	char = self.db.char
-	stats = char.stats
 end
 
 local time = time
@@ -954,9 +953,9 @@ function RSD:PreviewDing(i)
 	args.total = "|cff71D5FF"..self:Time(S.totalTPM + time() - S.lastPlayed).."|r"
 	args.date = "|cff0070DD"..date("%Y.%m.%d %H:%M:%S").."|r"
 	args.date2 = "|cff0070DD"..date("%m/%d/%y %H:%M:%S").."|r"
-	args.afk = "|cffFFFF00"..self:Time(stats.timeAFK).."|r"
-	args["afk+"] = "|cffFFFF00"..self:Time(stats.totalAFK).."|r"
-	args.death = "|cffFF0000"..stats.death.."|r"
+	args.afk = "|cffFFFF00"..self:Time(char.timeAFK).."|r"
+	args["afk+"] = "|cffFFFF00"..self:Time(char.totalAFK).."|r"
+	args.death = "|cffFF0000"..char.death.."|r"
 	args["death+"] = "|cffFF0000"..self:AchievStat("death").."|r"
 	args.quest = "|cff58ACFA"..self:AchievStat("quest").."|r"
 	args.rt = "|T"..S.RT..random(8)..":16:16:0:3|t"

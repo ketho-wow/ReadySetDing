@@ -6,13 +6,12 @@ local legend = S.legend
 local cd = S.cd
 local args = S.args
 
-local profile, realm, char, stats
+local profile, realm, char
 
 function RSD:RefreshDB3()
 	profile = self.db.profile
 	realm = self.db.realm
 	char = self.db.char
-	stats = char.stats
 end
 
 local time = time
@@ -318,8 +317,8 @@ end
 local afk
 
 local function LeaveAFK()
-	stats.timeAFK = stats.timeAFK + (time() - afk)
-	stats.totalAFK = stats.totalAFK + (time() - afk)
+	char.timeAFK = char.timeAFK + (time() - afk)
+	char.totalAFK = char.totalAFK + (time() - afk)
 end
 
 local MARKED_AFK_MESSAGE = gsub(MARKED_AFK_MESSAGE, "%%s", ".+")
@@ -346,5 +345,5 @@ end
 	--------------
 
 function RSD:PLAYER_DEAD(event)
-	stats.death = stats.death + 1
+	char.death = char.death + 1
 end

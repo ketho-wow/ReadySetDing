@@ -64,10 +64,16 @@ function RSD:OnInitialize()
 	end
 	
 	options.args.profiles = LibStub("AceDBOptions-3.0"):GetOptionsTable(self.db)
-	options.args.profiles.order = 6
-	options.args.profiles.name = "|TInterface\\Icons\\INV_Misc_Note_01:16:16:-2:-1"..S.crop.."|t "..options.args.profiles.name
-	ACR:RegisterOptionsTable("ReadySetDing_Profiles", options.args.profiles)
-	ACD:AddToBlizOptions("ReadySetDing_Profiles", options.args.profiles.name, NAME)
+	local profiles = options.args.profiles
+	profiles.order = 6
+	profiles.name = "|TInterface\\Icons\\INV_Misc_Note_01:16:16:-2:-1"..S.crop.."|t "..profiles.name
+	ACR:RegisterOptionsTable("ReadySetDing_Profiles", profiles)
+	ACD:AddToBlizOptions("ReadySetDing_Profiles", profiles.name, NAME)
+	
+	-- add extra stuff into profiles tab
+	profiles.args.ReadySet7 = {type = "description", order = -2, name = "\n\n\n|TInterface\\AddOns\\ReadySetDing\\Images\\ReadySet7:32:128:9:-3|t"}
+	profiles.args.Windows7Awesome = {type = "description", order = -1,
+		name = " |TInterface\\AddOns\\ReadySetDing\\Images\\Windows7_Logo:64:64:0:0|t    |TInterface\\AddOns\\ReadySetDing\\Images\\Awesome:64:64:0:0|t"}
 	
 	for _, v in ipairs(slashCmds) do
 		self:RegisterChatCommand(v, "SlashCommand")
@@ -82,6 +88,11 @@ function RSD:OnInitialize()
 	char.DateStampList = char.DateStampList or {}
 	char.UnixTimeList = char.UnixTimeList or {}
 	self.db.global.maxxp = self.db.global.maxxp or {}
+	
+	-- character specific
+	char.timeAFK = char.timeAFK or 0
+	char.totalAFK = char.totalAFK or 0
+	char.death = char.death or 0
 	
 	-- level 1 init
 	if player.level == 1 then
@@ -202,12 +213,7 @@ function RSD:RefreshDB()
 	profile = self.db.profile
 	char = self.db.char
 	realm = self.db.realm
-	
-	-- character specific
-	char.timeAFK = char.timeAFK or 0
-	char.totalAFK = char.totalAFK or 0
-	char.death = char.death or 0
-	
+		
 	-- update table references in other files
 	for i = 1, 3 do
 		self["RefreshDB"..i](self)
@@ -558,7 +564,7 @@ function RSD:GUILD_ROSTER_UPDATE(event)
 					args.name = format("|cff%s|Hplayer:%s|h%s|h|r", S.classCache[englishClass], name, name)
 					args.level = "|cffADFF2F"..level.."|r"
 					-- hidden args
-					args.class = class
+					args.class = "|cff"..S.classCache[englishClass]..class.."|r"
 					args.rank = rank
 					args.zone = zone
 					args.realtime = realtime
@@ -603,11 +609,13 @@ function RSD:ChatGuild(name, level, class, rank, zone, realtime)
 	local args = args
 	args.level = level
 	args["level-"] = level - 1
-	args.realtime = self:Time(realtime)
+	args["level#"] = S.maxlevel
+	args["level%"] = S.maxlevel - level
 	args.name = name
 	args.class = class
 	args.rank = rank
 	args.zone = zone or ""
+	args.realtime = self:Time(realtime)
 	args.rt = "{rt"..random(8).."}"
 	
 	local msg = profile.GuildRandom and profile.GuildMsg[random(profile.NumRandomGuild)] or profile.GuildMsg[1]
@@ -678,60 +686,6 @@ function RSD:BN_FRIEND_INFO_CHANGED(event)
 					self:Output(profile.ShowMsg, args)
 				end
 				bnet[toonName] = level
-			end
-		end
-	end
-end
-
-	--------------
-	--- Output ---
-	--------------
-
-function RSD:ReplaceArgs(msg, args)
-	-- new random messages init as nil
-	if not msg then return "" end
-	
-	for k in gmatch(msg, "%b<>") do
-		-- remove <>, make case insensitive
-		local s = strlower(gsub(k, "[<>]", ""))
-		
-		-- escape special characters
-		-- a maybe better alternative to %p is "[%%%.%-%+%?%*%^%$%(%)%[%]%{%}]"
-		s = gsub(args[s] or s, "(%p)", "%%%1")
-		k = gsub(k, "(%p)", "%%%1")
-		
-		msg = msg:gsub(k, s)
-	end
-	wipe(args)
-	return msg
-end
-
-local sinks = {
-	COMBAT_TEXT_LABEL,
-	"RaidWarningFrame",
-	"RaidBossEmoteFrame",
-	"UIErrorsFrame",
-}
-
-function RSD:Output(msg, args)
-	local v = profile.ShowOutput
-	msg = msg and self:ReplaceArgs(msg, args) or sinks[v] -- fallback to example; does not include chat windows
-	
-	if v == 1 then
-		CombatText_AddMessage(msg, COMBAT_TEXT_SCROLL_FUNCTION, 1, 1, 1)
-	elseif v == 2 then
-		-- RaidWarningFrame / RaidBossEmoteFrame shows max 2 messages at the same time
-		-- they're called "slots" as in "RaidWarningFrameSlot1"
-		RaidNotice_AddMessage(RaidWarningFrame, msg, {r=1, g=1, b=1})
-	elseif v == 3 then
-		RaidNotice_AddMessage(RaidBossEmoteFrame, msg, {r=1, g=1, b=1})
-	elseif v == 4 then
-		UIErrorsFrame:AddMessage(msg)
-	else
-		for i = 1, NUM_CHAT_WINDOWS do
-			if i == v-4 then
-				_G["ChatFrame"..i]:AddMessage(msg or (NAME..": |cff71D5FF"..i..". "..GetChatWindowInfo(i).."|r"))
-				break
 			end
 		end
 	end

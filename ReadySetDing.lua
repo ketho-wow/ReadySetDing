@@ -2,7 +2,7 @@
 --- Author: Ketho (EU-Boulderfist)		---
 --- License: Public Domain				---
 --- Created: 2009.09.01					---
---- Version: 1.05 [2012.05.22]			---
+--- Version: 1.06 [2012.05.29]			---
 -------------------------------------------
 --- Curse			http://www.curse.com/addons/wow/readysetding
 --- WoWInterface	http://www.wowinterface.com/downloads/info16220-ReadySetDing.html
@@ -13,12 +13,12 @@
 -- custom achievements; use custom achiev lib
 
 local NAME, S = ...
-S.VERSION = 1.05
+S.VERSION = 1.06
 S.BUILD = "Release"
 
 ReadySetDing = LibStub("AceAddon-3.0"):NewAddon("ReadySetDing", "AceEvent-3.0", "AceTimer-3.0", "AceConsole-3.0")
 local RSD = ReadySetDing
-RSD.S = S -- make S accessible through ReadySetDing for debug purpose
+RSD.S = S -- debug purpose
 
 local ACR = LibStub("AceConfigRegistry-3.0")
 local ACD = LibStub("AceConfigDialog-3.0")
@@ -122,68 +122,72 @@ S.player = {
 }
 local player = S.player
 
+S.maxlevel = MAX_PLAYER_LEVEL_TABLE[#MAX_PLAYER_LEVEL_TABLE]
+
 	------------
 	--- Time ---
 	------------
 
-function RSD:SecondsTime(v)
-	return SecondsToTime(v, profile.TimeOmitSec, not profile.TimeAbbrev, profile.TimeMaxCount)
-end
-
--- not capitalized
-local D_SECONDS = strlower(D_SECONDS)
-local D_MINUTES = strlower(D_MINUTES)
-local D_HOURS = strlower(D_HOURS)
-local D_DAYS = strlower(D_DAYS)
-
--- exception for German capitalization
-if GetLocale() == "deDE" then
-	D_SECONDS = _G.D_SECONDS
-	D_MINUTES = _G.D_MINUTES
-	D_HOURS = _G.D_HOURS
-	D_DAYS = _G.D_DAYS
-end
-
-local b = CreateFrame("Button")
-
-function RSD:TimeString(v, full)
-	local sec = floor(v) % 60
-	local minute = floor(v/60) % 60
-	local hour = floor(v/3600) % 24
-	local day = floor(v/86400)
-	
-	local fsec = format(D_SECONDS, sec)
-	local fmin = format(D_MINUTES, minute)
-	local fhour = format(D_HOURS, hour)
-	local fday = format(D_DAYS, day)
-	
-	if v >= 86400 then
-		return (hour > 0 or full) and format("%s, %s", fday, fhour) or fday
-	elseif v >= 3600 then
-		return (minute > 0 or full) and format("%s, %s", fhour, fmin) or fhour
-	elseif v >= 60 then
-		return (sec > 0 or full) and format("%s, %s", fmin, fsec) or fmin
-	elseif v >= 0 then
-		return fsec
-	else
-		return v
+do
+	function RSD:SecondsTime(v)
+		return SecondsToTime(v, profile.TimeOmitSec, not profile.TimeAbbrev, profile.TimeMaxCount)
 	end
-end
-
-function RSD:Time(v)
-	local s
-	if profile.LegacyTime then
-		s = self:TimeString(v, not profile.TimeOmitZero)
-	else
-		s = self:SecondsTime(v)
-		s = profile.TimeLowerCase and s:lower() or s
+	
+	-- not capitalized
+	local D_SECONDS = strlower(D_SECONDS)
+	local D_MINUTES = strlower(D_MINUTES)
+	local D_HOURS = strlower(D_HOURS)
+	local D_DAYS = strlower(D_DAYS)
+	
+	-- exception for German capitalization
+	if GetLocale() == "deDE" then
+		D_SECONDS = _G.D_SECONDS
+		D_MINUTES = _G.D_MINUTES
+		D_HOURS = _G.D_HOURS
+		D_DAYS = _G.D_DAYS
 	end
-	-- sanitize for SendChatMessage by removing any pipe characters
-	return b:GetText(b:SetText(s)) or ""
+	
+	function RSD:TimeString(v, full)
+		local sec = floor(v) % 60
+		local minute = floor(v/60) % 60
+		local hour = floor(v/3600) % 24
+		local day = floor(v/86400)
+		
+		local fsec = format(D_SECONDS, sec)
+		local fmin = format(D_MINUTES, minute)
+		local fhour = format(D_HOURS, hour)
+		local fday = format(D_DAYS, day)
+		
+		if v >= 86400 then
+			return (hour > 0 or full) and format("%s, %s", fday, fhour) or fday
+		elseif v >= 3600 then
+			return (minute > 0 or full) and format("%s, %s", fhour, fmin) or fhour
+		elseif v >= 60 then
+			return (sec > 0 or full) and format("%s, %s", fmin, fsec) or fmin
+		elseif v >= 0 then
+			return fsec
+		else
+			return v
+		end
+	end
+	
+	local b = CreateFrame("Button")
+	
+	function RSD:Time(v)
+		local s
+		if profile.LegacyTime then
+			s = self:TimeString(v, not profile.TimeOmitZero)
+		else
+			s = self:SecondsTime(v)
+			s = profile.TimeLowerCase and s:lower() or s
+		end
+		-- sanitize for SendChatMessage by removing any pipe characters
+		return b:GetText(b:SetText(s)) or ""
+	end
+	
+	-- singular hour
+	S.HOUR = gsub(b:GetText(b:SetFormattedText(_G.D_HOURS, 1)), "1 ", "")
 end
-
--- singular hour
-S.HOUR = gsub(b:GetText(b:SetFormattedText(_G.D_HOURS, 1)), "1 ", "")
 
 	---------------------------
 	--- Time Format Example ---
@@ -191,15 +195,13 @@ S.HOUR = gsub(b:GetText(b:SetFormattedText(_G.D_HOURS, 1)), "1 ", "")
 
 do
 	local tday, thour, tmin, tsec = random(9), random(23), random(59), random(59)
-
+	
 	S.TimeUnits = {
 		60*tmin,
 		60*tmin + tsec,
 		3600*thour + 60*tmin + tsec,
 		86400*tday + 3600*thour + 60*tmin + tsec,
 	}
-	
-	S.LegacyTime = S.TimeUnits[2]
 	
 	S.TimeOmitZero = 3600*thour
 end
@@ -225,65 +227,6 @@ end
 
 function S.CanUseStopwatch(v)
 	return player.level < player.maxlevel and v < MAX_TIMER_SEC
-end
-
-	--------------
-	--- Sounds ---
-	--------------
-
-S.sounds = {
-	"Interface\\AddOns\\ReadySetDing\\Sounds\\mysound.mp3",
-	"|cffF6ADC6Random|r",
-	"Sound\\Interface\\LevelUp.ogg",
-	"sound\\INTERFACE\\UI_GuildLevelUp.ogg",
-	"Sound\\Interface\\iQuestComplete.ogg",
-	"Sound\\Spells\\AchievmentSound1.ogg",
-	"Sound\\Spells\\Resurrection.ogg",
-	"Sound\\Doodad\\BellTollAlliance.ogg",
-	"sound\\CREATURE\\MANDOKIR\\VO_ZG2_MANDOKIR_LEVELUP_EVENT_01.ogg",
-	"sound\\CREATURE\\JINDO\\VO_ZG2_JINDO_MANDOKIR_LEVELS_UP_01.ogg",
-	"Sound\\character\\BloodElf\\BloodElfFemaleCongratulations02.ogg",
-	"Sound\\character\\Human\\HumanVocalFemale\\HumanFemaleCongratulations01.ogg",
-	"Sound\\character\\NightElf\\NightElfVocalFemale\\NightElfFemaleCongratulations01.ogg",
-	"Sound\\Character\\BloodElf\\BloodElfFemaleFlirt02.ogg",
-	"Sound\\Creature\\Paletress\\AC_Paletress_Death01.ogg",
-	"Sound\\character\\Orc\\OrcVocalMale\\OrcMaleCheer01.ogg",
-	"Sound\\creature\\Peon\\PeonPissed3.ogg",
-	"Sound\\creature\\HoodWolf\\HoodWolfTransformPlayer01.ogg",
-	"Sound\\creature\\Illidan\\BLACK_Illidan_04.ogg",
-	"Sound\\creature\\LichKing\\IC_Lich King_FMAttack01.ogg",
-	"sound\\CREATURE\\Deathwing\\VO_DS_DEATHWING_MAELSTROMSPELL_05.OGG",
-	"Sound\\Music\\GlueScreenMusic\\wow_main_theme.mp3",
-	"sound\\music\\cataclysm\\MUS_WordsAndMusicByEvent_E01.mp3",
-	"Sound\\Music\\Musical Moments\\angelic\\angelic01.mp3",
-	"Sound\\Music\\WorldEvents\\AllianceFirepole.mp3",
-	"Sound\\Music\\ZoneMusic\\TavernDwarf\\RA_DwarfTavern1A.mp3",
-}
-
-	--------------
-	--- Legend ---
-	--------------
-
-do
-	local legend = {}
-	
-	legend.show = "\n|cff71D5FFICON|r, |cffA8A8FFCHAN|r, |cffFFFFFFNAME|r, |cffADFF2FLEVEL|r"
-	
-	legend.chat = strjoin("\n", unpack({
-		"",
-		"|cffADFF2FLEVEL,|r |cffF6ADC6LEVEL-, LEVEL#, LEVEL%|r",
-		"|cff71D5FFTIME, TOTAL,|r |cff0070DDDATE, DATE2|r",
-		"|cffFFFF00AFK, AFK+,|r |cffFF0000DEATH, DEATH+|r",
-		TARGETICONS..": |cffFFFFFF{rt5} |TInterface\\TargetingFrame\\UI-RaidTargetingIcon_5:12|t|r, |cffFF8000RT|r",
-	}))
-	
-	legend.guild = "\n|cffADFF2FLEVEL|r, |cffF6ADC6LEVEL-|r, |cff71D5FFREALTIME|r, |cffFF8000RT|r\n|cff71D5FFNAME|r, |cff0070DDCLASS|r, |cff0070DDRANK|r, |cff0070DDZONE|r"
-	
-	legend.gratz = "\n|cff71D5FFGZ|r, |cff3FBF3FNAME|r, |cffF6ADC6EMOT|r, |cffFF8000RT|r"
-	legend.gz = {"gz", "GZ", "grats", "gratz", "Gratz", "congrats"}
-	legend.emot = {":)", ";)", "=)", "=]", "8)", ":3", "<3", ":p", ":P", "=D", ";D", "xD", "XD", "^^", "^_^", "^O^", "n_n", "\\o/", "orz"}
-	
-	S.legend = legend
 end
 
 	--------------------------
@@ -427,6 +370,71 @@ for k, v in pairs(LOCALIZED_CLASS_NAMES_FEMALE) do
 	S.revLOCALIZED_CLASS_NAMES[v] = k
 end
 
+	--------------
+	--- Legend ---
+	--------------
+
+do
+	local legend = {}
+	
+	legend.show = "\n|cff71D5FFICON|r, |cffA8A8FFCHAN|r, |cffFFFFFFNAME|r, |cffADFF2FLEVEL|r"
+	
+	legend.chat = strjoin("\n", unpack({
+		"",
+		"|cffADFF2FLEVEL,|r |cffF6ADC6LEVEL-, LEVEL#, LEVEL%|r",
+		"|cff71D5FFTIME, TOTAL,|r |cff0070DDDATE, DATE2|r",
+		"|cffFFFF00AFK, AFK+,|r |cffFF0000DEATH, DEATH+|r",
+		TARGETICONS..": |cffFFFFFF{rt5} |TInterface\\TargetingFrame\\UI-RaidTargetingIcon_5:12|t|r, |cffFF8000RT|r",
+	}))
+	
+	local playerColor = S.classCache[player.englishClass]
+	legend.guild = strjoin("\n", unpack({
+		"",
+		"|cffADFF2FLEVEL|r, |cffF6ADC6LEVEL-, LEVEL#, LEVEL%|r",
+		"|cff"..playerColor.."NAME|r, |cff"..playerColor.."CLASS|r, |cff0070DDRANK|r, |cff0070DDZONE|r",
+		"|cff71D5FFREALTIME|r, |cffFF8000RT|r",
+	}))
+	
+	legend.gratz = "\n|cff71D5FFGZ|r, |cff3FBF3FNAME|r, |cffF6ADC6EMOT|r, |cffFF8000RT|r"
+	legend.gz = {"gz", "GZ", "grats", "gratz", "Gratz", "congrats"}
+	legend.emot = {":)", ";)", "=)", "=]", "8)", ":3", "<3", ":p", ":P", "=D", ";D", "xD", "XD", "^^", "^_^", "^O^", "n_n", "\\o/", "orz"}
+	
+	S.legend = legend
+end
+
+	--------------
+	--- Sounds ---
+	--------------
+
+S.sounds = {
+	"Interface\\AddOns\\ReadySetDing\\Sounds\\mysound.mp3",
+	"|cffF6ADC6Random|r",
+	"Sound\\Interface\\LevelUp.ogg",
+	"sound\\INTERFACE\\UI_GuildLevelUp.ogg",
+	"Sound\\Interface\\iQuestComplete.ogg",
+	"Sound\\Spells\\AchievmentSound1.ogg",
+	"Sound\\Spells\\Resurrection.ogg",
+	"Sound\\Doodad\\BellTollAlliance.ogg",
+	"sound\\CREATURE\\MANDOKIR\\VO_ZG2_MANDOKIR_LEVELUP_EVENT_01.ogg",
+	"sound\\CREATURE\\JINDO\\VO_ZG2_JINDO_MANDOKIR_LEVELS_UP_01.ogg",
+	"Sound\\character\\BloodElf\\BloodElfFemaleCongratulations02.ogg",
+	"Sound\\character\\Human\\HumanVocalFemale\\HumanFemaleCongratulations01.ogg",
+	"Sound\\character\\NightElf\\NightElfVocalFemale\\NightElfFemaleCongratulations01.ogg",
+	"Sound\\Character\\BloodElf\\BloodElfFemaleFlirt02.ogg",
+	"Sound\\Creature\\Paletress\\AC_Paletress_Death01.ogg",
+	"Sound\\character\\Orc\\OrcVocalMale\\OrcMaleCheer01.ogg",
+	"Sound\\creature\\Peon\\PeonPissed3.ogg",
+	"Sound\\creature\\HoodWolf\\HoodWolfTransformPlayer01.ogg",
+	"Sound\\creature\\Illidan\\BLACK_Illidan_04.ogg",
+	"Sound\\creature\\LichKing\\IC_Lich King_FMAttack01.ogg",
+	"sound\\CREATURE\\Deathwing\\VO_DS_DEATHWING_MAELSTROMSPELL_05.OGG",
+	"Sound\\Music\\GlueScreenMusic\\wow_main_theme.mp3",
+	"sound\\music\\cataclysm\\MUS_WordsAndMusicByEvent_E01.mp3",
+	"Sound\\Music\\Musical Moments\\angelic\\angelic01.mp3",
+	"Sound\\Music\\WorldEvents\\AllianceFirepole.mp3",
+	"Sound\\Music\\ZoneMusic\\TavernDwarf\\RA_DwarfTavern1A.mp3",
+}
+
 	-------------
 	--- Stats ---
 	-------------
@@ -454,6 +462,64 @@ function RSD:LevelSpeed(d)
 	return levelTime[player.level] and levelTime[player.level] + S.curTPM + time() - S.lastPlayed or L.NO_DATA
 end
 ]]
+
+	---------------
+	--- Replace ---
+	---------------
+
+function RSD:ReplaceArgs(msg, args)
+	-- new random messages init as nil
+	if not msg then return "" end
+	
+	for k in gmatch(msg, "%b<>") do
+		-- remove <>, make case insensitive
+		local s = strlower(gsub(k, "[<>]", ""))
+		
+		-- escape special characters
+		-- a maybe better alternative to %p is "[%%%.%-%+%?%*%^%$%(%)%[%]%{%}]"
+		s = gsub(args[s] or s, "(%p)", "%%%1")
+		k = gsub(k, "(%p)", "%%%1")
+		
+		msg = msg:gsub(k, s)
+	end
+	wipe(args)
+	return msg
+end
+
+	--------------
+	--- Output ---
+	--------------
+
+local sinks = {
+	COMBAT_TEXT_LABEL,
+	"RaidWarningFrame",
+	"RaidBossEmoteFrame",
+	"UIErrorsFrame",
+}
+
+function RSD:Output(msg, args)
+	local v = profile.ShowOutput
+	msg = msg and self:ReplaceArgs(msg, args) or sinks[v] -- fallback to example; does not include chat windows
+	
+	if v == 1 then
+		CombatText_AddMessage(msg, COMBAT_TEXT_SCROLL_FUNCTION, 1, 1, 1)
+	elseif v == 2 then
+		-- RaidWarningFrame / RaidBossEmoteFrame shows max 2 messages at the same time
+		-- they're called "slots" as in "RaidWarningFrameSlot1"
+		RaidNotice_AddMessage(RaidWarningFrame, msg, {r=1, g=1, b=1})
+	elseif v == 3 then
+		RaidNotice_AddMessage(RaidBossEmoteFrame, msg, {r=1, g=1, b=1})
+	elseif v == 4 then
+		UIErrorsFrame:AddMessage(msg)
+	else
+		for i = 1, NUM_CHAT_WINDOWS do
+			if i == v-4 then
+				_G["ChatFrame"..i]:AddMessage(msg or (NAME..": |cff71D5FF"..i..". "..GetChatWindowInfo(i).."|r"))
+				break
+			end
+		end
+	end
+end
 
 	----------------------
 	--- Filter /played ---

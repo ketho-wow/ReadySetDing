@@ -31,6 +31,9 @@ local format, gsub = format, gsub
 -- "<NAME> has reached level <LEVEL>!"
 local GUILD_NEWS_FORMAT6A = GUILD_NEWS_FORMAT6:gsub("%%s", "<NAME>"):gsub("%%d", "<LEVEL>")
 
+-- "Congratulations, "<NAME>" has reached Level <LEVEL>!"
+local GUILD_LEVEL_UP2 = GUILD_LEVEL_UP:gsub("\"%%s\"", "<NAME>"):gsub("\124c.-\124h%[(.-)%]\124h\124r", "%1"):gsub("%%d", "<LEVEL>")
+
 -- coloring
 local TIME_PLAYED_TOTAL2 = gsub(TIME_PLAYED_TOTAL, "%%s", "|cff71D5FF%%s|r")
 local TIME_PLAYED_LEVEL2 = gsub(TIME_PLAYED_LEVEL, "%%s", "|cff71D5FF%%s|r")
@@ -60,10 +63,10 @@ S.defaults = {
 		NumRandomDing = 5,
 		DingMsg = {
 			L.MSG_PLAYER_DING,
+			TUTORIAL_TITLE55.." <LEVEL> :)",
 			L.MSG_PLAYER_DING2,
 			L.MSG_PLAYER_DING3,
-			TUTORIAL_TITLE55.." <LEVEL>",
-			PLAYER_LEVEL_UP.."! <LEVEL>",
+			L.MSG_PLAYER_DING4,
 		},
 		
 		ShowOutput = 2,
@@ -86,7 +89,7 @@ S.defaults = {
 			L.MSG_GUILD_DING,
 			L.MSG_GUILD_DING2,
 			L.MSG_GUILD_DING3,
-			"<NAME>: "..LEVEL.." <LEVEL> [<ZONE>]",
+			GUILD_LEVEL_UP2,
 		},
 		
 		GratzAFK = true,
@@ -359,47 +362,57 @@ S.options = {
 					name = "|cff3FBF3F"..L.TIME_FORMAT.."|r",
 					inline = true,
 					args = {
+						PreviewTime = {
+							type = "description", order = 1,
+							fontSize = "large",
+							name = function()
+								local s = profile.LegacyTime and RSD:TimeString(S.TimeOmitZero, not profile.TimeOmitZero) or RSD:Time(S.TimeUnits[profile.TimeMaxCount])
+								return "|cffF6ADC6"..s.."|r"
+							end,
+						},
+						header1 = {type = "header", order = 2, name = ""},
 						LegacyTime = {
-							type = "toggle", order = 1,
-							desc = function() return (profile.LegacyTime and "|cffF6ADC6"..RSD:TimeString(S.LegacyTime).."|r" or "") end,
+							type = "toggle", order = 3,
+							width = "full", descStyle = "",
 							name = function() return (profile.LegacyTime and "" or "|cff979797")..L.TIME_FORMAT_LEGACY end,
 						},
 						TimeOmitZero = {
-							type = "toggle", order = 2,
+							type = "toggle", order = 4,
 							width = "full",
 							desc = format("%s %s %s", RSD:TimeString(S.TimeOmitZero, true), arrow, RSD:TimeString(S.TimeOmitZero, false)),
 							name = L.TIME_OMIT_ZERO_VALUE,
 							hidden = function() return not profile.LegacyTime end,
 						},
 						TimeMaxCount = {
-							type = "range", order = 3,
-							desc = function() return "|cffF6ADC6"..RSD:Time(S.TimeUnits[profile.TimeMaxCount]).."|r" end,
+							type = "range", order = 5,
+							descStyle = "",
 							name = "   "..L.TIME_MAX_UNITS,
 							min = 1,
 							max = 4,
 							step = 1,
-							hidden = function() return profile.LegacyTime end,
+							hidden = "LegacyTime",
 						},
-						newline1 = {type = "description", order = 4, name = ""},
 						TimeOmitSec = {
-							type = "toggle", order = 5,
+							type = "toggle", order = 6,
+							width = "full",
 							desc = SECONDS.." "..arrow.." |cffFF0000"..NOT_APPLICABLE.."|r",
 							name = L.TIME_OMIT_SECONDS,
-							hidden = function() return profile.LegacyTime end,
+							hidden = "LegacyTime",
 						},
 						TimeLowerCase = {
-							type = "toggle", order = 6,
-							desc = format("%s %s %s",
-								HOURS, arrow, HOURS:lower()),
+							type = "toggle", order = 7,
+							width = "full",
+							desc = format("%s %s %s", HOURS, arrow, HOURS:lower()),
 							name = L.TIME_LOWER_CASE,
-							hidden = function() return profile.LegacyTime end,
+							hidden = "LegacyTime",
 						},
 						TimeAbbrev = {
-							type = "toggle", order = 7,
+							type = "toggle", order = 8,
+							width = "full",
 							desc = format("%s %s %s\n%s %s %s\n%s %s %s\n%s %s %s",
 								SECONDS, arrow, SECONDS_ABBR2, MINUTES, arrow, MINUTES_ABBR2, HOURS, arrow, HOURS_ABBR2, DAYS, arrow, DAYS_ABBR2),
 							name = L.TIME_ABBREVIATE,
-							hidden = function() return profile.LegacyTime end,
+							hidden = "LegacyTime",
 						},
 					},
 				},
@@ -423,7 +436,7 @@ S.options = {
 				LevelGraph = {
 					type = "toggle", order = 6,
 					width = "full", descStyle = "",
-					name = "|TInterface\\Icons\\Spell_Fire_BurningSpeed:16:16:1:0"..S.crop.."|t  "..L.LEVEL_GRAPH,
+					name = "|TINTERFACE\\ICONS\\achievement_guildperk_fasttrack_rank2:16:16:1:0"..S.crop.."|t  "..L.LEVEL_GRAPH,
 					set = function(i, v)
 						profile.LevelGraph = v
 						-- when opened in Blizzard Options Panel
@@ -459,7 +472,7 @@ S.options = {
 				GuildMemberDing = {
 					type = "toggle", order = 1,
 					width = "full", descStyle = "",
-					name = "|TINTERFACE\\ICONS\\achievement_guildperk_fasttrack_rank2:16:16:1:1"..S.crop.."|t  "..L.ANNOUNCE_GUILDMEMBER_LEVELUP,
+					name = "|TInterface\\GuildFrame\\GuildLogo-NoLogo:16:16:1:0:64:64:14:51:14:51|t  "..L.ANNOUNCE_GUILDMEMBER_LEVELUP,
 					set = "SetValueEvent",
 				},
 				inline1 = {
@@ -493,7 +506,7 @@ S.options = {
 							descStyle = "",
 							name = " "..L.MINIMUM_LEVEL_FILTER,
 							min = 2,
-							max = MAX_PLAYER_LEVEL_TABLE[#MAX_PLAYER_LEVEL_TABLE],
+							max = S.maxlevel,
 							step = 1,
 						},
 						NumRandomGuild = {
@@ -527,9 +540,9 @@ S.options = {
 					fontSize = "medium",
 					name = function() return RSD:PreviewGuild(1) end,
 				},
-				spacing1 = {type = "description", order = -4, name = " "},
+				spacing1 = {type = "description", order = -2, name = "\n"},
 				GuildMemberLevelSpeed = {
-					type = "execute", order = -3,
+					type = "execute", order = -1,
 					name = "|TInterface\\Icons\\INV_Misc_Note_01:16:16:1:-1"..S.crop.."|t |cffFFFFFF"..L.LEVEL_SPEED.."|r",
 					func = function()
 						local list = S.recycle[1]; wipe(list)
@@ -559,14 +572,6 @@ S.options = {
 						end
 					end,
 					hidden = function() return not IsInGuild() end,
-				},
-				ReadySet7 = {
-					type = "description", order = -2,
-					name = "|TInterface\\AddOns\\ReadySetDing\\Images\\ReadySet7:32:128:9:-3|t"
-				},
-				Windows7Awesome = {
-					type = "description", order = -1,
-					name = " |TInterface\\AddOns\\ReadySetDing\\Images\\Windows7_Logo:64:64:0:0|t    |TInterface\\AddOns\\ReadySetDing\\Images\\Awesome:64:64:0:0|t"
 				},
 			},
 		},
@@ -815,6 +820,10 @@ function RSD:RefreshEvents()
 	end
 end
 
+function RSD:LegacyTime()
+	return profile.LegacyTime
+end
+
 	-----------------------
 	--- Random Messages ---
 	-----------------------
@@ -925,7 +934,7 @@ end
 
 function RSD:ValidateLength(msg)
 	-- my patterns. just. suck. ><
-	local msg = self:ReplaceArgs(msg, args)
+	msg = self:ReplaceArgs(msg, args)
 	msg = msg:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
 	msg = msg:gsub("|T.-|t", "{rtN}") -- maybe in the future pass the message without the raid targets preview
 	
@@ -975,17 +984,20 @@ end
 
 function RSD:PreviewGuild(i)
 	if IsInGuild() and GetNumGuildMembers() > 0 then -- sanity check
-		local name, rank, _, level, class, zone = GetGuildRosterInfo(random((GetNumGuildMembers())))
+		local name, rank, _, level, class, zone, _, _, _, _, englishClass = GetGuildRosterInfo(random((GetNumGuildMembers())))
 		if not name then return ERROR_CAPS end -- sanity check
 		
 		local args = args
-		args.level = "|cffADFF2F"..(level == 85 and level or level + 1).."|r" -- fix level 86
+		local newLevel = (level == S.maxlevel) and level or level + 1 -- fix level 86
+		args.level = "|cffADFF2F"..newLevel.."|r"
 		args["level-"] = "|cffF6ADC6"..level.."|r"
-		args.realtime = "|cff71D5FF"..self:Time(random(600, 7200)).."|r"
-		args.name = "|cff71D5FF"..name.."|r"
-		args.class = "|cff0070DD"..class.."|r"
+		args["level#"] = "|cffF6ADC6"..S.maxlevel.."|r"
+		args["level%"] = "|cffF6ADC6"..S.maxlevel-newLevel.."|r"
+		args.name = "|cff"..S.classCache[englishClass]..name.."|r"
+		args.class = "|cff"..S.classCache[englishClass]..class.."|r"
 		args.rank = "|cff0070DD"..rank.."|r"
 		args.zone = "|cff0070DD"..(zone or ZONE).."|r"
+		args.realtime = "|cff71D5FF"..self:Time(random(600, 7200)).."|r"
 		args.rt = "|T"..S.RT..random(8)..":16:16:0:3|t"
 		
 		local msg = self:PreviewRaidTarget(profile.GuildMsg[i])
@@ -1036,7 +1048,6 @@ hooksecurefunc(ACD, "Open", function(self, app)
 end)
 
 do
-	-- there sometimes seems to be a bug with LibGraph if startCoord1 is reused for the second graph
 	local startCoord1 = {0, 0}
 	local startCoord2 = {0, 0}
 	
@@ -1054,6 +1065,7 @@ do
 		local YLevelHeight = 0
 		local YTotalHeight = char.TotalTimeList[table.maxn(char.TotalTimeList)]
 		
+		-- bug: ReadySetDing_LevelGraph sometimes is missing an x coord
 		local t1 = S.recycle[1]; wipe(t1)
 		t1[1] = startCoord1
 		for i = 2, player.maxlevel do
@@ -1084,11 +1096,12 @@ do
 	end
 end
 
-	------------
-	--- Data ---
-	------------
+	-----------------
+	--- DataFrame ---
+	-----------------
 
--- I peeked into Prat's CopyChat code <.<
+-- I peeked into Prat's CopyChat code for the ScrollFrame & EditBox <.<
+-- and FloatingChatFrameTemplate for the ResizeButton >.>
 function RSD:DataFrame()
 	if not ReadySetDingData then
 		local f = CreateFrame("Frame", "ReadySetDingData", UIParent, "DialogBoxFrame")
@@ -1098,11 +1111,17 @@ function RSD:DataFrame()
 			bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
 			edgeFile = "Interface\\PVPFrame\\UI-Character-PVP-Highlight", -- this one is neat
 			edgeSize = 16,
-			insets = { left = 8, right = 8, top = 8, bottom = 8 },
+			insets = { left = 8, right = 6, top = 8, bottom = 8 },
 		})
 		f:SetBackdropBorderColor(0, .44, .87, 0.5)
 		
-		f:SetMovable(true); f:EnableMouse(true)
+		f:EnableMouse(true) -- also seems to be automatically enabled when setting the OnMouseDown script
+		
+	---------------
+	--- Movable ---
+	---------------
+		
+		f:SetMovable(true)
 		f:SetScript("OnMouseDown", function(self, button)
 			if button == "LeftButton" then
 				self:StartMoving()
@@ -1112,20 +1131,60 @@ function RSD:DataFrame()
 			self:StopMovingOrSizing()
 		end)
 		
+	-------------------
+	--- ScrollFrame ---
+	-------------------
+		
 		local sf = CreateFrame("ScrollFrame", "ReadySetDingDataScrollFrame", ReadySetDingData, "UIPanelScrollFrameTemplate")
-		sf:SetPoint("TOP", -5, -17)
-		sf:SetPoint("BOTTOM", ReadySetDingDataButton, "TOP", 0, 5)
-		sf:SetSize(540, 0)
+		sf:SetPoint("LEFT", 16, 0)
+		sf:SetPoint("RIGHT", -32, 0)
+		sf:SetPoint("TOP", 0, -16)
+		sf:SetPoint("BOTTOM", ReadySetDingDataButton, "TOP", 0, 0)
+		
+	---------------
+	--- EditBox ---
+	---------------
 		
 		local eb = CreateFrame("EditBox", "ReadySetDingDataEditBox", ReadySetDingDataScrollFrame)
-		eb:SetSize(540, 0)
+		eb:SetSize(sf:GetSize()) -- seems inheriting the points won't automatically set the size
+		
 		eb:SetMultiLine(true)
 		eb:SetFontObject("ChatFontNormal")
+		eb:SetAutoFocus(false) -- make keyboard not automatically focused to this editbox
 		eb:SetScript("OnEscapePressed", function(self)
 			f:Hide()
 		end)
 		
 		sf:SetScrollChild(eb)
+		
+	-----------------
+	--- Resizable ---
+	-----------------
+		
+		f:SetResizable(true)
+		f:SetMinResize(150, 100) -- at least show the "okay" button
+		
+		local rb = CreateFrame("Button", "ReadySetDingDataResizeButton", ReadySetDingData)
+		rb:SetPoint("BOTTOMRIGHT", -6, 7); rb:SetSize(16, 16)
+		
+		rb:SetNormalTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up")
+		rb:SetHighlightTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Highlight")
+		rb:SetPushedTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Down")
+		
+		rb:SetScript("OnMouseDown", function(self, button)
+			if button == "LeftButton" then
+				f:StartSizing()
+				self:GetHighlightTexture():Hide() -- we only want to see the PushedTexture now 
+				SetCursor("UI-Cursor-Size") -- hide the cursor
+			end
+		end)
+		rb:SetScript("OnMouseUp", function(self, button)
+			f:StopMovingOrSizing()
+			self:GetHighlightTexture():Show()
+			SetCursor(nil) -- show the cursor again
+			eb:SetWidth(sf:GetWidth()) -- update editbox to the new scrollframe width
+		end)
+		
 		f:Show()
 	else
 		ReadySetDingData:Show()

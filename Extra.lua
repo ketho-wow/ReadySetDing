@@ -15,7 +15,6 @@ function RSD:RefreshDB3()
 end
 
 local time = time
-local gsub = gsub
 local random = random
 
 local AchievementBlacklist = {
@@ -297,12 +296,13 @@ function RSD:CHAT_MSG_GUILD_ACHIEVEMENT(event, msg, name)
 end
 
 function RSD:AutoGratz(chan, name)
-	local msg = profile.GratzRandom and profile.GratzMsg[random(profile.NumRandomGratz)] or profile.GratzMsg[1]
 	local args = args
 	args.name = (random(2) == 1) and name or name:lower()
 	args.gz = legend.gz[random(#legend.gz)]
 	args.emot = legend.emot[random(#legend.emot)]
 	args.rt = "{rt"..random(8).."}"
+	
+	local msg = profile.GratzRandom and profile.GratzMsg[random(profile.NumRandomGratz)] or profile.GratzMsg[1]
 	msg = self:ReplaceArgs(msg, args)
 	
 	self:ScheduleTimer(function()

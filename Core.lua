@@ -74,6 +74,10 @@ function RSD:OnInitialize()
 	profiles.args.ReadySet7 = {type = "description", order = -2, name = "\n\n\n|TInterface\\AddOns\\ReadySetDing\\Images\\ReadySet7:32:128:9:-3|t"}
 	profiles.args.Windows7Awesome = {type = "description", order = -1,
 		name = " |TInterface\\AddOns\\ReadySetDing\\Images\\Windows7_Logo:64:64:0:0|t    |TInterface\\AddOns\\ReadySetDing\\Images\\Awesome:64:64:0:0|t"}
+		
+	----------------------
+	--- Slash Commands ---
+	----------------------
 	
 	for _, v in ipairs(slashCmds) do
 		self:RegisterChatCommand(v, "SlashCommand")

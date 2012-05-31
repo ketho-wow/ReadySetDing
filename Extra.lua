@@ -286,8 +286,8 @@ function RSD:CHAT_MSG_GUILD_ACHIEVEMENT(event, msg, name)
 	if profile.GratzAFK and UnitIsAFK("player") then return end
 	
 	if profile.AutoGratz and name ~= player.name and time() > (cd.gzGuild or 0) then
-		if (not profile.AnyAchiev and strfind(msg, LEVEL)) or profile.gzGuild then
-			if ((profile.FilterAchiev and not AchievementBlacklist[tonumber(msg:match("achievement:(%d+)"))]) or not profile.FilterAchiev) then
+		if (not profile.AnyAchiev and strfind(msg, LEVEL)) or profile.AnyAchiev then
+			if (profile.FilterAchiev and not AchievementBlacklist[tonumber(msg:match("achievement:(%d+)"))]) or not profile.FilterAchiev then
 				cd.gzGuild = time() + profile.GratzCooldown
 				self:AutoGratz("GUILD", name)
 			end
@@ -307,7 +307,7 @@ function RSD:AutoGratz(chan, name)
 	
 	self:ScheduleTimer(function()
 		SendChatMessage(msg, chan)
-	end, (profile.GratzDelay == 0) and random(30, 200) / 10 or profile.GratzDelay)
+	end, (profile.GratzDelay == 0) and random(30, 170) / 10 or profile.GratzDelay)
 end
 
 	----------------
@@ -324,14 +324,17 @@ end
 local MARKED_AFK_MESSAGE = gsub(MARKED_AFK_MESSAGE, "%%s", ".+")
 
 function RSD:CHAT_MSG_SYSTEM(event, msg)
+	-- entering afk
 	if msg == MARKED_AFK or strfind(msg, MARKED_AFK_MESSAGE) then
 		afk = time()
+	-- leaving afk
 	elseif msg == CLEARED_AFK and afk then
 		LeaveAFK()
 	end
 end
 
 function RSD:PLAYER_LEAVING_WORLD(event)
+	-- logging out while afk
 	if UnitIsAFK("player") and afk then
 		LeaveAFK()
 	end

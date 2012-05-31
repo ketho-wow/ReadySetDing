@@ -57,7 +57,7 @@ S.defaults = {
 		ShowGuild = true,
 		ShowFriend = true,
 		ShowRealID = true,
-		ShowMsg = "<ICON> [<CHAN>] [<NAME>]: Level <LEVEL>",
+		ShowMsg = "<ICON> [<CHAN>] [<NAME>]: "..LEVEL.." <LEVEL>",
 		
 		ChatParty = true,
 		NumRandomDing = 5,
@@ -180,6 +180,7 @@ S.options = {
 							type = "description", order = 7,
 							fontSize = "medium",
 							name = function()
+								local args = args
 								local raceIcon = S.GetRaceIcon(strupper(select(2, UnitRace("player"))).."_"..S.sexremap[UnitSex("player")], 1, 3)
 								local classIcon = S.GetClassIcon(select(2, UnitClass("player")), 2, 3)
 								args.icon = raceIcon..classIcon
@@ -933,9 +934,7 @@ end
 	----------------
 
 function RSD:ValidateLength(msg)
-	-- my patterns. just. suck. ><
-	msg = self:ReplaceArgs(msg, args)
-	msg = msg:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
+	msg = msg:gsub("|c%x%x%x%x%x%x%x%x(.-)|r", "%1")
 	msg = msg:gsub("|T.-|t", "{rtN}") -- maybe in the future pass the message without the raid targets preview
 	
 	-- notify if message length exceeds 127 or 255 chars
@@ -1115,13 +1114,12 @@ function RSD:DataFrame()
 		})
 		f:SetBackdropBorderColor(0, .44, .87, 0.5)
 		
-		f:EnableMouse(true) -- also seems to be automatically enabled when setting the OnMouseDown script
-		
 	---------------
 	--- Movable ---
 	---------------
 		
-		f:SetMovable(true)
+		f:EnableMouse(true) -- also seems to be automatically enabled when setting the OnMouseDown script
+		f:SetMovable(true); f:SetClampedToScreen(true)
 		f:SetScript("OnMouseDown", function(self, button)
 			if button == "LeftButton" then
 				self:StartMoving()
@@ -1146,13 +1144,14 @@ function RSD:DataFrame()
 	---------------
 		
 		local eb = CreateFrame("EditBox", "ReadySetDingDataEditBox", ReadySetDingDataScrollFrame)
-		eb:SetSize(sf:GetSize()) -- seems inheriting the points won't automatically set the size
+		eb:SetSize(sf:GetSize()) -- seems inheriting the points won't automatically set the width/size
 		
 		eb:SetMultiLine(true)
 		eb:SetFontObject("ChatFontNormal")
 		eb:SetAutoFocus(false) -- make keyboard not automatically focused to this editbox
 		eb:SetScript("OnEscapePressed", function(self)
-			f:Hide()
+			--self:ClearFocus()
+			f:Hide() -- rather hide, since we only use it for copying to clipboard
 		end)
 		
 		sf:SetScrollChild(eb)
@@ -1173,7 +1172,7 @@ function RSD:DataFrame()
 		
 		rb:SetScript("OnMouseDown", function(self, button)
 			if button == "LeftButton" then
-				f:StartSizing()
+				f:StartSizing("BOTTOMRIGHT")
 				self:GetHighlightTexture():Hide() -- we only want to see the PushedTexture now 
 				SetCursor("UI-Cursor-Size") -- hide the cursor
 			end

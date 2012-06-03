@@ -132,7 +132,7 @@ S.options = {
 	args = {
 		main = {
 			type = "group", order = 1,
-			name = "|TInterface\\AddOns\\ReadySetDing\\Images\\Windows7_Logo:16:16:-2:1|t "..GAMEOPTIONS_MENU,
+			name = "|TInterface\\AddOns\\ReadySetDing\\Images\\Windows7:16:16:-2:1|t "..GAMEOPTIONS_MENU,
 			handler = RSD,
 			get = "GetValue",
 			set = "SetValue",
@@ -546,7 +546,7 @@ S.options = {
 					type = "execute", order = -1,
 					name = "|TInterface\\Icons\\INV_Misc_Note_01:16:16:1:-1"..S.crop.."|t |cffFFFFFF"..L.LEVEL_SPEED.."|r",
 					func = function()
-						local list = S.recycle[1]; wipe(list)
+						local list = S.recycle[2]; wipe(list)
 						for i = 1, GetNumGuildMembers() do
 							local name, _, level = GetGuildRosterInfo(i)
 							if realm[name] and realm[name][level] then
@@ -562,7 +562,7 @@ S.options = {
 							end
 						end
 						
-						local t = S.recycle[2]; wipe(t)
+						local t = S.recycle[3]; wipe(t)
 						for k in pairs(list) do
 							tinsert(t, k)
 						end
@@ -697,9 +697,14 @@ S.options = {
 							width = "full", descStyle = "",
 							name = "|TInterface\\Icons\\INV_Gizmo_GoblingTonkController:16:16:1:0"..S.crop.."|t  "..L.SCREENSHOT_HIDE_UI,
 						},
-						spacing1 = {type = "description", order = 2, name = ""},
+						RaidWarning = {
+							type = "toggle", order = 2,
+							width = "full", descStyle = "",
+							name = "|TInterface\\Icons\\Trade_Engineering:16:16:1:0"..S.crop.."|t  \""..RAID_WARNING.."\"",
+						},
+						spacing1 = {type = "description", order = 3, name = ""},
 						ScreenshotDelay = {
-							type = "range", order = 3,
+							type = "range", order = 4,
 							desc = "("..strlower(SECONDS)..")",
 							name = L.DELAY,
 							min = 0, softMin = 0,
@@ -1047,8 +1052,7 @@ hooksecurefunc(ACD, "Open", function(self, app)
 end)
 
 do
-	local startCoord1 = {0, 0}
-	local startCoord2 = {0, 0}
+	local startCoord = {0, 0}
 	
 	local levelColor = {.68, 1, .18, .7}
 	local totalColor = {.44, .84, 1, .7}
@@ -1064,9 +1068,8 @@ do
 		local YLevelHeight = 0
 		local YTotalHeight = char.TotalTimeList[table.maxn(char.TotalTimeList)]
 		
-		-- bug: ReadySetDing_LevelGraph sometimes is missing an x coord
-		local t1 = S.recycle[1]; wipe(t1)
-		t1[1] = startCoord1
+		local t1 = S.recycle[4]; wipe(t1)
+		t1[1] = startCoord
 		for i = 2, player.maxlevel do
 			local levelTime = char.LevelTimeList[i]
 			if levelTime then
@@ -1076,8 +1079,8 @@ do
 		end
 		level:AddDataSeries(t1, levelColor)
 		
-		local t2 = S.recycle[2]; wipe(t2)
-		t2[1] = startCoord2
+		local t2 = S.recycle[5]; wipe(t2)
+		t2[1] = startCoord
 		for i = 2, player.maxlevel do
 			if char.TotalTimeList[i] then
 				tinsert(t2, {i-1, char.TotalTimeList[i]})
@@ -1199,11 +1202,11 @@ function RSD:DataFrame()
 end
 
 function RSD:GetData()
-	local t = S.recycle[1]; wipe(t)
-	local s = S.recycle[2]; wipe(s)
+	local t = S.recycle[6]; wipe(t)
+	local s = S.recycle[7]; wipe(s)
 	
 	for i = 1, 6 do
-		t[i] = S.recycle[i+2]; wipe(t[i])
+		t[i] = S.recycle[i+7]; wipe(t[i])
 	end
 	
 	-- Summary

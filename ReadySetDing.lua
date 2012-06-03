@@ -2,7 +2,7 @@
 --- Author: Ketho (EU-Boulderfist)		---
 --- License: Public Domain				---
 --- Created: 2009.09.01					---
---- Version: 1.07 [2012.05.31]			---
+--- Version: 1.08 [2012.06.03]			---
 -------------------------------------------
 --- Curse			http://www.curse.com/addons/wow/readysetding
 --- WoWInterface	http://www.wowinterface.com/downloads/info16220-ReadySetDing.html
@@ -13,7 +13,7 @@
 -- custom achievements; use custom achiev lib
 
 local NAME, S = ...
-S.VERSION = 1.07
+S.VERSION = 1.08
 S.BUILD = "Release"
 
 ReadySetDing = LibStub("AceAddon-3.0"):NewAddon("ReadySetDing", "AceEvent-3.0", "AceTimer-3.0", "AceConsole-3.0")
@@ -41,7 +41,8 @@ local cd = S.cd
 
 S.args = {} -- message args
 
--- reuse tables
+-- self reminder: don't "recycle" when tables are being reused in a way that they "conflict"
+-- or just don't let them use the same index (=.=)
 S.recycle = setmetatable({}, {__index = function(t, k)
 	local v = {}
 	rawset(t, k, v)

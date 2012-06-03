@@ -1,5 +1,5 @@
 ## Interface: 40300
-## Version: 1.07
+## Version: 1.08
 ## Title: ReadySetDing
 ## Notes: Ding!
 ## Author: Ketho @ EU-Boulderfist

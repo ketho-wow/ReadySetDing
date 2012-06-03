@@ -53,7 +53,7 @@ end
 
 local dataobject = {
 	type = player.level < player.maxlevel and "data source" or "launcher",
-	icon = "Interface\\AddOns\\ReadySetDing\\Images\\Windows7_Logo",
+	icon = "Interface\\AddOns\\ReadySetDing\\Images\\Windows7",
 	OnClick = function(clickedframe, button)
 		if IsModifierKeyDown() then
 			RSD:SlashCommand(RSD:IsEnabled() and "0" or "1")

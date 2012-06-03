@@ -70,11 +70,6 @@ function RSD:OnInitialize()
 	ACR:RegisterOptionsTable("ReadySetDing_Profiles", profiles)
 	ACD:AddToBlizOptions("ReadySetDing_Profiles", profiles.name, NAME)
 	
-	-- add extra stuff into profiles tab
-	profiles.args.ReadySet7 = {type = "description", order = -2, name = "\n\n\n|TInterface\\AddOns\\ReadySetDing\\Images\\ReadySet7:32:128:9:-3|t"}
-	profiles.args.Windows7Awesome = {type = "description", order = -1,
-		name = " |TInterface\\AddOns\\ReadySetDing\\Images\\Windows7_Logo:64:64:0:0|t    |TInterface\\AddOns\\ReadySetDing\\Images\\Awesome:64:64:0:0|t"}
-		
 	----------------------
 	--- Slash Commands ---
 	----------------------
@@ -179,10 +174,6 @@ function RSD:OnEnable()
 	
 	-- this kinda defeats the purpose of registering/unregistering events according to options <.<
 	self:ScheduleRepeatingTimer(function()
-		-- the returns of UnitLevel() aren't yet updated on UNIT_LEVEL
-		if S.UNIT_LEVEL() then
-			self:UNIT_LEVEL("UNIT_LEVEL")
-		end
 		if S.GUILD_ROSTER_UPDATE() then
 			GuildRoster() -- fires GUILD_ROSTER_UPDATE
 		end
@@ -196,6 +187,13 @@ function RSD:OnEnable()
 			self:BN_FRIEND_INFO_CHANGED("BN_FRIEND_INFO_CHANGED")
 		end
 	end, 11)
+	
+	self:ScheduleRepeatingTimer(function()
+		-- the returns of UnitLevel() aren't yet updated on UNIT_LEVEL
+		if S.UNIT_LEVEL() then
+			self:UNIT_LEVEL("UNIT_LEVEL")
+		end
+	end, 5)
 end
 
 function RSD:OnDisable()
@@ -388,6 +386,10 @@ function RSD:TIME_PLAYED_MSG(event, ...)
 		
 		-- Screenshot
 		if profile.Screenshot then
+			if profile.RaidWarning then
+				RaidNotice_AddMessage(RaidWarningFrame, text, {r=1, g=1, b=1})
+			end
+			
 			local timeHide = profile.ScreenshotDelay - 1
 			 -- change any negative value to zero (e.g. 0.5 - 1)
 			if timeHide < 0 then timeHide = 0 end
@@ -482,7 +484,7 @@ function RSD:ChatDing(levelTime)
 	args.race = player.race
 	args.faction = player.faction
 	args.realm = player.realm
-	args.zone = GetRealZoneText() or GetSubZoneText() or ""
+	args.zone = GetRealZoneText() or GetSubZoneText() or ZONE
 	args.guild = GetGuildInfo("player") or ""
 	args.ilv = floor(GetAverageItemLevel())
 	
@@ -499,7 +501,7 @@ local group = {}
 
 function RSD:UNIT_LEVEL()
 	if time() > (cd.group or 0) then
-		cd.group = time() + 2
+		cd.group = time() + 1
 		
 		local numParty = profile.ShowParty and GetNumPartyMembers() or 0
 		local numRaid = profile.ShowRaid and GetNumRaidMembers() or 0
@@ -634,7 +636,7 @@ local friend = {}
 
 function RSD:FRIENDLIST_UPDATE(event)
 	if time() > (cd.friend or 0) then
-		cd.friend = time() + 2
+		cd.friend = time() + 1
 		local chan = FRIENDS_WOW_NAME_COLOR_CODE..FRIEND.."|r"
 		
 		for i = 1, select(2, GetNumFriends()) do
@@ -661,7 +663,7 @@ local realid = {}
 
 function RSD:BN_FRIEND_INFO_CHANGED(event)
 	if time() > (cd.realid or 0) then
-		cd.realid = time() + 2
+		cd.realid = time() + 1
 		local chan = FRIENDS_BNET_NAME_COLOR_CODE..BATTLENET_FRIEND.."|r"
 		
 		for i = 1, select(2, BNGetNumFriends()) do

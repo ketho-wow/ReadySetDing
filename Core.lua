@@ -174,6 +174,10 @@ function RSD:OnEnable()
 	
 	-- this kinda defeats the purpose of registering/unregistering events according to options <.<
 	self:ScheduleRepeatingTimer(function()
+		-- the returns of UnitLevel() aren't yet updated on UNIT_LEVEL
+		if S.UNIT_LEVEL() then
+			self:UNIT_LEVEL("UNIT_LEVEL")
+		end
 		if S.GUILD_ROSTER_UPDATE() then
 			GuildRoster() -- fires GUILD_ROSTER_UPDATE
 		end
@@ -187,13 +191,6 @@ function RSD:OnEnable()
 			self:BN_FRIEND_INFO_CHANGED("BN_FRIEND_INFO_CHANGED")
 		end
 	end, 11)
-	
-	self:ScheduleRepeatingTimer(function()
-		-- the returns of UnitLevel() aren't yet updated on UNIT_LEVEL
-		if S.UNIT_LEVEL() then
-			self:UNIT_LEVEL("UNIT_LEVEL")
-		end
-	end, 5)
 end
 
 function RSD:OnDisable()
@@ -500,42 +497,38 @@ end
 local group = {}
 
 function RSD:UNIT_LEVEL()
-	if time() > (cd.group or 0) then
-		cd.group = time() + 1
-		
-		local numParty = profile.ShowParty and GetNumPartyMembers() or 0
-		local numRaid = profile.ShowRaid and GetNumRaidMembers() or 0
+	local numParty = profile.ShowParty and GetNumPartyMembers() or 0
+	local numRaid = profile.ShowRaid and GetNumRaidMembers() or 0
 
-		local numGroup = (numRaid > 0) and numRaid or (numParty > 0) and numParty or 0
-		local groupType = (numRaid > 0) and "raid" or (numParty > 0) and "party"
-		local chan = (numRaid > 0) and "|cffFF7F00"..RAID.."|r" or (numParty > 0) and "|cffA8A8FF"..PARTY.."|r"
-		
-		for i = 1, numGroup do
-			local guid = UnitGUID(groupType..i)
-			local name, realm = UnitName(groupType..i)
-			local level = UnitLevel(groupType..i)
-			-- level can return as 0 when party members are not yet in the instance/zone
-			if guid and level and level > 0 then
-				if group[guid] and group[guid] > 0 and level > group[guid] and name ~= player.name then
-					local class = select(2, UnitClass(groupType..i))
-					local race = select(2, UnitRace(groupType..i))
-					local sex = UnitSex(groupType..i)
-					
-					local raceIcon = S.GetRaceIcon(strupper(race).."_"..S.sexremap[sex], 1, 1)
-					local classIcon = S.GetClassIcon(class, 1, 1)
-					args.icon = raceIcon..classIcon
-					
-					args.chan = chan
-					
-					local classColor = S.classCache[select(2, UnitClass(groupType..i))]
-					args.name = format("|cff%s|Hplayer:%s|h%s|h|r", classColor, name..(realm and "-"..realm or ""), name)
-					
-					args.level = "|cffADFF2F"..level.."|r"
-					
-					self:Output(profile.ShowMsg, args)
-				end
-				group[guid] = level
+	local numGroup = (numRaid > 0) and numRaid or (numParty > 0) and numParty or 0
+	local groupType = (numRaid > 0) and "raid" or (numParty > 0) and "party"
+	local chan = (numRaid > 0) and "|cffFF7F00"..RAID.."|r" or (numParty > 0) and "|cffA8A8FF"..PARTY.."|r"
+	
+	for i = 1, numGroup do
+		local guid = UnitGUID(groupType..i)
+		local name, realm = UnitName(groupType..i)
+		local level = UnitLevel(groupType..i)
+		-- level can return as 0 when party members are not yet in the instance/zone
+		if guid and level and level > 0 then
+			if group[guid] and group[guid] > 0 and level > group[guid] and name ~= player.name then
+				local class = select(2, UnitClass(groupType..i))
+				local race = select(2, UnitRace(groupType..i))
+				local sex = UnitSex(groupType..i)
+				
+				local raceIcon = S.GetRaceIcon(strupper(race).."_"..S.sexremap[sex], 1, 1)
+				local classIcon = S.GetClassIcon(class, 1, 1)
+				args.icon = raceIcon..classIcon
+				
+				args.chan = chan
+				
+				local classColor = S.classCache[select(2, UnitClass(groupType..i))]
+				args.name = format("|cff%s|Hplayer:%s|h%s|h|r", classColor, name..(realm and "-"..realm or ""), name)
+				
+				args.level = "|cffADFF2F"..level.."|r"
+				
+				self:Output(profile.ShowMsg, args)
 			end
+			group[guid] = level
 		end
 	end
 end

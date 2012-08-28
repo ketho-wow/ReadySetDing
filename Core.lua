@@ -58,17 +58,18 @@ function RSD:OnInitialize()
 	ACD:AddToBlizOptions("ReadySetDing_Parent", NAME)
 	ACD:SetDefaultSize("ReadySetDing_Parent", 650, 575)
 	
-	for _, v in ipairs(appKey) do
-		ACR:RegisterOptionsTable(v, appValue[v])
-		ACD:AddToBlizOptions(v, appValue[v].name, NAME)
-	end
-	
+	-- setup profiles now, self reminder: requires db to be already defined
 	options.args.profiles = LibStub("AceDBOptions-3.0"):GetOptionsTable(self.db)
 	local profiles = options.args.profiles
 	profiles.order = 6
 	profiles.name = "|TInterface\\Icons\\INV_Misc_Note_01:16:16:-2:-1"..S.crop.."|t "..profiles.name
-	ACR:RegisterOptionsTable("ReadySetDing_Profiles", profiles)
-	ACD:AddToBlizOptions("ReadySetDing_Profiles", profiles.name, NAME)
+	tinsert(appKey, "ReadySetDing_Profiles")
+	appValue.ReadySetDing_Profiles = profiles
+	
+	for _, v in ipairs(appKey) do
+		ACR:RegisterOptionsTable(v, appValue[v])
+		ACD:AddToBlizOptions(v, appValue[v].name, NAME)
+	end
 	
 	----------------------
 	--- Slash Commands ---
@@ -335,7 +336,7 @@ function RSD:TIME_PLAYED_MSG(event, ...)
 		
 		-- Party/Raid Announce
 		if profile.ChatParty then
-			local chan = GetNumRaidMembers() > 0 and "RAID" or GetNumPartyMembers() > 0 and "PARTY" or "SAY"
+			local chan = GetNumGroupMembers() > 0 and "RAID" or GetNumSubgroupMembers() > 0 and "PARTY" or "SAY"
 			if select(2, IsInInstance()) == "pvp" then
 				chan = "BATTLEGROUND"
 			end
@@ -497,8 +498,8 @@ end
 local group = {}
 
 function RSD:UNIT_LEVEL()
-	local numParty = profile.ShowParty and GetNumPartyMembers() or 0
-	local numRaid = profile.ShowRaid and GetNumRaidMembers() or 0
+	local numParty = profile.ShowParty and GetNumSubgroupMembers() or 0
+	local numRaid = profile.ShowRaid and GetNumGroupMembers() or 0
 
 	local numGroup = (numRaid > 0) and numRaid or (numParty > 0) and numParty or 0
 	local groupType = (numRaid > 0) and "raid" or (numParty > 0) and "party"
@@ -576,8 +577,9 @@ function RSD:GUILD_ROSTER_UPDATE(event)
 						-- filters
 						local afk = profile.GuildAFK and not UnitIsAFK("player") or not profile.GuildAFK
 						local achiev = profile.FilterLevelAchiev and not S.Levels[level] or not profile.FilterLevelAchiev
+						local minLevel = (level >= profile.MinLevelFilter) -- forgot to add this in the rewrite ><
 						
-						if afk and achiev then
+						if afk and achiev and minLevel then
 							SendChatMessage(self:ChatGuild(name, level, class, rank, zone, realtime), "GUILD")
 						end
 					end
@@ -600,7 +602,8 @@ function RSD:GUILD_ROSTER_UPDATE(event)
 			realm[name] = realm[name] or {}
 			realm[name][1] = level
 		end
-		showedDiffs = true -- can't test this. hope it works and a bunny doesn't die
+		-- works most of the time. sometimes a bunny does die though
+		showedDiffs = true
 	end
 end
 

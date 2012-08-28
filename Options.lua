@@ -184,7 +184,7 @@ S.options = {
 								local raceIcon = S.GetRaceIcon(strupper(select(2, UnitRace("player"))).."_"..S.sexremap[UnitSex("player")], 1, 3)
 								local classIcon = S.GetClassIcon(select(2, UnitClass("player")), 2, 3)
 								args.icon = raceIcon..classIcon
-								args.chan = GetNumRaidMembers() > 0 and "|cffFF7F00"..RAID.."|r" or "|cffA8A8FF"..PARTY.."|r"
+								args.chan = GetNumGroupMembers() > 0 and "|cffFF7F00"..RAID.."|r" or "|cffA8A8FF"..PARTY.."|r"
 								args.name = "|cff"..S.classCache[player.englishClass].._G.NAME.."|r"
 								args.level = "|cffADFF2F"..player.level + (player.level == player.maxlevel and 0 or 1).."|r"
 								return "  "..RSD:ReplaceArgs(profile.ShowMsg, args)
@@ -668,7 +668,7 @@ S.options = {
 						ExampleMessage = {
 							type = "description", order = 2,
 							fontSize = "medium",
-							name = "|cff71D5FF[RT]|r = {rt1-8}\n|cff71D5FF[GZ]|r = "..strjoin(", ", unpack(legend.gz)).."\n|cff71D5FF[EMOT]|r = "..strjoin(", ", unpack(legend.emot)),
+							name = "|cff71D5FF[RT]|r = {rt1-8}\n|cff71D5FF[GZ]|r = "..strjoin(", ", unpack(legend.gz)),
 						},
 					},
 				},
@@ -1128,9 +1128,7 @@ function RSD:DataFrame()
 				self:StartMoving()
 			end
 		end)
-		f:SetScript("OnMouseUp", function(self, button)
-			self:StopMovingOrSizing()
-		end)
+		f:SetScript("OnMouseUp", f.StopMovingOrSizing)
 		
 	-------------------
 	--- ScrollFrame ---

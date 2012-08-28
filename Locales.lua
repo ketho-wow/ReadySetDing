@@ -69,8 +69,7 @@ local L = {
 		MSG_PLAYER_DING = "Ding! Nivel <LEVEL> en <TIME>",
 		TOTAL_TIME = "Tiempo Total",
 	},
-	esMX = {
-	},
+	--esMX = {},
 	frFR = {
 	},
 	itIT = {

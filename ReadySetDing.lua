@@ -2,7 +2,7 @@
 --- Author: Ketho (EU-Boulderfist)		---
 --- License: Public Domain				---
 --- Created: 2009.09.01					---
---- Version: 1.09 [2012.06.05]			---
+--- Version: 1.10 [2012.08.28]			---
 -------------------------------------------
 --- Curse			http://www.curse.com/addons/wow/readysetding
 --- WoWInterface	http://www.wowinterface.com/downloads/info16220-ReadySetDing.html
@@ -13,7 +13,7 @@
 -- custom achievements; use custom achiev lib
 
 local NAME, S = ...
-S.VERSION = 1.09
+S.VERSION = "1.10"
 S.BUILD = "Release"
 
 ReadySetDing = LibStub("AceAddon-3.0"):NewAddon("ReadySetDing", "AceEvent-3.0", "AceTimer-3.0", "AceConsole-3.0")
@@ -235,7 +235,7 @@ end
 	--------------------------
 
 do
-	local levels = {10, 20, 30, 40, 50, 60, 70, 80, 85}
+	local levels = {10, 20, 30, 40, 50, 60, 70, 80, 85, 90}
 	
 	S.Levels = {}
 	
@@ -317,6 +317,9 @@ S.RACE_ICON_TCOORDS_256 = { -- GlueXML\CharacterCreate.lua L25 (4.3.3.15354)
 
 	WORGEN_MALE		= {160, 192, 0, 128},
 	WORGEN_FEMALE	= {160, 192, 256, 384},
+	
+	PANDAREN_MALE	= {192, 224, 0, 128},
+	PANDAREN_FEMALE	= {192, 224, 256, 384},
 }
 
 S.sexremap = {nil, "MALE", "FEMALE"}
@@ -380,21 +383,16 @@ do
 	
 	legend.show = "\n|cff71D5FFICON|r, |cffA8A8FFCHAN|r, |cffFFFFFFNAME|r, |cffADFF2FLEVEL|r"
 	
-	legend.chat = strjoin("\n", unpack({
-		"",
-		"|cffADFF2FLEVEL,|r |cffF6ADC6LEVEL-, LEVEL#, LEVEL%|r",
-		"|cff71D5FFTIME, TOTAL,|r |cff0070DDDATE, DATE2|r",
-		"|cffFFFF00AFK, AFK+,|r |cffFF0000DEATH, DEATH+|r",
-		TARGETICONS..": |cffFFFFFF{rt5} |TInterface\\TargetingFrame\\UI-RaidTargetingIcon_5:12|t|r, |cffFF8000RT|r",
-	}))
+	legend.chat = "\n|cffADFF2FLEVEL,|r |cffF6ADC6LEVEL-, LEVEL#, LEVEL%|r"
+		.."\n|cff71D5FFTIME, TOTAL,|r |cff0070DDDATE, DATE2|r"
+		.."\n|cffFFFF00AFK, AFK+,|r |cffFF0000DEATH, DEATH+|r\n"
+		..TARGETICONS..": |cffFFFFFF{rt5} |TInterface\\TargetingFrame\\UI-RaidTargetingIcon_5:12|t|r, |cffFF8000RT|r"
 	
 	local playerColor = S.classCache[player.englishClass]
-	legend.guild = strjoin("\n", unpack({
-		"",
-		"|cffADFF2FLEVEL|r, |cffF6ADC6LEVEL-, LEVEL#, LEVEL%|r",
-		"|cff"..playerColor.."NAME|r, |cff"..playerColor.."CLASS|r, |cff0070DDRANK|r, |cff0070DDZONE|r",
-		"|cff71D5FFREALTIME|r, |cffFF8000RT|r",
-	}))
+	
+	legend.guild = "\n|cffADFF2FLEVEL|r, |cffF6ADC6LEVEL-, LEVEL#, LEVEL%|r"
+		.."\n|cff"..playerColor.."NAME|r, |cff"..playerColor.."CLASS|r, |cff0070DDRANK|r, |cff0070DDZONE|r"
+		.."\n|cff71D5FFREALTIME|r, |cffFF8000RT|r"
 	
 	legend.gratz = "\n|cff71D5FFGZ|r, |cff3FBF3FNAME|r, |cffF6ADC6EMOT|r, |cffFF8000RT|r"
 	legend.gz = {"gz", "GZ", "grats", "gratz", "Gratz", "congrats"}

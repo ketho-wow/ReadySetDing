@@ -2,8 +2,6 @@ local _, S = ...
 
 local L = {
 	deDE = {
-		AUTO_GRATZ = "Autom. begl\195\188ckw\195\188nschen",
-		COOLDOWN = "Abklingzeit",
 		DELAY = "Verz\195\182gerung",
 		LEVEL_SPEED = "Stufenaufstiegstempo",
 		LEVEL_TIME = "Stufen-Spieldauer",
@@ -30,7 +28,6 @@ local L = {
 		
 		TOTAL = "Total",
 		DATA = "Data",
-		COOLDOWN = "Cooldown",
 		DELAY = "Delay",
 		
 		RANDOM_MESSAGE = "Random Message",
@@ -54,15 +51,12 @@ local L = {
 		FILTER_LEVEL_ACHIEVEMENTS = FILTER.." "..LEVEL.." |cffFFFF00"..ACHIEVEMENTS.."|r",
 		MINIMUM_LEVEL_FILTER = MINIMUM.." "..LEVEL.." "..FILTER,
 		
-		AUTO_GRATZ = "Auto Gratz",
 		SCREENSHOT_HIDE_UI = HIDE.." "..BUG_CATEGORY5,
 		
 		BROKER_CLICK = "|cffFFFFFFClick|r to open the options menu",
 		BROKER_SHIFT_CLICK = "|cffFFFFFFShift-click|r to toggle this AddOn",
 	},
 	esES = {
-		AUTO_GRATZ = "Auto Felicitarse",
-		COOLDOWN = "Reutilizacion",
 		DELAY = "Retraso",
 		LEVEL_SPEED = "Velocidad de Nivel",
 		LEVEL_TIME = "Tiempo de Nivel",
@@ -76,7 +70,6 @@ local L = {
 	},
 	koKR = {
 		ANNOUNCE_GUILDMEMBER_LEVELUP = "\234\184\184\235\147\156\236\155\144 \235\160\136\235\178\168\236\151\133 \236\149\140\235\166\172\234\184\176",
-		AUTO_GRATZ = "\236\158\144\235\143\153 \236\182\149\237\149\152",
 		DATA = "\235\141\176\236\157\180\237\132\176",
 		DELAY = "\236\167\128\236\151\176\236\139\156\234\176\132",
 		DISABLE_AFK = "\236\158\144\235\166\172\235\185\132\236\155\128\236\139\156 \235\185\132\237\153\156\236\132\177\237\153\148",
@@ -97,7 +90,6 @@ local L = {
 	ptBR = {
 	},
 	ruRU = {
-		AUTO_GRATZ = "\208\144\209\130\208\190\208\191\208\190\208\183\208\180\209\128\208\176\208\178\208\187\208\181\208\189\208\184\208\181", -- "§¡§ä§à§á§à§Ù§Õ§â§Ñ§Ó§Ý§Ö§ß§Ú§Ö"
 		DELAY = "\208\151\208\176\208\180\208\181\209\128\208\182\208\186\208\176", -- "§©§Ñ§Õ§Ö§â§Ø§Ü§Ñ"
 		LEVEL_SPEED = "\208\161\208\186\208\190\209\128\208\190\209\129\209\130\209\140 \208\189\208\176\208\177\208\190\209\128\208\176 \209\131\209\128\208\190\208\178\208\189\209\143", -- "§³§Ü§à§â§à§ã§ä§î §ß§Ñ§Ò§à§â§Ñ §å§â§à§Ó§ß§ñ"
 		LEVEL_TIME = "\208\146\209\128\208\181\208\188\209\143 \208\183\208\176\209\130\209\128\208\176\209\135\208\181\208\189\208\189\208\190\208\181 \208\189\208\176 \209\131\209\128\208\190\208\178\208\181\208\189\209\140", -- "§£§â§Ö§Þ§ñ §Ù§Ñ§ä§â§Ñ§é§Ö§ß§ß§à§Ö §ß§Ñ §å§â§à§Ó§Ö§ß§î"

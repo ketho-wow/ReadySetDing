@@ -1,5 +1,5 @@
 ## Interface: 50001
-## Version: 1.10
+## Version: 1.11
 ## Title: ReadySetDing
 ## Notes: Ding!
 ## Author: Ketho @ EU-Boulderfist

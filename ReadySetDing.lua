@@ -2,7 +2,7 @@
 --- Author: Ketho (EU-Boulderfist)		---
 --- License: Public Domain				---
 --- Created: 2009.09.01					---
---- Version: 1.10 [2012.08.28]			---
+--- Version: 1.11 [2012.09.17]			---
 -------------------------------------------
 --- Curse			http://www.curse.com/addons/wow/readysetding
 --- WoWInterface	http://www.wowinterface.com/downloads/info16220-ReadySetDing.html
@@ -13,7 +13,7 @@
 -- custom achievements; use custom achiev lib
 
 local NAME, S = ...
-S.VERSION = "1.10"
+S.VERSION = "1.11"
 S.BUILD = "Release"
 
 ReadySetDing = LibStub("AceAddon-3.0"):NewAddon("ReadySetDing", "AceEvent-3.0", "AceTimer-3.0", "AceConsole-3.0")
@@ -67,13 +67,6 @@ S.events = {
 	-- (Real ID) Friend Level Up
 	"FRIENDLIST_UPDATE",
 	"BN_FRIEND_INFO_CHANGED",
-	
-	-- Auto Gratz
-	CHAT_MSG = {
-		"CHAT_MSG_PARTY",
-		"CHAT_MSG_GUILD",
-	},
-	"CHAT_MSG_GUILD_ACHIEVEMENT",
 	
 	-- AFK Time
 	"CHAT_MSG_SYSTEM",
@@ -251,20 +244,6 @@ do
 end
 
 	--------------------
-	--- Raid Targets ---
-	--------------------
-
-do
-	local t = {}
-	
-	for i = 1, 4 do
-		t[i] = "  |T"..S.RT..i..":16:16:0:3|t  {rt"..i.."}  ".._G["RAID_TARGET_"..i].."          |T"..S.RT..(i+4)..":16:16:0:3|t  {rt"..(i+4).."}  ".._G["RAID_TARGET_"..(i+4)]
-	end
-	
-	S.RaidTargetIcons = strjoin("\n", unpack(t))
-end
-
-	--------------------
 	--- Class Colors ---
 	--------------------
 
@@ -393,10 +372,6 @@ do
 	legend.guild = "\n|cffADFF2FLEVEL|r, |cffF6ADC6LEVEL-, LEVEL#, LEVEL%|r"
 		.."\n|cff"..playerColor.."NAME|r, |cff"..playerColor.."CLASS|r, |cff0070DDRANK|r, |cff0070DDZONE|r"
 		.."\n|cff71D5FFREALTIME|r, |cffFF8000RT|r"
-	
-	legend.gratz = "\n|cff71D5FFGZ|r, |cff3FBF3FNAME|r, |cffF6ADC6EMOT|r, |cffFF8000RT|r"
-	legend.gz = {"gz", "GZ", "grats", "gratz", "Gratz", "congrats"}
-	legend.emot = {":)", ";)", "=)", "=]", "8)", ":3", "<3", ":p", ":P", "=D", ";D", "xD", "XD", "^^", "^_^", "^O^", "n_n", "\\o/", "orz"}
 	
 	S.legend = legend
 end

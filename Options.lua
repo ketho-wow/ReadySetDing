@@ -92,23 +92,6 @@ S.defaults = {
 			GUILD_LEVEL_UP2,
 		},
 		
-		GratzAFK = true,
-		FilterAchiev = true,
-		GratzDelay = 0,
-		GratzCooldown = 300,
-		NumRandomGratz = 9,
-		GratzMsg = {
-			[1] = "<GZ>",
-			[4] = "<GZ>!",
-			[7] = "<RT> gz <RT>",
-			[2] = "gz!",
-			[5] = "gz =)",
-			[8] = "grats",
-			[3] = "<GZ> <EMOT>",
-			[6] = "<GZ> <NAME>",
-			[9] = "<GZ> <NAME> <EMOT>",
-		},
-		
 		ScreenshotDelay = 1,
 		
 		LibSharedMediaSound = true,
@@ -184,7 +167,7 @@ S.options = {
 								local raceIcon = S.GetRaceIcon(strupper(select(2, UnitRace("player"))).."_"..S.sexremap[UnitSex("player")], 1, 3)
 								local classIcon = S.GetClassIcon(select(2, UnitClass("player")), 2, 3)
 								args.icon = raceIcon..classIcon
-								args.chan = GetNumGroupMembers() > 0 and "|cffFF7F00"..RAID.."|r" or "|cffA8A8FF"..PARTY.."|r"
+								args.chan = IsInRaid() and "|cffFF7F00"..RAID.."|r" or "|cffA8A8FF"..PARTY.."|r"
 								args.name = "|cff"..S.classCache[player.englishClass].._G.NAME.."|r"
 								args.level = "|cffADFF2F"..player.level + (player.level == player.maxlevel and 0 or 1).."|r"
 								return "  "..RSD:ReplaceArgs(profile.ShowMsg, args)
@@ -576,106 +559,8 @@ S.options = {
 				},
 			},
 		},
-		autogratz = {
-			type = "group", order = 4,
-			name = "|TInterface\\Icons\\INV_Misc_Gift_05:16:16:-2:-1"..S.crop.."|t "..L.AUTO_GRATZ,
-			handler = RSD,
-			get = "GetValue",
-			set = "SetValue",
-			args = {
-				AutoGratz = {
-					type = "toggle", order = 1,
-					width = "full", descStyle = "",
-					name = "|TInterface\\Icons\\INV_Misc_Gift_05:16:16:1:0"..S.crop.."|t  "..L.AUTO_GRATZ,
-				},
-				inline1 = {
-					type = "group", order = 2,
-					name = " ",
-					inline = true,
-					disabled = function() return not profile.AutoGratz end,
-					args = {
-						GratzAFK = {
-							type = "toggle", order = 1,
-							width = "full", descStyle = "",
-							desc = "|cffFFFF00\""..MARKED_AFK.."\"|r",
-							name = "|TInterface\\Icons\\Spell_Nature_Sleep:16:16:1:0"..S.crop.."|t  "..L.DISABLE_AFK,
-						},
-						GratzRandom = {
-							type = "toggle", order = 2,
-							width = "full", descStyle = "",
-							name = "|TInterface\\AddOns\\ReadySetDing\\Images\\Awesome:16:16:1:1|t  |cffF6ADC6"..L.RANDOM_MESSAGE.."|r",
-						},
-						AnyAchiev = {
-							type = "toggle", order = 3,
-							descStyle = "",
-							name = "|TInterface\\Icons\\Achievement_Reputation_06:16:16:1:1"..S.crop.."|t  |cffFFFF00"..ACHIEVEMENTS.."|r",
-						},
-						FilterAchiev = {
-							type = "toggle", order = 4,
-							desc = "Internal Blacklist",
-							name = "|TInterface\\Icons\\Trade_Engineering:16:16:1:1"..S.crop.."|t  +"..FILTER,
-							disabled = function() return not profile.AutoGratz or not profile.AnyAchiev end,
-						},
-						spacing1 = {type = "description", order = 5, name = " "},
-						GratzDelay = {
-							type = "range", order = 6,
-							desc = "0 = |cffFF8000Random|r 3-17 "..strlower(SECONDS),
-							name = L.DELAY,
-							min = 0, softMin = 0,
-							max = 60, softMax = 10,
-							step = 0.5,
-						},
-						GratzCooldown = {
-							type = "range", order = 7,
-							desc = function() return format(ITEM_COOLDOWN_TOTAL_SEC, profile.GratzCooldown) end,
-							name = L.COOLDOWN,
-							min = 0, softMin = 0,
-							max = 1200, softMax = 600,
-							step = 1,
-						},
-						NumRandomGratz = {
-							type = "range", order = 8,
-							descStyle = "",
-							name = "# |cffF6ADC6"..L.RANDOM_MESSAGE.."|r",
-							min = 2, softMin = 2,
-							max = 99, softMax = 30,
-							step = 1,
-							set = function(i, v)
-								profile.NumRandomGratz = v
-								RSD:SetupRandomGratz(v)
-							end,
-							hidden = function() return not profile.GratzRandom end,
-						},
-					},
-				},
-				GratzMsg1 = {
-					type = "input", order = 10,
-					name = " ",
-					usage = legend.gratz,
-					get = function(i) return profile.GratzMsg[1] end,
-					set = function(i, v) profile.GratzMsg[1] = (strtrim(v) == "") and defaults.profile.GratzMsg[1] or v end,
-				},
-				inline2 = {
-					type = "group", order = -1,
-					name = " ",
-					inline = true,
-					args = {
-						RaidTarget = {
-							type = "description", order = 1,
-							fontSize = "medium",
-							name = S.RaidTargetIcons.."\n",
-						},
-						ExampleMessage = {
-							type = "description", order = 2,
-							fontSize = "medium",
-							name = "|cff71D5FF[RT]|r = {rt1-8}\n|cff71D5FF[GZ]|r = "..strjoin(", ", unpack(legend.gz)),
-						},
-					},
-				},
-			},
-		},
 		screenshot = {
-			type = "group", order = 5,
+			type = "group", order = 4,
 			name = "|TInterface\\Icons\\inv_misc_spyglass_03:16:16:-2:-1"..S.crop.."|t "..BINDING_NAME_SCREENSHOT,
 			handler = RSD,
 			get = "GetValue",
@@ -907,31 +792,6 @@ function RSD:SetupRandomGuild(num)
 		guild["GuildPreview"..i] = nil
 	end
 	prev[2] = num
-end
-
-function RSD:SetupRandomGratz(num)
-	local gratz = options.args.autogratz.args
-	
-	for i = prev[3] or 2, num do
-		gratz["GratzMsg"..i] = {
-			type = "input", order = i+10,
-			name = "",
-			get = function(info) return profile.GratzMsg[i] end,
-			set = function(info, v)
-				if strtrim(v) == "" then
-					profile.GratzMsg[i] = defaults.profile.GratzMsg[i]
-				else
-					profile.GratzMsg[i] = v
-				end
-			end,
-			hidden = function() return not profile.GratzRandom end,
-		}
-	end
-	
-	for i = num+1, prev[3] or 0 do
-		gratz["GratzMsg"..i] = nil
-	end
-	prev[3] = num
 end
 
 	----------------

@@ -28,7 +28,6 @@ local appKey = {
 	"ReadySetDing_Main",
 	"ReadySetDing_Advanced",
 	"ReadySetDing_GuildMember",
-	"ReadySetDing_AutoGratz",
 	"ReadySetDing_Screenshot",
 }
 
@@ -36,12 +35,9 @@ local appValue = {
 	ReadySetDing_Main = options.args.main,
 	ReadySetDing_Advanced = options.args.advanced,
 	ReadySetDing_GuildMember = options.args.guildmember,
-	ReadySetDing_AutoGratz = options.args.autogratz,
 	ReadySetDing_Screenshot = options.args.screenshot,
 	ReadySetDing_Data = options.args.data,
 }
-
-local slashCmds = {"rsd", "readyset", "readysetding"}
 
 function RSD:OnInitialize()
 	self.db = LibStub("AceDB-3.0"):New("ReadySetDingDB", S.defaults, true)
@@ -75,7 +71,7 @@ function RSD:OnInitialize()
 	--- Slash Commands ---
 	----------------------
 	
-	for _, v in ipairs(slashCmds) do
+	for _, v in ipairs({"rsd", "readyset", "readysetding"}) do
 		self:RegisterChatCommand(v, "SlashCommand")
 	end
 	
@@ -195,7 +191,7 @@ function RSD:OnEnable()
 end
 
 function RSD:OnDisable()
-	self:UnregisterAllEvents() 
+	self:UnregisterAllEvents()
 	self:CancelAllTimers()
 	if CUSTOM_CLASS_COLORS then
 		CUSTOM_CLASS_COLORS:UnregisterCallback("WipeCache", self)
@@ -205,7 +201,6 @@ end
 local setupRandom = {
 	"Ding",
 	"Guild",
-	"Gratz",
 }
 
 function RSD:RefreshDB()
@@ -325,28 +320,28 @@ function RSD:TIME_PLAYED_MSG(event, ...)
 		end
 		
 		-- Language
-		local lang
+		local _, langId
 		if profile.Language == 2 then
-			lang = GetLanguageByIndex(random(GetNumLanguages()))
+			_, langId = GetLanguageByIndex(random(GetNumLanguages()))
 		elseif profile.Language > 2 then
-			lang = GetLanguageByIndex(profile.Language-2)
+			_, langId = GetLanguageByIndex(profile.Language-2)
 		end
 		
 		local text = self:ChatDing(levelTime)
 		
 		-- Party/Raid Announce
 		if profile.ChatParty then
-			local chan = GetNumGroupMembers() > 0 and "RAID" or GetNumSubgroupMembers() > 0 and "PARTY" or "SAY"
+			local chan = IsInRaid() and "RAID" or IsInGroup() and "PARTY" or "SAY"
 			if select(2, IsInInstance()) == "pvp" then
 				chan = "BATTLEGROUND"
 			end
 			self:ScheduleTimer(function()
 				-- send in two messages
 				if strlen(text) > 255 then
-					SendChatMessage(strsub(text, 1, 255), chan, lang)
-					SendChatMessage(strsub(text, 256), chan, lang)
+					SendChatMessage(strsub(text, 1, 255), chan, langId)
+					SendChatMessage(strsub(text, 256), chan, langId)
 				else
-					SendChatMessage(text, chan, lang)
+					SendChatMessage(text, chan, langId)
 				end
 			end, profile.DingDelay)
 		end
@@ -354,7 +349,7 @@ function RSD:TIME_PLAYED_MSG(event, ...)
 		-- Guild Announce
 		if profile.ChatGuild and IsInGuild() then
 			self:ScheduleTimer(function()
-				SendChatMessage(text, "GUILD", lang)
+				SendChatMessage(text, "GUILD", langId)
 			end, profile.DingDelay)
 		end
 		
@@ -376,7 +371,7 @@ function RSD:TIME_PLAYED_MSG(event, ...)
 		if profile.ChatBroadcast then
 			self:ScheduleTimer(function()
 				-- save current message
-				local origMsg = select(3, BNGetInfo())
+				local origMsg = select(4, BNGetInfo())
 				BNSetCustomMessage(strsub(text, 1, 127))
 				BNSetCustomMessage(origMsg)
 			end, profile.DingDelay)
@@ -498,12 +493,15 @@ end
 local group = {}
 
 function RSD:UNIT_LEVEL()
-	local numParty = profile.ShowParty and GetNumSubgroupMembers() or 0
-	local numRaid = profile.ShowRaid and GetNumGroupMembers() or 0
-
-	local numGroup = (numRaid > 0) and numRaid or (numParty > 0) and numParty or 0
-	local groupType = (numRaid > 0) and "raid" or (numParty > 0) and "party"
-	local chan = (numRaid > 0) and "|cffFF7F00"..RAID.."|r" or (numParty > 0) and "|cffA8A8FF"..PARTY.."|r"
+	local isRaid = profile.ShowParty and IsInRaid()
+	local isParty = profile.ShowRaid and IsInGroup()
+	
+	local numRaid = GetNumGroupMembers()
+	local numParty = GetNumSubgroupMembers()
+	
+	local numGroup = isRaid and numRaid or isParty and numParty or 0
+	local groupType = isRaid and "raid" or isParty and "party"
+	local chan = isRaid and "|cffFF7F00"..RAID.."|r" or isParty and "|cffA8A8FF"..PARTY.."|r"
 	
 	for i = 1, numGroup do
 		local guid = UnitGUID(groupType..i)
@@ -538,10 +536,11 @@ end
 	--- Guild ---
 	-------------
 
-local showedDiffs, showedHeader
+-- before secondGRU show anything as guild diff
+-- after secondGRU show realtime (around +20 sec earliest)
+local firstGRU, secondGRU, showedHeader
 
 -- now this is an even bigger mess than before ._.
--- completely drycoded/untested
 function RSD:GUILD_ROSTER_UPDATE(event)
 	if IsInGuild() and time() > (cd.guild or 0) then
 		cd.guild = time() + 10
@@ -552,7 +551,7 @@ function RSD:GUILD_ROSTER_UPDATE(event)
 			
 			-- sanity checks
 			if name and realm[name] and level > realm[name][1] and name ~= player.name then
-				if showedDiffs then
+				if secondGRU then
 					local realtime = 0
 					if level-1 ~= 1 and realm[name][level-1] then
 						realtime = time() - realm[name][level-1][1]
@@ -602,8 +601,10 @@ function RSD:GUILD_ROSTER_UPDATE(event)
 			realm[name] = realm[name] or {}
 			realm[name][1] = level
 		end
-		-- works most of the time. sometimes a bunny does die though
-		showedDiffs = true
+		-- even more awful delaying
+		-- a lot of bunnies were sacrificed for this
+		if firstGRU then secondGRU = true end
+		firstGRU = true
 	end
 end
 
@@ -663,8 +664,10 @@ function RSD:BN_FRIEND_INFO_CHANGED(event)
 		local chan = FRIENDS_BNET_NAME_COLOR_CODE..BATTLENET_FRIEND.."|r"
 		
 		for i = 1, select(2, BNGetNumFriends()) do
-			local presenceId, firstname, surname, someToonName, toonID = BNGetFriendInfo(i)
-			local _, toonName, client, realm, _, _, race, class, _, _, level = BNGetToonInfo(presenceId)
+			local presenceID, presenceName, battleTag, isBattleTagPresence = BNGetFriendInfo(i)
+			
+			-- ToDo: add support for multiple online toons / BNGetFriendToonInfo
+			local _, toonName, client, realm, _, _, race, class, _, _, level = BNGetToonInfo(presenceID)
 			
 			-- avoid misrecognizing characters that share the same name, but are from different servers
 			realid[realm] = realid[realm] or {}
@@ -677,11 +680,9 @@ function RSD:BN_FRIEND_INFO_CHANGED(event)
 					
 					args.chan = chan
 					
-					-- "|Kg49|k00000000|k": f BNplayer; g firstname; s surname
-					local fixedLink = firstname:gsub("g", "f")
-					local fullName = firstname.." "..surname
+					-- "|Kg49|k00000000|k": f BNplayer; g firstname; s surname; default f in 5.0.4
 					-- the "BNplayer" hyperlink might maybe taint whatever it calls on right-click
-					args.name = format("|cff%s|HBNplayer:%s:%s|h%s|r |cff%s%s|h|r", "82C5FF", fixedLink, presenceId, fullName, S.classCache[S.revLOCALIZED_CLASS_NAMES[class]], toonName)
+					args.name = format("|cff%s|HBNplayer:%s:%s|h%s|r |cff%s%s|h|r", "82C5FF", presenceName, presenceID, presenceName, S.classCache[S.revLOCALIZED_CLASS_NAMES[class]], toonName)
 					
 					args.level = "|cffADFF2F"..level.."|r"
 					

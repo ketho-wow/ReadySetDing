@@ -333,7 +333,7 @@ function RSD:TIME_PLAYED_MSG(event, ...)
 		if profile.ChatParty then
 			local chan = IsInRaid() and "RAID" or IsInGroup() and "PARTY" or "SAY"
 			if select(2, IsInInstance()) == "pvp" then
-				chan = "BATTLEGROUND"
+				chan = "INSTANCE_CHAT"
 			end
 			self:ScheduleTimer(function()
 				-- send in two messages
@@ -668,6 +668,7 @@ function RSD:BN_FRIEND_INFO_CHANGED(event)
 			
 			-- ToDo: add support for multiple online toons / BNGetFriendToonInfo
 			local _, toonName, client, realm, _, _, race, class, _, _, level = BNGetToonInfo(presenceID)
+			if not realm then return end -- sanity check (reported by featalene-Curse)
 			
 			-- avoid misrecognizing characters that share the same name, but are from different servers
 			realid[realm] = realid[realm] or {}

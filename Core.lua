@@ -331,10 +331,8 @@ function RSD:TIME_PLAYED_MSG(event, ...)
 		
 		-- Party/Raid Announce
 		if profile.ChatParty then
-			local chan = IsInRaid() and "RAID" or IsInGroup() and "PARTY" or "SAY"
-			if select(2, IsInInstance()) == "pvp" then
-				chan = "INSTANCE_CHAT"
-			end
+			local isBattleground = select(2, IsInInstance()) == "pvp"
+			local chan = (IsPartyLFG() or isBattleground) and "INSTANCE_CHAT" or IsInRaid() and "RAID" or IsInGroup() and "PARTY" or "SAY"
 			self:ScheduleTimer(function()
 				-- send in two messages
 				if strlen(text) > 255 then

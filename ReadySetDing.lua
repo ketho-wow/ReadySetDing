@@ -2,7 +2,7 @@
 --- Author: Ketho (EU-Boulderfist)		---
 --- License: Public Domain				---
 --- Created: 2009.09.01					---
---- Version: 1.12 [2012.12.01]			---
+--- Version: 1.13 [2013.05.03]			---
 -------------------------------------------
 --- Curse			http://www.curse.com/addons/wow/readysetding
 --- WoWInterface	http://www.wowinterface.com/downloads/info16220-ReadySetDing.html
@@ -13,7 +13,7 @@
 -- custom achievements; use custom achiev lib
 
 local NAME, S = ...
-S.VERSION = "1.12"
+S.VERSION = GetAddOnMetadata(NAME, "Version")
 S.BUILD = "Release"
 
 ReadySetDing = LibStub("AceAddon-3.0"):NewAddon("ReadySetDing", "AceEvent-3.0", "AceTimer-3.0", "AceConsole-3.0")

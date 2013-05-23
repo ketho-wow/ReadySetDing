@@ -378,7 +378,7 @@ function RSD:TIME_PLAYED_MSG(event, ...)
 		-- Screenshot
 		if profile.Screenshot then
 			if profile.RaidWarning then
-				RaidNotice_AddMessage(RaidWarningFrame, text, {r=1, g=1, b=1})
+				RaidNotice_AddMessage(RaidWarningFrame, text, S.white)
 			end
 			
 			local timeHide = profile.ScreenshotDelay - 1

@@ -2,7 +2,7 @@
 --- Author: Ketho (EU-Boulderfist)		---
 --- License: Public Domain				---
 --- Created: 2009.09.01					---
---- Version: 1.13 [2013.05.03]			---
+--- Version: 1.14 [2013.05.23]			---
 -------------------------------------------
 --- Curse			http://www.curse.com/addons/wow/readysetding
 --- WoWInterface	http://www.wowinterface.com/downloads/info16220-ReadySetDing.html
@@ -35,6 +35,7 @@ end
 
 S.crop = ":64:64:4:60:4:60"
 S.RT = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_"
+S.white = {r=1, g=1, b=1}
 
 S.cd = {} -- cooldowns
 local cd = S.cd
@@ -248,7 +249,7 @@ end
 	--------------------
 
 S.classCache = setmetatable({}, {__index = function(t, k)
-	local color = CUSTOM_CLASS_COLORS and CUSTOM_CLASS_COLORS[k] or RAID_CLASS_COLORS[k]
+	local color = (CUSTOM_CLASS_COLORS or RAID_CLASS_COLORS)[k]
 	local v = format("%02X%02X%02X", color.r*255, color.g*255, color.b*255)
 	rawset(t, k, v)
 	return v
@@ -480,9 +481,9 @@ function RSD:Output(msg, args)
 	elseif v == 2 then
 		-- RaidWarningFrame / RaidBossEmoteFrame shows max 2 messages at the same time
 		-- they're called "slots" as in "RaidWarningFrameSlot1"
-		RaidNotice_AddMessage(RaidWarningFrame, msg, {r=1, g=1, b=1})
+		RaidNotice_AddMessage(RaidWarningFrame, msg, S.white)
 	elseif v == 3 then
-		RaidNotice_AddMessage(RaidBossEmoteFrame, msg, {r=1, g=1, b=1})
+		RaidNotice_AddMessage(RaidBossEmoteFrame, msg, S.white)
 	elseif v == 4 then
 		UIErrorsFrame:AddMessage(msg)
 	else

@@ -2,7 +2,7 @@
 --- Author: Ketho (EU-Boulderfist)		---
 --- License: Public Domain				---
 --- Created: 2009.09.01					---
---- Version: 1.14 [2013.05.23]			---
+--- Version: 1.15 [2014.10.25]			---
 -------------------------------------------
 --- Curse			http://www.curse.com/addons/wow/readysetding
 --- WoWInterface	http://www.wowinterface.com/downloads/info16220-ReadySetDing.html
@@ -229,7 +229,7 @@ end
 	--------------------------
 
 do
-	local levels = {10, 20, 30, 40, 50, 60, 70, 80, 85, 90}
+	local levels = {10, 20, 30, 40, 50, 60, 70, 80, 85, 90, 100}
 	
 	S.Levels = {}
 	

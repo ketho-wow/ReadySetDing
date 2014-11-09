@@ -2,7 +2,7 @@
 --- Author: Ketho (EU-Boulderfist)		---
 --- License: Public Domain				---
 --- Created: 2009.09.01					---
---- Version: 1.15 [2014.10.25]			---
+--- Version: 1.16 [2014.11.10]			---
 -------------------------------------------
 --- Curse			http://www.curse.com/addons/wow/readysetding
 --- WoWInterface	http://www.wowinterface.com/downloads/info16220-ReadySetDing.html
@@ -25,11 +25,10 @@ local ACD = LibStub("AceConfigDialog-3.0")
 
 local L = S.L
 
-local profile, realm, char
+local profile, char
 
 function RSD:RefreshDB1()
 	profile = self.db.profile
-	realm = self.db.realm
 	char = self.db.char
 end
 
@@ -240,7 +239,7 @@ do
 	S.AchievIcons = {}
 	
 	for i, v in ipairs(levels) do
-		S.AchievIcons[i] = "|TInterface\\Icons\\Achievement_Level_"..v..":32:32:0:0|t"
+		S.AchievIcons[i] = "|TInterface\\Icons\\Achievement_Level_"..v..":24:24:0:0"..S.crop.."|t"
 	end
 end
 
@@ -425,18 +424,6 @@ function RSD:AchievStat(info)
 		return totalDeaths
 	end
 end
-
---[[
-function RSD:LevelSpeed(d)
-	local levelTime = char.LevelTimeList
-	for i = d, 1, -1 do
-		if levelTime[player.level-i] then
-			return (S.totalTPM - char.totalTimeList[player.level-i] + levelTime[player.level-i] + time() - S.lastPlayed) / (i+1)
-		end
-	end
-	return levelTime[player.level] and levelTime[player.level] + S.curTPM + time() - S.lastPlayed or L.NO_DATA
-end
-]]
 
 	---------------
 	--- Replace ---

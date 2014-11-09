@@ -11,7 +11,7 @@ local player = S.player
 local cd = S.cd
 local args = S.args
 
-local profile, realm, char
+local profile, member, char
 
 S.lastPlayed = time()
 S.totalTPM, S.curTPM = 0, 0
@@ -85,6 +85,20 @@ function RSD:OnInitialize()
 	char.UnixTimeList = char.UnixTimeList or {}
 	self.db.global.maxxp = self.db.global.maxxp or {}
 	
+	self.db.global.member = setmetatable(self.db.global.member or {}, {__index = function(t1, k1)
+			-- we must go deeper...
+			local v1 = setmetatable({}, {__index = function(t2, k2)
+				local v2 = {}
+				rawset(t2, k2, v2)
+				return v2
+			end})
+			
+			rawset(t1, k1, v1)
+			return v1
+		end
+	})
+	member = self.db.global.member 
+	
 	-- character specific
 	char.timeAFK = char.timeAFK or 0
 	char.totalAFK = char.totalAFK or 0
@@ -96,36 +110,9 @@ function RSD:OnInitialize()
 		char.UnixTimeList[1] = char.UnixTimeList[1] or time()
 	end
 	
-	-- "backwards compatibility" with v0.95 data; prefer capitalization for SavedVars
-	if char.levelTimeList then
-		for k, v in pairs(char.levelTimeList) do
-			char.LevelTimeList[k] = v
-		end
-		char.levelTimeList = nil
-		
-		for k, v in pairs(char.totalTimeList) do
-			char.TotalTimeList[k] = v
-		end
-		char.totalTimeList = nil
-		
-		for k, v in pairs(char.dateStampList) do
-			char.DateStampList[k] = v
-		end
-		char.dateStampList = nil
-		
-		for k, v in pairs(char.unixTimeList) do
-			char.UnixTimeList[k] = v
-		end
-		char.unixTimeList = nil
-		
-		-- can just build it straight from LevelTimeList
-		char.levelSummary = nil
-		char.experienceList = nil
-	end
-	
-	-- renamed/removed in v1.05
-	if char.stats then
-		char.stats = nil
+	-- v1.16: remove pre-connected realms guild member data
+	if self.db.realm then
+		wipe(self.db.realm)
 	end
 end
 
@@ -155,7 +142,7 @@ function RSD:OnEnable()
 	end
 	
 	-- filter /played message
-	S.filterPlayed = profile.FilterPlayed and true or false
+	S.filterPlayed = true
 	
 	-- support [Class Colors] by Phanx
 	if CUSTOM_CLASS_COLORS then
@@ -207,8 +194,7 @@ function RSD:RefreshDB()
 	-- table shortcuts
 	profile = self.db.profile
 	char = self.db.char
-	realm = self.db.realm
-		
+	
 	-- update table references in other files
 	for i = 1, 3 do
 		self["RefreshDB"..i](self)
@@ -277,7 +263,7 @@ function RSD:PLAYER_LEVEL_UP(event, ...)
 	local level = ...
 	player.level = level -- on another note, UnitLevel is not yet updated
 	playerDinged = true
-	S.filterPlayed = profile.FilterPlayed and true or false
+	S.filterPlayed = true
 	RequestTimePlayed() -- TIME_PLAYED_MSG
 end
 
@@ -545,59 +531,62 @@ function RSD:GUILD_ROSTER_UPDATE(event)
 		local chan = "|cff40FF40"..GUILD.."|r"
 		
 		for i = 1, GetNumGuildMembers() do
-			local name, rank, _, level, class, zone, _, _, _, _, englishClass = GetGuildRosterInfo(i)
-			
-			-- sanity checks
-			if name and realm[name] and level > realm[name][1] and name ~= player.name then
-				if secondGRU then
-					local realtime = 0
-					if level-1 ~= 1 and realm[name][level-1] then
-						realtime = time() - realm[name][level-1][1]
-					end
-					
-					-- args for ShowGuild specifically
-					args.icon = S.GetClassIcon(englishClass, 1, 1)
-					args.chan = chan
-					args.name = format("|cff%s|Hplayer:%s|h%s|h|r", S.classCache[englishClass], name, name)
-					args.level = "|cffADFF2F"..level.."|r"
-					-- hidden args
-					args.class = "|cff"..S.classCache[englishClass]..class.."|r"
-					args.rank = rank
-					args.zone = zone
-					args.realtime = realtime
-					
-					if profile.ShowGuild then
-						self:Output(profile.ShowMsg, args)
-					end
-					
-					if profile.GuildMemberDing then
-						-- filters
-						local afk = profile.GuildAFK and not UnitIsAFK("player") or not profile.GuildAFK
-						local achiev = profile.FilterLevelAchiev and not S.Levels[level] or not profile.FilterLevelAchiev
-						local minLevel = (level >= profile.MinLevelFilter) -- forgot to add this in the rewrite ><
+			local fullName, rank, _, level, class, zone, _, _, _, _, englishClass = GetGuildRosterInfo(i)
+			if fullName then -- sanity check
+				local charName, charRealm = strmatch(fullName, "(.+)%-(.+)")
+				if not member[charRealm] then print(charRealm, charName, fullName, i) end
+				local p = member[charRealm][charName]
+				
+				if #p > 0 and level > p[1] and charName ~= player.name then
+					if secondGRU then
+						local realtime = 0
+						if level-1 ~= 1 and p[level-1] then
+							realtime = time() - p[level-1][1]
+						end
 						
-						if afk and achiev and minLevel then
-							SendChatMessage(self:ChatGuild(name, level, class, rank, zone, realtime), "GUILD")
+						-- args for ShowGuild specifically
+						args.icon = S.GetClassIcon(englishClass, 1, 1)
+						args.chan = chan
+						args.name = format("|cff%s|Hplayer:%s|h%s|h|r", S.classCache[englishClass], charName, name)
+						args.level = "|cffADFF2F"..level.."|r"
+						-- hidden args
+						args.class = "|cff"..S.classCache[englishClass]..class.."|r"
+						args.rank = rank
+						args.zone = zone
+						args.realtime = realtime
+						
+						if profile.ShowGuild then
+							self:Output(profile.ShowMsg, args)
 						end
-					end
-					
-					-- save time & date
-					realm[name][level] = {time(), date("%Y.%m.%d %H:%M:%S")}
-				else
-					-- level changed while user was offline
-					if profile.GuildMemberDiff then
-						if not showedHeader and char.LastCheck then
-							self:Print(format("|cffF6ADC6[%s]|r - |cffADFF2F[%s]|r", char.LastCheck, date("%Y.%m.%d %H:%M:%S")))
-							showedHeader = true; char.LastCheck = nil
+						
+						if profile.GuildMemberDing then
+							-- filters
+							local achiev = profile.FilterLevelAchiev and not S.Levels[level] or not profile.FilterLevelAchiev
+							local minLevel = (level >= profile.MinLevelFilter) -- forgot to add this in the rewrite ><
+							
+							if not UnitIsAFK("player") and achiev and minLevel then
+								SendChatMessage(self:ChatGuild(charName, level, class, rank, zone, realtime), "GUILD")
+							end
 						end
-						print(format("|cff%s|Hplayer:%s|h[%s]|h|r %s |cffF6ADC6%s|r - |cffADFF2F%s|r (+|cff71D5FF%s|r)", S.classCache[englishClass], name, name, LEVEL, realm[name][1], level, level-realm[name][1]))
+						
+						-- save time & date
+						p[level] = {time(), date("%Y.%m.%d %H:%M:%S")}
+					else
+						-- level changed while user was offline
+						if profile.GuildMemberDiff then
+							if not showedHeader and char.LastCheck then
+								self:Print(format("|cffF6ADC6[%s]|r - |cffADFF2F[%s]|r", char.LastCheck, date("%Y.%m.%d %H:%M:%S")))
+								showedHeader = true; char.LastCheck = nil
+							end
+							print(format("|cff%s|Hplayer:%s|h[%s]|h|r %s |cffF6ADC6%s|r - |cffADFF2F%s|r (+|cff71D5FF%s|r)",
+								S.classCache[englishClass], charName, name, LEVEL, p[1], level, level-p[1]))
+						end
+						-- don't got time & date
+						p[level] = false
 					end
-					-- don't got time & date
-					realm[name][level] = false
 				end
+				p[1] = level
 			end
-			realm[name] = realm[name] or {}
-			realm[name][1] = level
 		end
 		-- even more awful delaying
 		-- a lot of bunnies were sacrificed for this

@@ -11,11 +11,10 @@ local player = S.player
 local legend = S.legend
 local args = S.args
 
-local profile, realm, char
+local profile, char
 
 function RSD:RefreshDB2()
 	profile = self.db.profile
-	realm = self.db.realm
 	char = self.db.char
 end
 
@@ -77,10 +76,8 @@ S.defaults = {
 		TimeMaxCount = 2,
 		
 		LevelGraph = true,
-		FilterPlayed = true,
 		GuildMemberDiff = true,
 		
-		GuildAFK = true,
 		FilterLevelAchiev = true,
 		MinLevelFilter = 10,
 		NumRandomGuild = 5,
@@ -188,18 +185,7 @@ S.options = {
 						ChatGuild = {
 							type = "toggle", order = 2,
 							descStyle = "",
-							name = function()
-								if IsInGuild() and GuildFrameTabardEmblem then
-									if time() > (cd.emblem or 0) then
-										cd.emblem = time() + 60
-										local emblem = {GuildFrameTabardEmblem:GetTexCoord()}
-										char.GuildEmblem = format("|TInterface\\GuildFrame\\GuildEmblemsLG_01:32:32:-2:3:32:32:%s:%s:%s:%s|t", emblem[1]*32, emblem[7]*32, emblem[2]*32, emblem[8]*32)
-									end
-								else
-									char.GuildEmblem = "|TInterface\\GuildFrame\\GuildLogo-NoLogo:32:32:-2:3|t"
-								end
-								return char.GuildEmblem.."|cff40FF40"..GUILD.."|r"
-							end,
+							name = "|TInterface\\GuildFrame\\GuildLogo-NoLogo:32:32:-2:3|t|cff40FF40"..GUILD.."|r",
 						},
 						DingRandom = {
 							type = "toggle", order = 3,
@@ -428,16 +414,6 @@ S.options = {
 						ReadySetDing_LevelGraph[v and "Show" or "Hide"](ReadySetDing_LevelGraph)
 					end,
 				},
-				FilterPlayed = {
-					type = "toggle", order = 7,
-					width = "full",
-					desc = function()
-						local level = format(TIME_PLAYED_LEVEL2, format(TIME_DAYHOURMINUTESECOND, unpack( {ChatFrame_TimeBreakDown(S.curTPM + time() - S.lastPlayed)} )))
-						local total = format(TIME_PLAYED_TOTAL2, format(TIME_DAYHOURMINUTESECOND, unpack( {ChatFrame_TimeBreakDown(S.totalTPM + time() - S.lastPlayed)} )))
-						return format("%s\n\n%s\n\n%s", level, total, L.NOT_FILTER_OTHER_ADDONS)
-					end,
-					name = "|TInterface\\Icons\\Spell_Holy_Silence:16:16:1:0"..S.crop.."|t  "..L.FILTER_PLAYED_MESSAGE,
-				},
 				GuildMemberDiff = {
 					type = "toggle", order = 8,
 					width = "full", descStyle = "",
@@ -465,11 +441,6 @@ S.options = {
 					inline = true,
 					disabled = function() return not profile.GuildMemberDing end,
 					args = {
-						GuildAFK = {
-							type = "toggle", order = 1,
-							width = "full", descStyle = "",
-							name = "|TInterface\\Icons\\Spell_Nature_Sleep:16:16:1:0"..S.crop.."|t  "..L.DISABLE_AFK,
-						},
 						GuildRandom = {
 							type = "toggle", order = 2,
 							width = "full", descStyle = "",
@@ -523,39 +494,6 @@ S.options = {
 					type = "description", order = 4,
 					fontSize = "medium",
 					name = function() return RSD:PreviewGuild(1) end,
-				},
-				spacing1 = {type = "description", order = -2, name = "\n"},
-				GuildMemberLevelSpeed = {
-					type = "execute", order = -1,
-					name = "|TInterface\\Icons\\INV_Misc_Note_01:16:16:1:-1"..S.crop.."|t |cffFFFFFF"..L.LEVEL_SPEED.."|r",
-					func = function()
-						local list = S.recycle[2]; wipe(list)
-						for i = 1, GetNumGuildMembers() do
-							local name, _, level = GetGuildRosterInfo(i)
-							if realm[name] and realm[name][level] then
-								-- drycoded
-								for j = 3, 1, -1 do
-									-- ignore the [1] index
-									if realm[name][level-j] and level-j >= 1 then
-										local speed = (time()-realm[name][level-j][1]) / (3600*j)
-										list[speed] = name
-										break
-									end
-								end
-							end
-						end
-						
-						local t = S.recycle[3]; wipe(t)
-						for k in pairs(list) do
-							tinsert(t, k)
-						end
-						sort(t)
-						
-						for i, v in ipairs(t) do
-							print(format("#%d |cff71D5FF%s|r |cffADFF2F%.2f|r %s/%s (|cffB6CA00%s|r)", i, list[v], v, S.HOUR, LEVEL, realm[list[v]][1]))
-						end
-					end,
-					hidden = function() return not IsInGuild() end,
 				},
 			},
 		},
@@ -612,6 +550,7 @@ S.options = {
 						local colorName = profile.LibSharedMediaSound and "|cff4E96F7LibSharedMedia|r "..SOUND_LABEL or "|cff979797LibSharedMedia "..SOUND_LABEL.."|r"
 						return "|TInterface\\Common\\VOICECHAT-SPEAKER:20:20:4:0|t "..colorName
 					end,
+					disabled = function() return not profile.Sound end,
 				},
 				inline2 = {
 					type = "group", order = 7,
@@ -857,7 +796,7 @@ function RSD:PreviewGuild(i)
 		args["level-"] = "|cffF6ADC6"..level.."|r"
 		args["level#"] = "|cffF6ADC6"..S.maxlevel.."|r"
 		args["level%"] = "|cffF6ADC6"..S.maxlevel-newLevel.."|r"
-		args.name = "|cff"..S.classCache[englishClass]..name.."|r"
+		args.name = "|cff"..S.classCache[englishClass]..strmatch(name, "(.+)%-.+").."|r"
 		args.class = "|cff"..S.classCache[englishClass]..class.."|r"
 		args.rank = "|cff0070DD"..rank.."|r"
 		args.zone = "|cff0070DD"..(zone or ZONE).."|r"

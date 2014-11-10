@@ -20,6 +20,8 @@ local curTPM2, totalTPM2
 local pairs, ipairs = pairs, ipairs
 local format, gsub = format, gsub
 
+local IsInGuild = IsInGuild
+
 	---------------------------
 	--- Ace3 Initialization ---
 	---------------------------
@@ -85,16 +87,10 @@ function RSD:OnInitialize()
 	char.UnixTimeList = char.UnixTimeList or {}
 	self.db.global.maxxp = self.db.global.maxxp or {}
 	
-	self.db.global.member = setmetatable(self.db.global.member or {}, {__index = function(t1, k1)
-			-- we must go deeper...
-			local v1 = setmetatable({}, {__index = function(t2, k2)
-				local v2 = {}
-				rawset(t2, k2, v2)
-				return v2
-			end})
-			
-			rawset(t1, k1, v1)
-			return v1
+	self.db.global.member = setmetatable(self.db.global.member or {}, {__index = function(t, k)
+			local v = {}
+			rawset(t, k, v)
+			return v
 		end
 	})
 	member = self.db.global.member 
@@ -162,7 +158,7 @@ function RSD:OnEnable()
 		if S.UNIT_LEVEL() then
 			self:UNIT_LEVEL("UNIT_LEVEL")
 		end
-		if S.GUILD_ROSTER_UPDATE() then
+		if S.GUILD_ROSTER_UPDATE() and IsInGuild() then
 			GuildRoster() -- fires GUILD_ROSTER_UPDATE
 		end
 		-- FRIENDLIST_UPDATE doesn't fire on actual friend levelups
@@ -526,73 +522,80 @@ local firstGRU, secondGRU, showedHeader
 
 -- now this is an even bigger mess than before ._.
 function RSD:GUILD_ROSTER_UPDATE(event)
-	if IsInGuild() and time() > (cd.guild or 0) then
-		cd.guild = time() + 10
-		local chan = "|cff40FF40"..GUILD.."|r"
+	if not (time() > (cd.guild or 0)) then return end
+	cd.guild = time() + 10
+	
+	local chan = "|cff40FF40"..GUILD.."|r"
+	
+	for i = 1, GetNumGuildMembers() do
+		local fullName, rank, _, level, class, zone, _, _, _, _, englishClass = GetGuildRosterInfo(i)
+		local charName, charRealm = strmatch(fullName or "", "(.+)%-(.+)") -- is this different on non-connected realms?..
 		
-		for i = 1, GetNumGuildMembers() do
-			local fullName, rank, _, level, class, zone, _, _, _, _, englishClass = GetGuildRosterInfo(i)
-			if fullName then -- sanity check
-				local charName, charRealm = strmatch(fullName, "(.+)%-(.+)")
-				if not member[charRealm] then print(charRealm, charName, fullName, i) end
-				local p = member[charRealm][charName]
-				
-				if #p > 0 and level > p[1] and charName ~= player.name then
-					if secondGRU then
-						local realtime = 0
-						if level-1 ~= 1 and p[level-1] then
-							realtime = time() - p[level-1][1]
-						end
-						
-						-- args for ShowGuild specifically
-						args.icon = S.GetClassIcon(englishClass, 1, 1)
-						args.chan = chan
-						args.name = format("|cff%s|Hplayer:%s|h%s|h|r", S.classCache[englishClass], charName, name)
-						args.level = "|cffADFF2F"..level.."|r"
-						-- hidden args
-						args.class = "|cff"..S.classCache[englishClass]..class.."|r"
-						args.rank = rank
-						args.zone = zone
-						args.realtime = realtime
-						
-						if profile.ShowGuild then
-							self:Output(profile.ShowMsg, args)
-						end
-						
-						if profile.GuildMemberDing then
-							-- filters
-							local achiev = profile.FilterLevelAchiev and not S.Levels[level] or not profile.FilterLevelAchiev
-							local minLevel = (level >= profile.MinLevelFilter) -- forgot to add this in the rewrite ><
-							
-							if not UnitIsAFK("player") and achiev and minLevel then
-								SendChatMessage(self:ChatGuild(charName, level, class, rank, zone, realtime), "GUILD")
-							end
-						end
-						
-						-- save time & date
-						p[level] = {time(), date("%Y.%m.%d %H:%M:%S")}
-					else
-						-- level changed while user was offline
-						if profile.GuildMemberDiff then
-							if not showedHeader and char.LastCheck then
-								self:Print(format("|cffF6ADC6[%s]|r - |cffADFF2F[%s]|r", char.LastCheck, date("%Y.%m.%d %H:%M:%S")))
-								showedHeader = true; char.LastCheck = nil
-							end
-							print(format("|cff%s|Hplayer:%s|h[%s]|h|r %s |cffF6ADC6%s|r - |cffADFF2F%s|r (+|cff71D5FF%s|r)",
-								S.classCache[englishClass], charName, name, LEVEL, p[1], level, level-p[1]))
-						end
-						-- don't got time & date
-						p[level] = false
+		if charName and charRealm then -- sanity checks
+			local p = member[charRealm][charName]
+			
+			-- sanity checks everywhere~
+			if p and #p > 0 and level > p[1] and charName ~= player.name then
+				if secondGRU then
+					local realtime = 0
+					if level-1 ~= 1 and p[level-1] then
+						realtime = time() - p[level-1][1]
 					end
+					
+					-- args for ShowGuild specifically
+					args.icon = S.GetClassIcon(englishClass, 1, 1)
+					args.chan = chan
+					args.name = format("|cff%s|Hplayer:%s|h%s|h|r", S.classCache[englishClass], name, charName)
+					args.level = "|cffADFF2F"..level.."|r"
+					-- hidden args
+					args.class = "|cff"..S.classCache[englishClass]..class.."|r"
+					args.rank = rank
+					args.zone = zone
+					args.realtime = realtime
+					
+					if profile.ShowGuild then
+						self:Output(profile.ShowMsg, args)
+					end
+					
+					if profile.GuildMemberDing then
+						-- filters
+						local achiev = profile.FilterLevelAchiev and not S.Levels[level] or not profile.FilterLevelAchiev
+						local minLevel = (level >= profile.MinLevelFilter) -- forgot to add this in the rewrite ><
+						
+						if not UnitIsAFK("player") and achiev and minLevel then
+							SendChatMessage(self:ChatGuild(charName, level, class, rank, zone, realtime), "GUILD")
+						end
+					end
+					
+					-- save time & date
+					p[level] = {time(), date("%Y.%m.%d %H:%M:%S")}
+				else
+					-- level changed while user was offline
+					if profile.GuildMemberDiff then
+						if not showedHeader and char.LastCheck then
+							self:Print(format("|cffF6ADC6[%s]|r - |cffADFF2F[%s]|r", char.LastCheck, date("%Y.%m.%d %H:%M:%S")))
+							showedHeader = true; char.LastCheck = nil
+						end
+						print(format("|cff%s|Hplayer:%s|h[%s]|h|r %s |cffF6ADC6%s|r - |cffADFF2F%s|r (+|cff71D5FF%s|r)",
+							S.classCache[englishClass], name, charName, LEVEL, p[1], level, level-p[1]))
+					end
+					-- don't got time & date
+					p[level] = false
 				end
-				p[1] = level
+			end
+			
+			-- dont save already maxed characters
+			if level ~= S.maxlevel or (p and #p > 0) then
+				member[charRealm][charName] = member[charRealm][charName] or {}
+				member[charRealm][charName][1] = level
 			end
 		end
-		-- even more awful delaying
-		-- a lot of bunnies were sacrificed for this
-		if firstGRU then secondGRU = true end
-		firstGRU = true
 	end
+	
+	-- even more awful delaying
+	-- a lot of bunnies were sacrificed for this
+	if firstGRU then secondGRU = true end
+	firstGRU = true
 end
 
 function RSD:ChatGuild(name, level, class, rank, zone, realtime)

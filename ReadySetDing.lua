@@ -2,7 +2,7 @@
 --- Author: Ketho (EU-Boulderfist)		---
 --- License: Public Domain				---
 --- Created: 2009.09.01					---
---- Version: 1.16 [2014.11.10]			---
+--- Version: 1.17 [2014.11.11]			---
 -------------------------------------------
 --- Curse			http://www.curse.com/addons/wow/readysetding
 --- WoWInterface	http://www.wowinterface.com/downloads/info16220-ReadySetDing.html
@@ -10,7 +10,6 @@
 --- To Do:
 -- guild member levels scroll window
 -- more advanced graphs, guildmember graphs
--- custom achievements; use custom achiev lib
 
 local NAME, S = ...
 S.VERSION = GetAddOnMetadata(NAME, "Version")

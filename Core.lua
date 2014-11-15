@@ -107,9 +107,7 @@ function RSD:OnInitialize()
 	end
 	
 	-- v1.16: remove pre-connected realms guild member data
-	if self.db.realm then
-		wipe(self.db.realm)
-	end
+	wipe(self.db.realm)
 end
 
 local f = CreateFrame("Frame")
@@ -526,6 +524,7 @@ function RSD:GUILD_ROSTER_UPDATE(event)
 	cd.guild = time() + 10
 	
 	local chan = "|cff40FF40"..GUILD.."|r"
+	local afk = UnitIsAFK("player")
 	
 	for i = 1, GetNumGuildMembers() do
 		local fullName, rank, _, level, class, zone, _, _, _, _, englishClass = GetGuildRosterInfo(i)
@@ -545,7 +544,7 @@ function RSD:GUILD_ROSTER_UPDATE(event)
 					-- args for ShowGuild specifically
 					args.icon = S.GetClassIcon(englishClass, 1, 1)
 					args.chan = chan
-					args.name = format("|cff%s|Hplayer:%s|h%s|h|r", S.classCache[englishClass], name, charName)
+					args.name = format("|cff%s|Hplayer:%s|h%s|h|r", S.classCache[englishClass], fullName, charName)
 					args.level = "|cffADFF2F"..level.."|r"
 					-- hidden args
 					args.class = "|cff"..S.classCache[englishClass]..class.."|r"
@@ -562,7 +561,7 @@ function RSD:GUILD_ROSTER_UPDATE(event)
 						local achiev = profile.FilterLevelAchiev and not S.Levels[level] or not profile.FilterLevelAchiev
 						local minLevel = (level >= profile.MinLevelFilter) -- forgot to add this in the rewrite ><
 						
-						if not UnitIsAFK("player") and achiev and minLevel then
+						if not afk and achiev and minLevel then
 							SendChatMessage(self:ChatGuild(charName, level, class, rank, zone, realtime), "GUILD")
 						end
 					end
@@ -577,7 +576,7 @@ function RSD:GUILD_ROSTER_UPDATE(event)
 							showedHeader = true; char.LastCheck = nil
 						end
 						print(format("|cff%s|Hplayer:%s|h[%s]|h|r %s |cffF6ADC6%s|r - |cffADFF2F%s|r (+|cff71D5FF%s|r)",
-							S.classCache[englishClass], name, charName, LEVEL, p[1], level, level-p[1]))
+							S.classCache[englishClass], fullName, charName, LEVEL, p[1], level, level-p[1]))
 					end
 					-- don't got time & date
 					p[level] = false

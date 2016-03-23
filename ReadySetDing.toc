@@ -1,5 +1,5 @@
-## Interface: 60000
-## Version: 1.18
+## Interface: 60200
+## Version: 1.19
 ## Title: ReadySetDing
 ## Notes: Ding!
 ## Author: Ketho @ EU-Boulderfist

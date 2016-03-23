@@ -656,7 +656,7 @@ function RSD:BN_FRIEND_INFO_CHANGED(event)
 			local presenceID, presenceName, battleTag, isBattleTagPresence = BNGetFriendInfo(i)
 			
 			-- ToDo: add support for multiple online toons / BNGetFriendToonInfo
-			local _, toonName, client, realm, _, _, race, class, _, _, level = BNGetToonInfo(presenceID)
+			local _, toonName, client, realm, _, _, race, class, _, _, level = BNGetGameAccountInfo(presenceID)
 			if not realm then return end -- sanity check (reported by featalene-Curse)
 			
 			-- avoid misrecognizing characters that share the same name, but are from different servers

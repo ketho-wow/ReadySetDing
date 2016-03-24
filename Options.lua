@@ -67,9 +67,8 @@ S.defaults = {
 			L.MSG_PLAYER_DING4,
 		},
 		
-		ShowOutput = 2,
+		ShowOutput = 1,
 		Language = 1,
-		DingDelay = 0,
 		
 		LegacyTime = true,
 		TimeMaxCount = 2,
@@ -234,15 +233,13 @@ S.options = {
 							values = function()
 								local c = "|cff2E9AFE"
 								local t = {
-									c.."#|r  "..(SHOW_COMBAT_TEXT == "0" and "|cff979797" or "")..COMBAT_TEXT_LABEL,
 									c.."#|r  RaidWarningFrame",
-									c.."#|r  RaidBossEmoteFrame",
-									c.."#|r  UIErrorsFrame",
+									c.."#|r  "..(SHOW_COMBAT_TEXT == "0" and "|cff979797" or "")..COMBAT_TEXT_LABEL,
 								}
 								for i = 1, NUM_CHAT_WINDOWS do
 									local window = GetChatWindowInfo(i)
 									if #window > 0 then
-										t[i+4] = c..i..".|r "..window
+										t[i+2] = c..i..".|r "..window
 									end
 								end
 								return t
@@ -260,16 +257,8 @@ S.options = {
 					name = "|cff3FBF3F"..CHAT_ANNOUNCE.."|r",
 					inline = true,
 					args = {
-						DingDelay = {
-							type = "range", order = 1,
-							desc = "("..strlower(SECONDS)..")",
-							name = L.DELAY,
-							min = 0, softMin = 0,
-							max = 60, softMax = 5,
-							step = 0.5,
-						},
 						Language = {
-							type = "select", order = 2,
+							type = "select", order = 1,
 							descStyle = "",
 							name = "   "..LANGUAGES_LABEL,
 							values = function()
@@ -362,8 +351,13 @@ S.options = {
 						end
 					end,
 				},
-				LevelGraph = {
+				Screenshot = {
 					type = "toggle", order = 6,
+					width = "full", descStyle = "",
+					name = "|TInterface\\Icons\\inv_misc_spyglass_03:16:16:1:0"..S.crop.."|t  "..BINDING_NAME_SCREENSHOT,
+				},
+				LevelGraph = {
+					type = "toggle", order = 7,
 					width = "full", descStyle = "",
 					name = "|TINTERFACE\\ICONS\\achievement_guildperk_fasttrack_rank2:16:16:1:0"..S.crop.."|t  "..L.LEVEL_GRAPH,
 					set = function(i, v)
@@ -480,6 +474,8 @@ function RSD:PreviewDing(i)
 	args.death = "|cffFF0000"..char.death.."|r"
 	args["death+"] = "|cffFF0000"..self:AchievStat("death").."|r"
 	args.quest = "|cff58ACFA"..self:AchievStat("quest").."|r"
+	args.zone = GetRealZoneText() or GetSubZoneText() or ZONE
+	
 	return "  "..self:ReplaceArgs(profile.DingMsg[i], args)
 end
 
@@ -524,14 +520,21 @@ hooksecurefunc(ACD, "Open", function(self, app)
 end)
 
 do
-	local startCoord = {0, 0}
-	
 	local levelColor = {.68, 1, .18, .7}
 	local totalColor = {.44, .84, 1, .7}
 	
+	local function getLowestLevel()
+		for i = 2, player.maxlevel do
+			if char.LevelTimeList[i] then
+				return i
+			end
+		end
+	end
+	
 	-- maybe make graphs customizable in some way in the future
 	function RSD:UpdateGraph(level, total)
-		local XWidth = table.maxn(char.LevelTimeList) - 1
+		local minLevel = getLowestLevel()
+		local XWidth = table.maxn(char.LevelTimeList) - minLevel
 		local XRealWidth = min(XWidth * 25, 375)
 		
 		level:SetWidth(XRealWidth)
@@ -541,21 +544,19 @@ do
 		local YTotalHeight = char.TotalTimeList[table.maxn(char.TotalTimeList)]
 		
 		local t1 = S.recycle[4]; wipe(t1)
-		t1[1] = startCoord
-		for i = 2, player.maxlevel do
+		for i = minLevel, player.maxlevel do
 			local levelTime = char.LevelTimeList[i]
 			if levelTime then
-				tinsert(t1, {i-1, levelTime})
+				tinsert(t1, {i-minLevel, levelTime})
 				YLevelHeight = levelTime > YLevelHeight and levelTime or YLevelHeight
 			end
 		end
 		level:AddDataSeries(t1, levelColor)
 		
 		local t2 = S.recycle[5]; wipe(t2)
-		t2[1] = startCoord
-		for i = 2, player.maxlevel do
+		for i = minLevel, player.maxlevel do
 			if char.TotalTimeList[i] then
-				tinsert(t2, {i-1, char.TotalTimeList[i]})
+				tinsert(t2, {i-minLevel, char.TotalTimeList[i]})
 			end
 		end
 		total:AddDataSeries(t2, totalColor)

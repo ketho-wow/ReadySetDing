@@ -2,7 +2,7 @@
 --- Author: Ketho (EU-Boulderfist)		---
 --- License: Public Domain				---
 --- Created: 2009.09.01					---
---- Version: 2.0 [2016.03.24]			---
+--- Version: 2.1 [2016.03.24]			---
 -------------------------------------------
 --- Curse			http://mods.curse.com/addons/wow/readysetding
 --- WoWInterface	http://www.wowinterface.com/downloads/info16220-ReadySetDing.html
@@ -312,20 +312,12 @@ end
 	--- Legend ---
 	--------------
 
-do
-	local legend = {}
+S.legend = {}
+S.legend.show = "\n|cff71D5FFICON|r, |cffA8A8FFCHAN|r, |cffFFFFFFNAME|r, |cffADFF2FLEVEL|r"
+S.legend.chat = "\n|cffADFF2FLEVEL,|r |cffF6ADC6LEVEL-, LEVEL#, LEVEL%|r"
+	.."\n|cff71D5FFTIME, TOTAL,|r |cff0070DDDATE, DATE2|r"
+	.."\n|cffFFFF00AFK, AFK+,|r |cffFF0000DEATH, DEATH+|r\n"
 	
-	legend.show = "\n|cff71D5FFICON|r, |cffA8A8FFCHAN|r, |cffFFFFFFNAME|r, |cffADFF2FLEVEL|r"
-	
-	legend.chat = "\n|cffADFF2FLEVEL,|r |cffF6ADC6LEVEL-, LEVEL#, LEVEL%|r"
-		.."\n|cff71D5FFTIME, TOTAL,|r |cff0070DDDATE, DATE2|r"
-		.."\n|cffFFFF00AFK, AFK+,|r |cffFF0000DEATH, DEATH+|r\n"
-	
-	local playerColor = S.classCache[player.englishClass]
-	
-	S.legend = legend
-end
-
 	-------------
 	--- Stats ---
 	-------------
@@ -370,10 +362,8 @@ end
 	--------------
 
 local sinks = {
-	COMBAT_TEXT_LABEL,
 	"RaidWarningFrame",
-	"RaidBossEmoteFrame",
-	"UIErrorsFrame",
+	COMBAT_TEXT_LABEL,
 }
 
 function RSD:ShowLevelup(msg, args)
@@ -381,22 +371,14 @@ function RSD:ShowLevelup(msg, args)
 	msg = msg and self:ReplaceArgs(msg, args) or sinks[v] -- fallback to example; does not include chat windows
 	
 	if v == 1 then
-		CombatText_AddMessage(msg, COMBAT_TEXT_SCROLL_FUNCTION, 1, 1, 1)
-	elseif v == 2 then
-		-- RaidWarningFrame / RaidBossEmoteFrame shows max 2 messages at the same time
+		-- RaidWarningFrame shows max 2 messages at the same time
 		-- they're called "slots" as in "RaidWarningFrameSlot1"
 		RaidNotice_AddMessage(RaidWarningFrame, msg, S.white)
-	elseif v == 3 then
-		RaidNotice_AddMessage(RaidBossEmoteFrame, msg, S.white)
-	elseif v == 4 then
-		UIErrorsFrame:AddMessage(msg)
+	elseif v == 2 then
+		CombatText_AddMessage(msg, CombatText_StandardScroll, 1, 1, 1)
 	else
-		for i = 1, NUM_CHAT_WINDOWS do
-			if i == v-4 then
-				_G["ChatFrame"..i]:AddMessage(msg or (NAME..": |cff71D5FF"..i..". "..GetChatWindowInfo(i).."|r"))
-				break
-			end
-		end
+		local i = v-2
+		_G["ChatFrame"..i]:AddMessage(msg or (NAME..": |cff71D5FF"..i..". "..GetChatWindowInfo(i).."|r"))
 	end
 end
 

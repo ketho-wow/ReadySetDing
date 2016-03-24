@@ -285,22 +285,25 @@ function RSD:TIME_PLAYED_MSG(event, ...)
 		if profile.ChatGroup then
 			local isBattleground = select(2, IsInInstance()) == "pvp"
 			local chan = (IsPartyLFG() or isBattleground) and "INSTANCE_CHAT" or IsInRaid() and "RAID" or IsInGroup() and "PARTY" or "SAY"
-			self:ScheduleTimer(function()
-				-- send in two messages
-				if strlen(text) > 255 then
-					SendChatMessage(strsub(text, 1, 255), chan, langId)
-					SendChatMessage(strsub(text, 256), chan, langId)
-				else
-					SendChatMessage(text, chan, langId)
-				end
-			end, profile.DingDelay)
+			-- send in two messages
+			if strlen(text) > 255 then
+				SendChatMessage(strsub(text, 1, 255), chan, langId)
+				SendChatMessage(strsub(text, 256), chan, langId)
+			else
+				SendChatMessage(text, chan, langId)
+			end
 		end
 		
 		-- Guild Announce
 		if profile.ChatGuild and IsInGuild() then
+			SendChatMessage(text, "GUILD", langId)
+		end
+		
+		-- Screenshot
+		if profile.Screenshot then
 			self:ScheduleTimer(function()
-				SendChatMessage(text, "GUILD", langId)
-			end, profile.DingDelay)
+				Screenshot()
+			end, 1)
 		end
 		
 		if profile.Stopwatch and S.CanUseStopwatch(S.curTPM) then
@@ -364,7 +367,6 @@ function RSD:ChatDing(levelTime)
 	args.death = char.death
 	args["death+"] = self:AchievStat("death")
 	args.quest = self:AchievStat("quest")
-	args.rt = "{rt"..random(8).."}"
 	args.zone = GetRealZoneText() or GetSubZoneText() or ZONE
 	
 	-- fallback to default in case of blank (nil) random message

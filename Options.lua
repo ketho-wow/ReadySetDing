@@ -51,14 +51,13 @@ local arrow = "|cffF6ADC6->|r"
 
 S.defaults = {
 	profile = {
-		ShowParty = true,
-		ShowRaid = true,
+		ShowGroup = true,
 		ShowGuild = true,
 		ShowFriend = true,
-		ShowRealID = true,
 		ShowMsg = "<ICON> [<CHAN>] [<NAME>]: "..LEVEL.." <LEVEL>",
 		
-		ChatParty = true,
+		ChatGroup = true,
+		
 		NumRandomDing = 5,
 		DingMsg = {
 			L.MSG_PLAYER_DING,
@@ -76,26 +75,7 @@ S.defaults = {
 		TimeMaxCount = 2,
 		
 		LevelGraph = true,
-		GuildMemberDiff = true,
-		
-		FilterLevelAchiev = true,
-		MinLevelFilter = 10,
-		NumRandomGuild = 5,
-		GuildMsg = {
-			GUILD_NEWS_FORMAT6A,
-			L.MSG_GUILD_DING,
-			L.MSG_GUILD_DING2,
-			L.MSG_GUILD_DING3,
-			GUILD_LEVEL_UP2,
-		},
-		
-		ScreenshotDelay = 1,
-		
-		LibSharedMediaSound = true,
-		SoundWidget = LSM:GetDefault(LSM.MediaType.SOUND),
-		CustomSound = S.sounds[2],
-		ExampleSound = 2,
-		SoundDelay = 4,
+		GuildMemberChangelog = true,
 	}
 }
 
@@ -112,7 +92,7 @@ S.options = {
 	args = {
 		main = {
 			type = "group", order = 1,
-			name = "|TInterface\\AddOns\\ReadySetDing\\Images\\Windows7:16:16:-2:1|t "..GAMEOPTIONS_MENU,
+			name = GAMEOPTIONS_MENU,
 			handler = RSD,
 			get = "GetValue",
 			set = "SetValue",
@@ -121,32 +101,21 @@ S.options = {
 					type = "group", order = 1,
 					name = "|cff3FBF3F"..SHOW.."|r",
 					inline = true,
-					set = "SetValueEvent",
 					args = {
-						ShowParty = {
+						ShowGroup = {
 							type = "toggle", order = 1,
 							descStyle = "",
-							name = " |cffA8A8FF"..PARTY.."|r",
-						},
-						ShowFriend = {
-							type = "toggle", order = 2,
-							descStyle = "",
-							name = " "..FRIENDS_WOW_NAME_COLOR_CODE..FRIENDS.."|r",
+							name = " |cffA8A8FF"..GROUP.."|r",
 						},
 						ShowGuild = {
-							type = "toggle", order = 3,
+							type = "toggle", order = 2,
 							descStyle = "",
 							name = " |cff40FF40"..GUILD.."|r",
 						},
-						ShowRaid = {
-							type = "toggle", order = 4,
+						ShowFriend = {
+							type = "toggle", order = 3,
 							descStyle = "",
-							name = " |cffFF7F00"..RAID.."|r",
-						},
-						ShowRealID = {
-							type = "toggle", order = 5,
-							descStyle = "",
-							name = " "..FRIENDS_BNET_NAME_COLOR_CODE..BATTLENET_FRIEND.."|r",
+							name = " "..FRIENDS_WOW_NAME_COLOR_CODE..FRIENDS.."|r",
 						},
 						ShowMsg = {
 							type = "input", order = 6,
@@ -177,33 +146,23 @@ S.options = {
 					name = "|cff3FBF3F"..CHAT_ANNOUNCE.."|r",
 					inline = true,
 					args = {
-						ChatParty = {
+						ChatGroup = {
 							type = "toggle", order = 1,
 							descStyle = "",
-							name = "|TInterface\\Icons\\Ability_Warrior_RallyingCry:16:16:1:0"..S.crop.."|t  |cffA8A8FF"..PARTY.."|r",
+							name = "|cffA8A8FF"..GROUP.."|r",
 						},
 						ChatGuild = {
 							type = "toggle", order = 2,
 							descStyle = "",
-							name = "|TInterface\\GuildFrame\\GuildLogo-NoLogo:32:32:-2:3|t|cff40FF40"..GUILD.."|r",
+							name = "|cff40FF40"..GUILD.."|r",
 						},
 						DingRandom = {
-							type = "toggle", order = 3,
-							descStyle = "",
-							name = "|TInterface\\AddOns\\ReadySetDing\\Images\\Awesome:16:16:1:1|t  |cffF6ADC6"..L.RANDOM_MESSAGE.."|r",
-						},
-						ChatZone = {
 							type = "toggle", order = 4,
 							descStyle = "",
-							name = "|TInterface\\Icons\\INV_Misc_Map_01:16:16:1:0"..S.crop.."|t  "..ZONE,
-						},
-						ChatBroadcast = {
-							type = "toggle", order = 5,
-							desc = BN_BROADCAST_TOOLTIP,
-							name = "|TInterface\\FriendsFrame\\PlusManz-BattleNet:24:24:1:1|t  |cff82C5FF"..BATTLENET_FRIEND.."|r",
+							name = "|cffF6ADC6"..L.RANDOM_MESSAGE.."|r",
 						},
 						NumRandomDing = {
-							type = "range", order = 6,
+							type = "range", order = 5,
 							descStyle = "",
 							name = "# |cffF6ADC6"..L.RANDOM_MESSAGE.."|r",
 							min = 2, softMin = 2,
@@ -251,7 +210,7 @@ S.options = {
 				spacing1 = {type = "description", order = 5, name = ""},
 				Data = {
 					type = "execute", order = 6,
-					name = "|TInterface\\Icons\\INV_Misc_Note_01:16:16:1:-1"..S.crop.."|t  |cffFFFFFF"..L.DATA.."|r",
+					name = "|TInterface\\Icons\\INV_Misc_Note_01:16:16:1:-1"..S.crop.."|t  |cffFFFFFF"..HISTORY.."|r",
 					func = "DataFrame",
 				},
 			},
@@ -290,7 +249,7 @@ S.options = {
 							end,
 							set = function(i, v)
 								profile.ShowOutput = v
-								RSD:Output()
+								RSD:ShowLevelup()
 							end,
 						},
 						spacing1 = {type = "description", order = 2, name = " "},
@@ -306,7 +265,7 @@ S.options = {
 							desc = "("..strlower(SECONDS)..")",
 							name = L.DELAY,
 							min = 0, softMin = 0,
-							max = 60, softMax = 10,
+							max = 60, softMax = 5,
 							step = 0.5,
 						},
 						Language = {
@@ -414,204 +373,11 @@ S.options = {
 						ReadySetDing_LevelGraph[v and "Show" or "Hide"](ReadySetDing_LevelGraph)
 					end,
 				},
-				GuildMemberDiff = {
+				GuildMemberChangelog = {
 					type = "toggle", order = 8,
 					width = "full", descStyle = "",
-					name = "|TInterface\\Icons\\INV_Misc_Book_07:16:16:1:0"..S.crop.."|t  "..L.GUILDMEMBER_LEVEL_DIFF,
-					set = "SetValueEvent",
-				},
-			},
-		},
-		guildmember = {
-			type = "group", order = 3,
-			name = "|TInterface\\GuildFrame\\GuildLogo-NoLogo:16:16:-2:-1:64:64:14:51:14:51|t "..GUILD,
-			handler = RSD,
-			get = "GetValue",
-			set = "SetValue",
-			args = {
-				GuildMemberDing = {
-					type = "toggle", order = 1,
-					width = "full", descStyle = "",
-					name = "|TInterface\\GuildFrame\\GuildLogo-NoLogo:16:16:1:0:64:64:14:51:14:51|t  "..L.ANNOUNCE_GUILDMEMBER_LEVELUP,
-					set = "SetValueEvent",
-				},
-				inline1 = {
-					type = "group", order = 2,
-					name = " ",
-					inline = true,
-					disabled = function() return not profile.GuildMemberDing end,
-					args = {
-						GuildRandom = {
-							type = "toggle", order = 2,
-							width = "full", descStyle = "",
-							name = "|TInterface\\AddOns\\ReadySetDing\\Images\\Awesome:16:16:1:1|t  |cffF6ADC6"..L.RANDOM_MESSAGE.."|r",
-						},
-						FilterLevelAchiev = {
-							type = "toggle", order = 3,
-							width = "full", descStyle = "",
-							name = " "..L.FILTER_LEVEL_ACHIEVEMENTS,
-						},
-						AchievExample = {
-							type = "description", order = 4,
-							name = "         "..strjoin("  ", unpack(S.AchievIcons))
-						},
-						spacing1 = {type = "description", order = 5, name = " "},
-						MinLevelFilter = {
-							type = "range", order = 6,
-							descStyle = "",
-							name = " "..L.MINIMUM_LEVEL_FILTER,
-							min = 2,
-							max = S.maxlevel,
-							step = 1,
-						},
-						NumRandomGuild = {
-							type = "range", order = 7,
-							descStyle = "",
-							name = "# |cffF6ADC6"..L.RANDOM_MESSAGE.."|r",
-							min = 2, softMin = 2,
-							max = 100, softMax = 25,
-							step = 1,
-							set = function(i, v)
-								profile.NumRandomGuild = v
-								RSD:SetupRandomGuild(v)
-							end,
-							hidden = function() return not profile.GuildRandom end,
-						},
-					},
-				},
-				GuildMsg1 = {
-					type = "input", order = 3,
-					width = "full", usage = legend.guild,
-					name = " ",
-					get = function(i) return profile.GuildMsg[1] end,
-					set = function(i, v)
-						profile.GuildMsg[1] = (strtrim(v) == "") and defaults.profile.GuildMsg[1] or v
-						RSD:ValidateLength(RSD:PreviewGuild(1))
-						S.activePreview[2] = nil
-					end,
-				},
-				PreviewGuild = {
-					type = "description", order = 4,
-					fontSize = "medium",
-					name = function() return RSD:PreviewGuild(1) end,
-				},
-			},
-		},
-		screenshot = {
-			type = "group", order = 4,
-			name = "|TInterface\\Icons\\inv_misc_spyglass_03:16:16:-2:-1"..S.crop.."|t "..BINDING_NAME_SCREENSHOT,
-			handler = RSD,
-			get = "GetValue",
-			set = "SetValue",
-			args = {
-				Screenshot = {
-					type = "toggle", order = 1,
-					width = "full", descStyle = "",
-					name = "|TInterface\\Icons\\inv_misc_spyglass_03:16:16:1:0"..S.crop.."|t  "..BINDING_NAME_SCREENSHOT,
-				},
-				inline1 = {
-					type = "group", order = 2,
-					name = " ",
-					inline = true,
-					disabled = function() return not profile.Screenshot end,
-					args = {
-						HideUI = {
-							type = "toggle", order = 1,
-							width = "full", descStyle = "",
-							name = "|TInterface\\Icons\\INV_Gizmo_GoblingTonkController:16:16:1:0"..S.crop.."|t  "..L.SCREENSHOT_HIDE_UI,
-						},
-						RaidWarning = {
-							type = "toggle", order = 2,
-							width = "full", descStyle = "",
-							name = "|TInterface\\Icons\\Trade_Engineering:16:16:1:0"..S.crop.."|t  \""..RAID_WARNING.."\"",
-						},
-						spacing1 = {type = "description", order = 3, name = ""},
-						ScreenshotDelay = {
-							type = "range", order = 4,
-							desc = "("..strlower(SECONDS)..")",
-							name = L.DELAY,
-							min = 0, softMin = 0,
-							max = 60, softMax = 2,
-							step = 0.1,
-						},
-					},
-				},
-				spacing1 = {type = "description", order = 3, name = " "},
-				header1 = {type = "header", order = 4, name = ""},
-				Sound = {
-					type = "toggle", order = 5,
-					width = "full", descStyle = "",
-					name = "|TInterface\\Icons\\INV_Misc_Bell_01:16:16:1:0"..S.crop.."|t  "..SOUND_LABEL,
-				},
-				LibSharedMediaSound = {
-					type = "toggle", order = 6,
-					width = "full", descStyle = "",
-					name = function()
-						local colorName = profile.LibSharedMediaSound and "|cff4E96F7LibSharedMedia|r "..SOUND_LABEL or "|cff979797LibSharedMedia "..SOUND_LABEL.."|r"
-						return "|TInterface\\Common\\VOICECHAT-SPEAKER:20:20:4:0|t "..colorName
-					end,
-					disabled = function() return not profile.Sound end,
-				},
-				inline2 = {
-					type = "group", order = 7,
-					name = " ",
-					inline = true,
-					disabled = function() return not profile.Sound end,
-					args = {
-						SoundWidget = {
-							type = "select", order = 1,
-							descStyle = "",
-							values = LSM:HashTable(LSM.MediaType.SOUND),
-							dialogControl = "LSM30_Sound",
-							name = "",
-							hidden = function() return not profile.LibSharedMediaSound end,
-						},
-						CustomSound = {
-							type = "input", order = 2,
-							width = "full", descStyle = "",
-							name = "",
-							set = function(i, v) profile.CustomSound = (strtrim(v) == "") and defaults.profile.CustomSound or v end,
-							hidden = function() return profile.LibSharedMediaSound end,
-						},
-						ExampleSound = {
-							type = "select", order = 3,
-							width = "full", descStyle = "",
-							name = "",
-							values = S.sounds,
-							set = function(i, v)
-								profile.ExampleSound = v
-								profile.CustomSound = S.sounds[v]
-							end,
-							hidden = function() return profile.LibSharedMediaSound end,
-						},
-						spacing1 = {type = "description", order = 4, name = " "},
-						SoundDelay = {
-							type = "range", order = 5,
-							desc = "("..strlower(SECONDS)..")",
-							name = L.DELAY,
-							min = 0, softMin = 0,
-							max = 60, softMax = 10,
-							step = 1,
-						},
-					},
-				},
-				TestSound = {
-					type = "execute", order = 8,
-					name = SLASH_STOPWATCH_PARAM_PLAY1, -- "play"
-					width = "half",
-					func = function()
-						-- would be kinda annoying if someone accidentally spammed
-						-- this in combination with long sound files
-						if time() > (cd.TestSound or 0) then
-							cd.TestSound = time() + 1
-							if profile.CustomSound == S.sounds[2] then
-								PlaySoundFile(S.sounds[random(3, #S.sounds)], "Master")
-							else
-								PlaySoundFile(profile.CustomSound, "Master")
-							end
-						end
-					end,
-					hidden = function() return profile.LibSharedMediaSound end,
+					name = "|TInterface\\Icons\\INV_Misc_Book_07:16:16:1:0"..S.crop.."|t  "..L.GUILD_CHANGELOG,
+					disabled = function() return not IsInGuild() or not profile.ShowGuild end,
 				},
 			},
 		},
@@ -630,24 +396,6 @@ end
 
 function RSD:SetValue(i, v)
 	profile[i[#i]] = v
-end
-
--- refresh individual option
-function RSD:SetValueEvent(i, v)
-	profile[i[#i]] = v
-	
-	-- requires for example, both ShowParty and ShowRaid being disabled, in order to unregister UNIT_LEVEL
-	local event = S.levelremap[i[#i]]
-	v = S[event] and S[event]() or v
-	self[v and "RegisterEvent" or "UnregisterEvent"](self, event)
-end
-
--- refresh all options
-function RSD:RefreshEvents()
-	for option, event in pairs(S.levelremap) do
-		local v = S[event] and S[event]() or profile[option]
-		self[v and "RegisterEvent" or "UnregisterEvent"](self, event)
-	end
 end
 
 function RSD:LegacyTime()
@@ -699,54 +447,16 @@ function RSD:SetupRandomDing(num)
 	prev[1] = num
 end
 
-function RSD:SetupRandomGuild(num)
-	local guild = options.args.guildmember.args
-	
-	for i = prev[2] or 2, num do
-		guild["GuildMsg"..i] = {
-			type = "input", order = (i+2)*2, -- 6, 8, 10, ...
-			width = "full", name = "",
-			get = function(info) return profile.GuildMsg[i] end,
-			set = function(info, v)
-				if strtrim(v) == "" then
-					profile.GuildMsg[i] = defaults.profile.GuildMsg[i]
-				else
-					profile.GuildMsg[i] = v
-				end
-				self:ValidateLength(self:PreviewGuild(i))
-				S.activePreview[2] = i
-			end,
-			hidden = function() return not profile.GuildRandom end,
-		}
-		guild["GuildPreview"..i] = {
-			type = "description", order = (i+2)*2+1,
-			fontSize = "medium",
-			name = function() return self:PreviewGuild(i) end,
-			hidden = function() return not profile.GuildRandom or S.activePreview[2] ~= i end,
-		}
-	end
-	
-	for i = num+1, prev[2] or 0 do
-		guild["GuildMsg"..i] = nil
-		guild["GuildPreview"..i] = nil
-	end
-	prev[2] = num
-end
-
 	----------------
 	--- Validate ---
 	----------------
 
 function RSD:ValidateLength(msg)
 	msg = msg:gsub("|c%x%x%x%x%x%x%x%x(.-)|r", "%1")
-	msg = msg:gsub("|T.-|t", "{rtN}") -- maybe in the future pass the message without the raid targets preview
 	
-	-- notify if message length exceeds 127 or 255 chars
-	local len = strlen(msg)-2 -- account for the two prepending blank spaces in preview
-	if len > 127 and profile.ChatBroadcast then
-		self:Print("|cff71D5FF"..BATTLENET_FRIEND.."|r |cffFF0000Message > 127 chars|r|r ("..len..")")
-	end
-	if len > 255 then
+	-- notify if message length exceeds 255 chars
+	local length = strlen(msg)-2 -- account for the two prepending blank spaces in preview
+	if length > 255 then
 		self:Print("|cffFF0000Message > 255 chars|r ("..len..")")
 	end
 end
@@ -770,44 +480,7 @@ function RSD:PreviewDing(i)
 	args.death = "|cffFF0000"..char.death.."|r"
 	args["death+"] = "|cffFF0000"..self:AchievStat("death").."|r"
 	args.quest = "|cff58ACFA"..self:AchievStat("quest").."|r"
-	args.rt = "|T"..S.RT..random(8)..":16:16:0:3|t"
-	-- hidden args
-	args.name = "|cffADFF2F"..player.name.."|r"
-	args.class = "|cffADFF2F"..player.class.."|r"
-	args.race = "|cffADFF2F"..player.race.."|r"
-	args.faction = "|cffADFF2F"..player.faction.."|r"
-	args.realm = "|cffADFF2F"..player.realm.."|r"
-	args.zone = "|cff58ACFA"..(GetRealZoneText() or GetSubZoneText() or ZONE).."|r"
-	args.guild = "|cffADFF2F"..(GetGuildInfo("player") or ERR_GUILD_PLAYER_NOT_IN_GUILD).."|r"
-	args.ilv = "|cffA335EE"..floor(GetAverageItemLevel()).."|r"
-	
-	local msg = self:PreviewRaidTarget(profile.DingMsg[i])
-	return "  "..self:ReplaceArgs(msg, args)
-end
-
-function RSD:PreviewGuild(i)
-	if IsInGuild() and GetNumGuildMembers() > 0 then -- sanity check
-		local name, rank, _, level, class, zone, _, _, _, _, englishClass = GetGuildRosterInfo(random((GetNumGuildMembers())))
-		if not name then return ERROR_CAPS end -- sanity check
-		
-		local args = args
-		local newLevel = (level == S.maxlevel) and level or level + 1 -- fix level 86
-		args.level = "|cffADFF2F"..newLevel.."|r"
-		args["level-"] = "|cffF6ADC6"..level.."|r"
-		args["level#"] = "|cffF6ADC6"..S.maxlevel.."|r"
-		args["level%"] = "|cffF6ADC6"..S.maxlevel-newLevel.."|r"
-		args.name = "|cff"..S.classCache[englishClass]..strmatch(name, "(.+)%-.+").."|r"
-		args.class = "|cff"..S.classCache[englishClass]..class.."|r"
-		args.rank = "|cff0070DD"..rank.."|r"
-		args.zone = "|cff0070DD"..(zone or ZONE).."|r"
-		args.realtime = "|cff71D5FF"..self:Time(random(600, 7200)).."|r"
-		args.rt = "|T"..S.RT..random(8)..":16:16:0:3|t"
-		
-		local msg = self:PreviewRaidTarget(profile.GuildMsg[i])
-		return "  "..self:ReplaceArgs(msg, args)
-	else
-		return "  |cffFFFF00"..ERR_GUILD_PLAYER_NOT_IN_GUILD.."|r"
-	end
+	return "  "..self:ReplaceArgs(profile.DingMsg[i], args)
 end
 
 function RSD:PreviewRaidTarget(msg)

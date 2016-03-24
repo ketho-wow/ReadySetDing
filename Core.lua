@@ -13,6 +13,7 @@ local args = S.args
 
 local profile, member, char
 
+local time = time
 S.lastPlayed = time()
 S.totalTPM, S.curTPM = 0, 0
 local curTPM2, totalTPM2
@@ -29,15 +30,11 @@ local IsInGuild = IsInGuild
 local appKey = {
 	"ReadySetDing_Main",
 	"ReadySetDing_Advanced",
-	"ReadySetDing_GuildMember",
-	"ReadySetDing_Screenshot",
 }
 
 local appValue = {
 	ReadySetDing_Main = options.args.main,
 	ReadySetDing_Advanced = options.args.advanced,
-	ReadySetDing_GuildMember = options.args.guildmember,
-	ReadySetDing_Screenshot = options.args.screenshot,
 	ReadySetDing_Data = options.args.data,
 }
 
@@ -150,23 +147,20 @@ function RSD:OnEnable()
 	-- standalone OnUpdate is more stable than AceTimer on client startup imho
 	f:SetScript("OnUpdate", f.WaitPlayed)
 	
-	-- this kinda defeats the purpose of registering/unregistering events according to options <.<
 	self:ScheduleRepeatingTimer(function()
 		-- the returns of UnitLevel() aren't yet updated on UNIT_LEVEL
-		if S.UNIT_LEVEL() then
-			self:UNIT_LEVEL("UNIT_LEVEL")
+		if profile.ShowGroup then
+			self:UNIT_LEVEL()
 		end
-		if S.GUILD_ROSTER_UPDATE() and IsInGuild() then
+		if profile.ShowGuild and IsInGuild() then
 			GuildRoster() -- fires GUILD_ROSTER_UPDATE
 		end
 		-- FRIENDLIST_UPDATE doesn't fire on actual friend levelups
 		-- the returns of GetFriendInfo() only get updated when FRIENDLIST_UPDATE fires
 		if profile.ShowFriend then
 			ShowFriends() -- fires FRIENDLIST_UPDATE
-		end
-		-- BN_FRIEND_INFO_CHANGED doesn't fire on login; but it does on actual levelups; just to be sure
-		if profile.ShowRealID then
-			self:BN_FRIEND_INFO_CHANGED("BN_FRIEND_INFO_CHANGED")
+			-- BN_FRIEND_INFO_CHANGED doesn't fire on login; but it does on actual levelups; just to be sure
+			self:BN_FRIEND_INFO_CHANGED()
 		end
 	end, 11)
 end
@@ -179,27 +173,18 @@ function RSD:OnDisable()
 	end
 end
 
-local setupRandom = {
-	"Ding",
-	"Guild",
-}
-
 function RSD:RefreshDB()
 	-- table shortcuts
 	profile = self.db.profile
 	char = self.db.char
 	
 	-- update table references in other files
-	for i = 1, 3 do
+	for i = 1, 2 do
 		self["RefreshDB"..i](self)
 	end
 	
 	-- init random messages
-	for _, v in ipairs(setupRandom) do
-		self["SetupRandom"..v](self, profile["NumRandom"..v])
-	end
-	
-	self:RefreshEvents() -- register/unregister level events according to options
+	self["SetupRandomDing"](self, profile["NumRandomDing"])
 	
 	-- stopwatch (only on changing profiles; it's not yet initialized at start)
 	-- but don't hide stopwatch, we'd want a library for that lol
@@ -286,19 +271,6 @@ function RSD:TIME_PLAYED_MSG(event, ...)
 		char.DateStampList[level] = date("%Y.%m.%d %H:%M:%S")
 		self.db.global.maxxp[level-1] = player.maxxp
 		
-		-- play custom sound if the user supplied one
-		if profile.Sound then
-			self:ScheduleTimer(function()
-				local sound
-				if profile.LibSharedMediaSound then
-					sound = LSM:HashTable(LSM.MediaType.SOUND)[profile.SoundWidget]
-				else
-					sound = (profile.CustomSound == S.sounds[2]) and S.sounds[random(3, #S.sounds)] or profile.CustomSound
-				end
-				PlaySoundFile(sound, "Master")
-			end, profile.SoundDelay)
-		end
-		
 		-- Language
 		local _, langId
 		if profile.Language == 2 then
@@ -310,7 +282,7 @@ function RSD:TIME_PLAYED_MSG(event, ...)
 		local text = self:ChatDing(levelTime)
 		
 		-- Party/Raid Announce
-		if profile.ChatParty then
+		if profile.ChatGroup then
 			local isBattleground = select(2, IsInInstance()) == "pvp"
 			local chan = (IsPartyLFG() or isBattleground) and "INSTANCE_CHAT" or IsInRaid() and "RAID" or IsInGroup() and "PARTY" or "SAY"
 			self:ScheduleTimer(function()
@@ -329,62 +301,6 @@ function RSD:TIME_PLAYED_MSG(event, ...)
 			self:ScheduleTimer(function()
 				SendChatMessage(text, "GUILD", langId)
 			end, profile.DingDelay)
-		end
-		
-		-- Zone Announce
-		if profile.ChatZone then
-			local channel = {GetChannelList()}
-			for i = 1, 10 do
-				-- the General channel could possibly have any channel number assigned 
-				if channel[i*2] == GENERAL then
-					self:ScheduleTimer(function()
-						SendChatMessage(text, "CHANNEL", nil, i*2-1)
-					end, profile.DingDelay)
-					break
-				end
-			end
-		end
-		
-		-- Real ID Broadcast
-		if profile.ChatBroadcast then
-			self:ScheduleTimer(function()
-				-- save current message
-				local origMsg = select(4, BNGetInfo())
-				BNSetCustomMessage(strsub(text, 1, 127))
-				BNSetCustomMessage(origMsg)
-			end, profile.DingDelay)
-		end
-		
-		-- Screenshot
-		if profile.Screenshot then
-			if profile.RaidWarning then
-				RaidNotice_AddMessage(RaidWarningFrame, text, S.white)
-			end
-			
-			local timeHide = profile.ScreenshotDelay - 1
-			 -- change any negative value to zero (e.g. 0.5 - 1)
-			if timeHide < 0 then timeHide = 0 end
-			
-			-- "hide" UI 1 sec before taking screenshot
-			-- SetAlpha can be called while in combat contrary to Show/Hide
-			if profile.HideUI then
-				self:ScheduleTimer(function()
-					UIParent:SetAlpha(0)
-				end, timeHide)
-			end
-			
-			-- take screenshot
-			self:ScheduleTimer(function()
-				Screenshot()
-			end, profile.ScreenshotDelay)
-			
-			-- "show" UI again
-			local origAlpha = UIParent:GetAlpha()
-			if profile.HideUI then
-				self:ScheduleTimer(function()
-					UIParent:SetAlpha(origAlpha)
-				end, profile.ScreenshotDelay + 1)
-			end
 		end
 		
 		if profile.Stopwatch and S.CanUseStopwatch(S.curTPM) then
@@ -449,15 +365,7 @@ function RSD:ChatDing(levelTime)
 	args["death+"] = self:AchievStat("death")
 	args.quest = self:AchievStat("quest")
 	args.rt = "{rt"..random(8).."}"
-	-- hidden args
-	args.name = player.name
-	args.class = player.class
-	args.race = player.race
-	args.faction = player.faction
-	args.realm = player.realm
 	args.zone = GetRealZoneText() or GetSubZoneText() or ZONE
-	args.guild = GetGuildInfo("player") or ""
-	args.ilv = floor(GetAverageItemLevel())
 	
 	-- fallback to default in case of blank (nil) random message
 	local msg = profile.DingRandom and profile.DingMsg[random(profile.NumRandomDing)] or profile.DingMsg[1]
@@ -471,13 +379,12 @@ end
 local group = {}
 
 function RSD:UNIT_LEVEL()
-	local isRaid = profile.ShowParty and IsInRaid()
-	local isParty = profile.ShowRaid and IsInGroup()
+	if not profile.ShowGroup then return end
 	
-	local numRaid = GetNumGroupMembers()
-	local numParty = GetNumSubgroupMembers()
+	local isRaid = IsInRaid()
+	local isParty = IsInGroup()
 	
-	local numGroup = isRaid and numRaid or isParty and numParty or 0
+	local numGroup = isRaid and GetNumGroupMembers() or isParty and GetNumSubgroupMembers() or 0
 	local groupType = isRaid and "raid" or isParty and "party"
 	local chan = isRaid and "|cffFF7F00"..RAID.."|r" or isParty and "|cffA8A8FF"..PARTY.."|r"
 	
@@ -503,7 +410,7 @@ function RSD:UNIT_LEVEL()
 				
 				args.level = "|cffADFF2F"..level.."|r"
 				
-				self:Output(profile.ShowMsg, args)
+				self:ShowLevelup(profile.ShowMsg, args)
 			end
 			group[guid] = level
 		end
@@ -520,11 +427,12 @@ local firstGRU, secondGRU, showedHeader
 
 -- now this is an even bigger mess than before ._.
 function RSD:GUILD_ROSTER_UPDATE(event)
+	if not profile.ShowGuild then return end
+	
 	if not (time() > (cd.guild or 0)) then return end
 	cd.guild = time() + 10
 	
 	local chan = "|cff40FF40"..GUILD.."|r"
-	local afk = UnitIsAFK("player")
 	
 	for i = 1, GetNumGuildMembers() do
 		local fullName, rank, _, level, class, zone, _, _, _, _, englishClass = GetGuildRosterInfo(i)
@@ -546,31 +454,18 @@ function RSD:GUILD_ROSTER_UPDATE(event)
 					args.chan = chan
 					args.name = format("|cff%s|Hplayer:%s|h%s|h|r", S.classCache[englishClass], fullName, charName)
 					args.level = "|cffADFF2F"..level.."|r"
-					-- hidden args
-					args.class = "|cff"..S.classCache[englishClass]..class.."|r"
-					args.rank = rank
 					args.zone = zone
 					args.realtime = realtime
 					
 					if profile.ShowGuild then
-						self:Output(profile.ShowMsg, args)
-					end
-					
-					if profile.GuildMemberDing then
-						-- filters
-						local achiev = profile.FilterLevelAchiev and not S.Levels[level] or not profile.FilterLevelAchiev
-						local minLevel = (level >= profile.MinLevelFilter) -- forgot to add this in the rewrite ><
-						
-						if not afk and achiev and minLevel then
-							SendChatMessage(self:ChatGuild(charName, level, class, rank, zone, realtime), "GUILD")
-						end
+						self:ShowLevelup(profile.ShowMsg, args)
 					end
 					
 					-- save time & date
 					p[level] = {time(), date("%Y.%m.%d %H:%M:%S")}
 				else
 					-- level changed while user was offline
-					if profile.GuildMemberDiff then
+					if profile.GuildMemberChangelog then
 						if not showedHeader and char.LastCheck then
 							self:Print(format("|cffF6ADC6[%s]|r - |cffADFF2F[%s]|r", char.LastCheck, date("%Y.%m.%d %H:%M:%S")))
 							showedHeader = true; char.LastCheck = nil
@@ -597,23 +492,6 @@ function RSD:GUILD_ROSTER_UPDATE(event)
 	firstGRU = true
 end
 
-function RSD:ChatGuild(name, level, class, rank, zone, realtime)
-	local args = args
-	args.level = level
-	args["level-"] = level - 1
-	args["level#"] = S.maxlevel
-	args["level%"] = S.maxlevel - level
-	args.name = name
-	args.class = class
-	args.rank = rank
-	args.zone = zone or ""
-	args.realtime = self:Time(realtime)
-	args.rt = "{rt"..random(8).."}"
-	
-	local msg = profile.GuildRandom and profile.GuildMsg[random(profile.NumRandomGuild)] or profile.GuildMsg[1]
-	return self:ReplaceArgs(msg, args)
-end
-
 	---------------
 	--- Friends ---
 	---------------
@@ -621,6 +499,8 @@ end
 local friend = {}
 
 function RSD:FRIENDLIST_UPDATE(event)
+	if not profile.ShowFriend then return end
+	
 	if time() > (cd.friend or 0) then
 		cd.friend = time() + 1
 		local chan = FRIENDS_WOW_NAME_COLOR_CODE..FRIEND.."|r"
@@ -633,7 +513,7 @@ function RSD:FRIENDLIST_UPDATE(event)
 					args.chan = chan
 					args.name = format("|cff%s|Hplayer:%s|h%s|h|r", S.classCache[S.revLOCALIZED_CLASS_NAMES[class]], name, name)
 					args.level = "|cffADFF2F"..level.."|r"
-					self:Output(profile.ShowMsg, args)
+					self:ShowLevelup(profile.ShowMsg, args)
 				end
 				friend[name] = level
 			end
@@ -647,13 +527,15 @@ end
 
 local realid = {}
 
-function RSD:BN_FRIEND_INFO_CHANGED(event)
+function RSD:BN_FRIEND_INFO_CHANGED()
+	if not profile.ShowFriend then return end
+	
 	if time() > (cd.realid or 0) then
 		cd.realid = time() + 1
 		local chan = FRIENDS_BNET_NAME_COLOR_CODE..BATTLENET_FRIEND.."|r"
 		
 		for i = 1, select(2, BNGetNumFriends()) do
-			local presenceID, presenceName, battleTag, isBattleTagPresence = BNGetFriendInfo(i)
+			local presenceID, presenceName = BNGetFriendInfo(i)
 			
 			-- ToDo: add support for multiple online toons / BNGetFriendToonInfo
 			local _, toonName, client, realm, _, _, race, class, _, _, level = BNGetGameAccountInfo(presenceID)
@@ -676,10 +558,50 @@ function RSD:BN_FRIEND_INFO_CHANGED(event)
 					
 					args.level = "|cffADFF2F"..level.."|r"
 					
-					self:Output(profile.ShowMsg, args)
+					self:ShowLevelup(profile.ShowMsg, args)
 				end
 				bnet[toonName] = level
 			end
 		end
 	end
+end
+	----------------
+	--- AFK Time ---
+	----------------
+
+local afk
+
+local function LeaveAFK()
+	char.timeAFK = char.timeAFK + (time() - afk)
+	char.totalAFK = char.totalAFK + (time() - afk)
+end
+
+local MARKED_AFK_MESSAGE = gsub(MARKED_AFK_MESSAGE, "%%s", ".+")
+
+function RSD:CHAT_MSG_SYSTEM(event, msg)
+	-- entering afk
+	if msg == MARKED_AFK or strfind(msg, MARKED_AFK_MESSAGE) then
+		afk = time()
+	-- leaving afk
+	elseif msg == CLEARED_AFK and afk then
+		LeaveAFK()
+	end
+end
+
+function RSD:PLAYER_LEAVING_WORLD(event)
+	-- logging out while afk
+	if UnitIsAFK("player") and afk then
+		LeaveAFK()
+	end
+	
+	-- time/date at logout for showing levelDiffs
+	char.LastCheck = date("%Y.%m.%d %H:%M:%S")
+end
+
+	--------------
+	--- Deaths ---
+	--------------
+
+function RSD:PLAYER_DEAD(event)
+	char.death = char.death + 1
 end

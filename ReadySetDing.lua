@@ -2,7 +2,7 @@
 --- Author: Ketho (EU-Boulderfist)		---
 --- License: Public Domain				---
 --- Created: 2009.09.01					---
---- Version: 1.19 [2016.03.23]			---
+--- Version: 2.0 [2016.03.24]			---
 -------------------------------------------
 --- Curse			http://mods.curse.com/addons/wow/readysetding
 --- WoWInterface	http://www.wowinterface.com/downloads/info16220-ReadySetDing.html
@@ -32,7 +32,6 @@ function RSD:RefreshDB1()
 end
 
 S.crop = ":64:64:4:60:4:60"
-S.RT = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_"
 S.white = {r=1, g=1, b=1}
 
 S.cd = {} -- cooldowns
@@ -74,29 +73,6 @@ S.events = {
 	-- Deaths
 	"PLAYER_DEAD",
 }
-
--- register/unregister events depending on options
-S.levelremap = {
-	ShowParty = "UNIT_LEVEL",
-	ShowRaid = "UNIT_LEVEL",
-	
-	ShowGuild = "GUILD_ROSTER_UPDATE",
-	GuildMemberDing = "GUILD_ROSTER_UPDATE",
-	GuildMemberDiff = "GUILD_ROSTER_UPDATE",
-	
-	ShowFriend = "FRIENDLIST_UPDATE",
-	ShowRealID = "BN_FRIEND_INFO_CHANGED",
-}
-
--- determine if any of the UNIT_LEVEL options are enabled
-function S.UNIT_LEVEL()
-	return profile.ShowParty or profile.ShowRaid
-end
-
--- determine if any of the GUILD_ROSTER_UPDATE options are enabled
-function S.GUILD_ROSTER_UPDATE()
-	return profile.ShowGuild or profile.GuildMemberDing or profile.GuildMemberDiff
-end
 
 	--------------
 	--- Player ---
@@ -222,26 +198,6 @@ function S.CanUseStopwatch(v)
 	return player.level < player.maxlevel and v < MAX_TIMER_SEC
 end
 
-	--------------------------
-	--- Level Achievements ---
-	--------------------------
-
-do
-	local levels = {10, 20, 30, 40, 50, 60, 70, 80, 85, 90, 100}
-	
-	S.Levels = {}
-	
-	for _, v in ipairs(levels) do
-		S.Levels[v] = true
-	end
-	
-	S.AchievIcons = {}
-	
-	for i, v in ipairs(levels) do
-		S.AchievIcons[i] = "|TInterface\\Icons\\Achievement_Level_"..v..":24:24:0:0"..S.crop.."|t"
-	end
-end
-
 	--------------------
 	--- Class Colors ---
 	--------------------
@@ -364,49 +320,11 @@ do
 	legend.chat = "\n|cffADFF2FLEVEL,|r |cffF6ADC6LEVEL-, LEVEL#, LEVEL%|r"
 		.."\n|cff71D5FFTIME, TOTAL,|r |cff0070DDDATE, DATE2|r"
 		.."\n|cffFFFF00AFK, AFK+,|r |cffFF0000DEATH, DEATH+|r\n"
-		..TARGETICONS..": |cffFFFFFF{rt5} |TInterface\\TargetingFrame\\UI-RaidTargetingIcon_5:12|t|r, |cffFF8000RT|r"
 	
 	local playerColor = S.classCache[player.englishClass]
 	
-	legend.guild = "\n|cffADFF2FLEVEL|r, |cffF6ADC6LEVEL-, LEVEL#, LEVEL%|r"
-		.."\n|cff"..playerColor.."NAME|r, |cff"..playerColor.."CLASS|r, |cff0070DDRANK|r, |cff0070DDZONE|r"
-		.."\n|cff71D5FFREALTIME|r, |cffFF8000RT|r"
-	
 	S.legend = legend
 end
-
-	--------------
-	--- Sounds ---
-	--------------
-
-S.sounds = {
-	"Interface\\AddOns\\ReadySetDing\\Sounds\\mysound.mp3",
-	"|cffF6ADC6Random|r",
-	"Sound\\Interface\\LevelUp.ogg",
-	"sound\\INTERFACE\\UI_GuildLevelUp.ogg",
-	"Sound\\Interface\\iQuestComplete.ogg",
-	"Sound\\Spells\\AchievmentSound1.ogg",
-	"Sound\\Spells\\Resurrection.ogg",
-	"Sound\\Doodad\\BellTollAlliance.ogg",
-	"sound\\CREATURE\\MANDOKIR\\VO_ZG2_MANDOKIR_LEVELUP_EVENT_01.ogg",
-	"sound\\CREATURE\\JINDO\\VO_ZG2_JINDO_MANDOKIR_LEVELS_UP_01.ogg",
-	"Sound\\character\\BloodElf\\BloodElfFemaleCongratulations02.ogg",
-	"Sound\\character\\Human\\HumanVocalFemale\\HumanFemaleCongratulations01.ogg",
-	"Sound\\character\\NightElf\\NightElfVocalFemale\\NightElfFemaleCongratulations01.ogg",
-	"Sound\\Character\\BloodElf\\BloodElfFemaleFlirt02.ogg",
-	"Sound\\Creature\\Paletress\\AC_Paletress_Death01.ogg",
-	"Sound\\character\\Orc\\OrcVocalMale\\OrcMaleCheer01.ogg",
-	"Sound\\creature\\Peon\\PeonPissed3.ogg",
-	"Sound\\creature\\HoodWolf\\HoodWolfTransformPlayer01.ogg",
-	"Sound\\creature\\Illidan\\BLACK_Illidan_04.ogg",
-	"Sound\\creature\\LichKing\\IC_Lich King_FMAttack01.ogg",
-	"sound\\CREATURE\\Deathwing\\VO_DS_DEATHWING_MAELSTROMSPELL_05.OGG",
-	"Sound\\Music\\GlueScreenMusic\\wow_main_theme.mp3",
-	"sound\\music\\cataclysm\\MUS_WordsAndMusicByEvent_E01.mp3",
-	"Sound\\Music\\Musical Moments\\angelic\\angelic01.mp3",
-	"Sound\\Music\\WorldEvents\\AllianceFirepole.mp3",
-	"Sound\\Music\\ZoneMusic\\TavernDwarf\\RA_DwarfTavern1A.mp3",
-}
 
 	-------------
 	--- Stats ---
@@ -458,7 +376,7 @@ local sinks = {
 	"UIErrorsFrame",
 }
 
-function RSD:Output(msg, args)
+function RSD:ShowLevelup(msg, args)
 	local v = profile.ShowOutput
 	msg = msg and self:ReplaceArgs(msg, args) or sinks[v] -- fallback to example; does not include chat windows
 	

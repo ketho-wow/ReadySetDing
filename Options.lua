@@ -270,9 +270,7 @@ S.options = {
 								end
 								return languages
 							end,
-							
 						},
-						spacing1 = {type = "description", order = 3, name = " "},
 					},
 				},
 				inline3 = {
@@ -505,7 +503,7 @@ hooksecurefunc(ACD, "Open", function(self, app)
 		if not ReadySetDing_LevelGraph then
 			-- if there are multiple ACD frames shown, this seems to parent to the first one instead, when the second one is opened
 			local level = LG:CreateGraphLine("ReadySetDing_LevelGraph", ACD.OpenFrames.ReadySetDing_Parent.frame, "TOPLEFT", "TOPRIGHT", 5, -65, 0, 200)
-			local total = LG:CreateGraphLine("ReadySetDing_TotalGraph", ReadySetDing_LevelGraph, "TOPLEFT", "BOTTOMLEFT", 0, -20, 0, 200)
+			local total = LG:CreateGraphLine("ReadySetDing_TotalGraph", ReadySetDing_LevelGraph, "TOPLEFT", "BOTTOMLEFT", 0, -40, 0, 200)
 			RSD:UpdateGraph(level, total)
 			
 			-- ACD frames get "recycled", so the graphs could possibly show up next to another addon as well
@@ -520,6 +518,8 @@ hooksecurefunc(ACD, "Open", function(self, app)
 end)
 
 do
+	local startCoord = {0, 0}
+	
 	local levelColor = {.68, 1, .18, .7}
 	local totalColor = {.44, .84, 1, .7}
 	
@@ -534,8 +534,11 @@ do
 	-- maybe make graphs customizable in some way in the future
 	function RSD:UpdateGraph(level, total)
 		local minLevel = getLowestLevel()
-		local XWidth = table.maxn(char.LevelTimeList) - minLevel
-		local XRealWidth = min(XWidth * 25, 375)
+		local hasLevelOne = char.LevelTimeList[2] -- if we have level 2, then we can show level 1 (0;0) too
+		local offset = hasLevelOne and 1 or 0
+		
+		local XLevels = table.maxn(char.LevelTimeList) - minLevel + offset
+		local XRealWidth = min(XLevels * 25, 500)
 		
 		level:SetWidth(XRealWidth)
 		total:SetWidth(XRealWidth)
@@ -544,30 +547,46 @@ do
 		local YTotalHeight = char.TotalTimeList[table.maxn(char.TotalTimeList)]
 		
 		local t1 = S.recycle[4]; wipe(t1)
+		
+		if hasLevelOne then
+			t1[1] = startCoord
+		end
+		
 		for i = minLevel, player.maxlevel do
 			local levelTime = char.LevelTimeList[i]
 			if levelTime then
-				tinsert(t1, {i-minLevel, levelTime})
+				tinsert(t1, {i-minLevel+offset, levelTime}) -- level 2: 2+1-2 == 2
 				YLevelHeight = levelTime > YLevelHeight and levelTime or YLevelHeight
 			end
 		end
+		
 		level:AddDataSeries(t1, levelColor)
 		
 		local t2 = S.recycle[5]; wipe(t2)
+		
+		if hasLevelOne then
+			t2[1] = startCoord
+		end
+		
 		for i = minLevel, player.maxlevel do
 			if char.TotalTimeList[i] then
-				tinsert(t2, {i-minLevel, char.TotalTimeList[i]})
+				tinsert(t2, {i-minLevel+offset, char.TotalTimeList[i]})
 			end
 		end
 		total:AddDataSeries(t2, totalColor)
 		
-		level.XMin = 0; level.XMax = XWidth
+		level.XMin = 0; level.XMax = XLevels
 		level.YMin = 0; level.YMax = YLevelHeight
 		level:SetGridSpacing(1, YLevelHeight / 4)
 		
-		total.XMin = 0; total.XMax = XWidth
+		total.XMin = 0; total.XMax = XLevels
 		total.YMin = 0; total.YMax = YTotalHeight
 		total:SetGridSpacing(1, YTotalHeight / 4)
+		
+		if XLevels > 3 then -- only show labels when there is enough space
+			level:SetYLabels(1, 1) -- no idea how this actually works...
+			total:SetYLabels(1, 1)
+		end
 	end
 end
 

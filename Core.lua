@@ -95,7 +95,6 @@ function RSD:OnInitialize()
 	-- character specific
 	char.timeAFK = char.timeAFK or 0
 	char.totalAFK = char.totalAFK or 0
-	char.death = char.death or 0
 	
 	-- level 1 init
 	if player.level == 1 then
@@ -292,6 +291,8 @@ function RSD:TIME_PLAYED_MSG(event, ...)
 			else
 				SendChatMessage(text, chan, langId)
 			end
+		else -- for people that rather like a local notification instead of announce
+			RaidNotice_AddMessage(RaidWarningFrame, text, S.white)
 		end
 		
 		-- Guild Announce
@@ -316,19 +317,19 @@ function RSD:TIME_PLAYED_MSG(event, ...)
 		end
 		
 		-- reset current level specific data
-		char.timeAFK, char.death = 0, 0
+		char.timeAFK = 0
 		
 	--------------
 	--- Graphs ---
 	--------------
 		
-		local levelg = ReadySetDing_LevelGraph
-		local totalg = ReadySetDing_TotalGraph
+		local level = ReadySetDing_LevelGraph
+		local total = ReadySetDing_TotalGraph
 		
-		if levelg and profile.LevelGraph then
-			levelg:ResetData()
-			totalg:ResetData()
-			self:UpdateGraph(levelg, totalg)
+		if level and profile.LevelGraph then
+			level:ResetData()
+			total:ResetData()
+			self:UpdateGraph(level, total)
 		end
 		
 	else
@@ -364,9 +365,6 @@ function RSD:ChatDing(levelTime)
 	args.date2 = date("%m/%d/%y %H:%M:%S")
 	args.afk = self:Time(char.timeAFK)
 	args["afk+"] = self:Time(char.totalAFK)
-	args.death = char.death
-	args["death+"] = self:AchievStat("death")
-	args.quest = self:AchievStat("quest")
 	args.zone = GetRealZoneText() or GetSubZoneText() or ZONE
 	
 	-- fallback to default in case of blank (nil) random message
@@ -598,12 +596,4 @@ function RSD:PLAYER_LEAVING_WORLD(event)
 	
 	-- time/date at logout for showing levelDiffs
 	char.LastCheck = date("%Y.%m.%d %H:%M:%S")
-end
-
-	--------------
-	--- Deaths ---
-	--------------
-
-function RSD:PLAYER_DEAD(event)
-	char.death = char.death + 1
 end

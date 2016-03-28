@@ -469,50 +469,68 @@ function RSD:PreviewDing(i)
 	args.date2 = "|cff0070DD"..date("%m/%d/%y %H:%M:%S").."|r"
 	args.afk = "|cffFFFF00"..self:Time(char.timeAFK).."|r"
 	args["afk+"] = "|cffFFFF00"..self:Time(char.totalAFK).."|r"
-	args.death = "|cffFF0000"..char.death.."|r"
-	args["death+"] = "|cffFF0000"..self:AchievStat("death").."|r"
-	args.quest = "|cff58ACFA"..self:AchievStat("quest").."|r"
 	args.zone = GetRealZoneText() or GetSubZoneText() or ZONE
 	
 	return "  "..self:ReplaceArgs(profile.DingMsg[i], args)
-end
-
-function RSD:PreviewRaidTarget(msg)
-	-- undefined random message
-	if not msg then return end
-	-- convert Raid Target icons; FrameXML\ChatFrame.lua L3168 (4.3.3.15354)
-	for k in gmatch(msg, "%b{}") do
-		local rt = strlower(gsub(k, "[{}]", ""))
-		if ICON_TAG_LIST[rt] and ICON_LIST[ICON_TAG_LIST[rt]] then
-			msg = msg:gsub(k, ICON_LIST[ICON_TAG_LIST[rt]].."16:16:0:3|t")
-		end
-	end
-	return msg
 end
 
 	-------------
 	--- Graph ---
 	-------------
 
--- AceConfigDialog frames are created on opening
-hooksecurefunc(ACD, "Open", function(self, app)
-	if not profile.LevelGraph or not next(char.LevelTimeList) then return end
-	
-	-- also gets called by Blizard Options Panel
-	if app == "ReadySetDing_Parent" and ACD.OpenFrames.ReadySetDing_Parent then
+do
+	local x1, y1 = 5, -60
+	local x2, y2 = 0, -50
+
+	function RSD:ShowGraph(parent)
+		if not profile.LevelGraph or not next(char.LevelTimeList) then return end
+		
 		if not ReadySetDing_LevelGraph then
 			-- if there are multiple ACD frames shown, this seems to parent to the first one instead, when the second one is opened
-			local level = LG:CreateGraphLine("ReadySetDing_LevelGraph", ACD.OpenFrames.ReadySetDing_Parent.frame, "TOPLEFT", "TOPRIGHT", 5, -65, 0, 200)
-			local total = LG:CreateGraphLine("ReadySetDing_TotalGraph", ReadySetDing_LevelGraph, "TOPLEFT", "BOTTOMLEFT", 0, -40, 0, 200)
+			local level = LG:CreateGraphLine("ReadySetDing_LevelGraph", parent, "TOPLEFT", "TOPRIGHT", x1, y1, 0, 200)
+			local total = LG:CreateGraphLine("ReadySetDing_TotalGraph", level, "TOPLEFT", "BOTTOMLEFT", x2, y2, 0, 200)
 			RSD:UpdateGraph(level, total)
-			
-			-- ACD frames get "recycled", so the graphs could possibly show up next to another addon as well
-			-- There is the physical "Close" button and ACD.CloseAll, this hook accounts for both methods
-			hooksecurefunc(self.OpenFrames.ReadySetDing_Parent, "OnRelease", function()
-				level:Hide()
-			end)
 		else
-			ReadySetDing_LevelGraph:Show()
+			-- set parent/points again, since it can be shown next to 2 different kinds of option panels
+			local level = ReadySetDing_LevelGraph
+			local total = ReadySetDing_TotalGraph
+			level:ClearAllPoints(); level:SetPoint("TOPLEFT", parent, "TOPRIGHT", x1, y1)
+			total:ClearAllPoints(); total:SetPoint("TOPLEFT", level, "BOTTOMLEFT", x2, y2)
+			level:SetParent(parent)
+			level:Show()
+		end
+	end
+end
+
+-- some dirty hooks
+do
+	local hasHook
+	
+	-- AceConfigDialog frames are created on opening
+	hooksecurefunc(ACD, "Open", function(self, appName)
+		if appName ~= "ReadySetDing_Parent" or not ACD.OpenFrames.ReadySetDing_Parent then return end
+		
+		RSD:ShowGraph(ACD.OpenFrames.ReadySetDing_Parent.frame)
+		
+		-- ACD frames get "recycled", so the graphs could possibly show up next to another addon as well
+		-- There is the physical "Close" button and ACD.CloseAll, this hook accounts for both methods
+		if not hasHook then
+			hasHook = true
+			hooksecurefunc(ACD.OpenFrames.ReadySetDing_Parent, "OnRelease", function()
+				if ReadySetDing_LevelGraph then -- sanity check; sometimes seems to occur at creation of a new character
+					ReadySetDing_LevelGraph:Hide()
+				end
+			end)
+		end
+	end)
+end
+
+hooksecurefunc("InterfaceOptionsList_DisplayPanel", function(frame)
+	if InterfaceOptionsFramePanelContainer.displayedPanel.name == NAME then
+		RSD:ShowGraph(InterfaceOptionsFrame)
+	else
+		if ReadySetDing_LevelGraph then -- sanity check
+			ReadySetDing_LevelGraph:Hide()
 		end
 	end
 end)
@@ -531,13 +549,40 @@ do
 		end
 	end
 	
+	local graphs
+	local fstrings = {{}, {}} -- keep track of and reuse fontstrings
+	local graphcolor = {levelColor, totalColor}
+	local xpoints = {"BOTTOMLEFT", "BOTTOM", "BOTTOMRIGHT"}
+	
+	local function UpdateXLabels(level, total, ...)
+		-- hack some X-axis labels in, since LibGraph doesnt really support it
+		-- no idea how they would properly implement it though, if they did
+		graphs = graphs or {level, total}
+		
+		for k, gr in pairs(graphs) do
+			for k2, v2 in pairs(xpoints) do
+				if not fstrings[k][k2] then
+					fstrings[k][k2] = CreateFrame("Frame", nil, level):CreateFontString()
+					local fs = fstrings[k][k2]
+					fs:SetFontObject("GameFontHighlightSmall")
+					fs:SetTextColor(unpack(graphcolor[k]))
+					fs:ClearAllPoints()
+					fs:SetPoint(v2, gr, v2, 0, -14)
+					fs:Show()
+				end
+				fstrings[k][k2]:SetText(select(k2, ...))
+			end
+		end
+	end
+	
 	-- maybe make graphs customizable in some way in the future
 	function RSD:UpdateGraph(level, total)
-		local minLevel = getLowestLevel()
+		local minLvl = getLowestLevel()
 		local hasLevelOne = char.LevelTimeList[2] -- if we have level 2, then we can show level 1 (0;0) too
 		local offset = hasLevelOne and 1 or 0
 		
-		local XLevels = table.maxn(char.LevelTimeList) - minLevel + offset
+		local MaxLvl = table.maxn(char.LevelTimeList)
+		local XLevels = MaxLvl - minLvl + offset
 		local XRealWidth = min(XLevels * 25, 500)
 		
 		level:SetWidth(XRealWidth)
@@ -552,10 +597,10 @@ do
 			t1[1] = startCoord
 		end
 		
-		for i = minLevel, player.maxlevel do
+		for i = minLvl, player.maxlevel do
 			local levelTime = char.LevelTimeList[i]
 			if levelTime then
-				tinsert(t1, {i-minLevel+offset, levelTime}) -- level 2: 2+1-2 == 2
+				tinsert(t1, {i-minLvl+offset, levelTime}) -- level 2: 2+1-2 == 2
 				YLevelHeight = levelTime > YLevelHeight and levelTime or YLevelHeight
 			end
 		end
@@ -568,9 +613,9 @@ do
 			t2[1] = startCoord
 		end
 		
-		for i = minLevel, player.maxlevel do
+		for i = minLvl, player.maxlevel do
 			if char.TotalTimeList[i] then
-				tinsert(t2, {i-minLevel+offset, char.TotalTimeList[i]})
+				tinsert(t2, {i-minLvl+offset, char.TotalTimeList[i]})
 			end
 		end
 		total:AddDataSeries(t2, totalColor)
@@ -578,15 +623,16 @@ do
 		level.XMin = 0; level.XMax = XLevels
 		level.YMin = 0; level.YMax = YLevelHeight
 		level:SetGridSpacing(1, YLevelHeight / 4)
+		level:SetYLabels(nil, 1) -- no idea how this actually works...
 		
 		total.XMin = 0; total.XMax = XLevels
 		total.YMin = 0; total.YMax = YTotalHeight
 		total:SetGridSpacing(1, YTotalHeight / 4)
+		total:SetYLabels(nil, 1)
 		
-		if XLevels > 3 then -- only show labels when there is enough space
-			level:SetYLabels(1, 1) -- no idea how this actually works...
-			total:SetYLabels(1, 1)
-		end
+		local realMinLvl = hasLevelOne and 1 or minLvl
+		local midLvl = floor((MaxLvl+realMinLvl)/2) -- the spacing is kinda off when we round down values
+		UpdateXLabels(level, total, realMinLvl, midLvl, MaxLvl)
 	end
 end
 

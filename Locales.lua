@@ -1,21 +1,11 @@
 local _, S = ...
 
 local L = {
-	deDE = {
-		LEVEL_SPEED = "Stufenaufstiegstempo",
-		LEVEL_TIME = "Stufen-Spieldauer",
-		MSG_PLAYER_DING = "Ding! Stufe <LEVEL> in <TIME>",
-		TOTAL = "Insgesamt",
-		TOTAL_TIME = "Spielzeit insgesamt",
-		
-		BROKER_CLICK = "|cffFFFFFFKlickt|r, um das Optionsmen\195\188 zu \195\182ffnen",
-		BROKER_SHIFT_CLICK = "|cffFFFFFFShift-klickt|r, um dieses AddOn ein-/auszuschalten",
-	},
 	enUS = {
 		MSG_PLAYER_DING = TUTORIAL_TITLE55.." "..LEVEL.." <LEVEL> in <TIME>",
 		MSG_PLAYER_DING2 = TUTORIAL_TITLE55.." "..LEVEL.." <LEVEL>",
 		MSG_PLAYER_DING3 = "I reached "..LEVEL.." <LEVEL> in <ZONE>!",
-		MSG_PLAYER_DING4 = "I have reached "..LEVEL.." <LEVEL>, only <LEVEL%> to go!",
+		MSG_PLAYER_DING4 = "I reached "..LEVEL.." <LEVEL>, only <LEVEL%> to go!",
 		
 		LEVEL_TIME = "Level Time",
 		TOTAL_TIME = "Total Time",
@@ -40,11 +30,35 @@ local L = {
 		BROKER_CLICK = "|cffFFFFFFClick|r to open the options menu",
 		BROKER_SHIFT_CLICK = "|cffFFFFFFShift-click|r to toggle this AddOn",
 	},
+	deDE = {
+		GUILD_CHANGELOG = "Stufenunterschied Gildenmitglieder", -- Needs review
+		LEVEL_GRAPH = "Stufendiagramm", -- Needs review
+		LEVEL_SPEED = "Stufenaufstiegstempo",
+		LEVEL_TIME = "Stufen-Spieldauer",
+		MSG_PLAYER_DING = "Ding! Stufe <LEVEL> in <TIME>",
+		MSG_PLAYER_DING2 = "Ding! Stufe <LEVEL>",
+		MSG_PLAYER_DING3 = "Ich habe Stufe <LEVEL> in <ZONE> erreicht!",
+		MSG_PLAYER_DING4 = "Ich habe Stufe <LEVEL> erreicht, es sind nur noch <LEVEL%> übrig!",
+		RANDOM_MESSAGE = "Zufällige Mitteilung",
+		TIME_ABBREVIATE = "Abkürzen",
+		TIME_FORMAT = "Zeitformat",
+		TIME_FORMAT_LEGACY = "Altes Zeitformat",
+		TIME_LOWER_CASE = "Kleinschrift", -- Needs review
+		TIME_MAX_UNITS = "Zeiteinheiten", -- Needs review
+		TIME_OMIT_SECONDS = "Sekunden auslassen", -- Needs review
+		TIME_OMIT_ZERO_VALUE = "Nullwerte auslassen", -- Needs review
+		TIMESTAMP = "Zeitstempel",
+		TOTAL = "Insgesamt",
+		TOTAL_TIME = "Spielzeit insgesamt",
+		
+		BROKER_CLICK = "|cffFFFFFFKlickt|r, um das Optionsmen\195\188 zu \195\182ffnen",
+		BROKER_SHIFT_CLICK = "|cffFFFFFFShift-klickt|r, um dieses AddOn ein-/auszuschalten",
+	},
 	esES = {
-		LEVEL_SPEED = "Velocidad de Nivel",
-		LEVEL_TIME = "Tiempo de Nivel",
-		MSG_PLAYER_DING = "Ding! Nivel <LEVEL> en <TIME>",
-		TOTAL_TIME = "Tiempo Total",
+		LEVEL_SPEED = "Velocidad de Nivel", -- Needs review
+		LEVEL_TIME = "Tiempo de Nivel", -- Needs review
+		MSG_PLAYER_DING = "Ding! Nivel <LEVEL> en <TIME>", -- Needs review
+		TOTAL_TIME = "Tiempo Total", -- Needs review
 	},
 	--esMX = {},
 	frFR = {
@@ -52,29 +66,71 @@ local L = {
 	itIT = {
 	},
 	koKR = {
-		LEVEL_GRAPH = "\235\160\136\235\178\168 \234\183\184\235\158\152\237\148\132",
-		LEVEL_SPEED = "\235\160\136\235\178\168\236\151\133 \236\134\141\235\143\132",
-		LEVEL_TIME = "\235\160\136\235\178\168 \237\148\140\235\160\136\236\157\180 \236\139\156\234\176\132",
-		MSG_PLAYER_DING = "\235\145\144\235\145\165! <LEVEL> \235\160\136\235\178\168\234\185\140\236\167\128 <TIME> \236\134\140\236\154\148",
-		MSG_PLAYER_DING2 = "\235\145\144\235\145\165! <LEVEL> \235\160\136\235\178\168",
-		--MSG_PLAYER_DING3 = "<LEVEL> \235\160\136\235\178\168\236\157\180 \235\144\144\236\150\180\236\154\148~!", -- Needs review
-		RANDOM_MESSAGE = "\235\172\180\236\158\145\236\156\132 \235\169\148\236\139\156\236\167\128",
-		TOTAL = "\236\180\157",
-		TOTAL_TIME = "\236\160\132\236\178\180 \236\139\156\234\176\132",
+		LEVEL_GRAPH = "레벨 그래프",
+		LEVEL_SPEED = "레벨업 속도",
+		LEVEL_TIME = "레벨 플레이 시간",
+		MSG_PLAYER_DING = "두둥! <LEVEL> 레벨까지 <TIME> 소요",
+		MSG_PLAYER_DING2 = "두둥! <LEVEL> 레벨",
+		MSG_PLAYER_DING3 = "<LEVEL> 레벨이 됐어요~!", -- Needs review
+		RANDOM_MESSAGE = "무작위 메시지",
+		TOTAL = "총",
+		TOTAL_TIME = "전체 시간",
 	},
 	ptBR = {
 	},
 	ruRU = {
-		LEVEL_SPEED = "\208\161\208\186\208\190\209\128\208\190\209\129\209\130\209\140 \208\189\208\176\208\177\208\190\209\128\208\176 \209\131\209\128\208\190\208\178\208\189\209\143", -- "Скорость набора уровня"
-		LEVEL_TIME = "\208\146\209\128\208\181\208\188\209\143 \208\183\208\176\209\130\209\128\208\176\209\135\208\181\208\189\208\189\208\190\208\181 \208\189\208\176 \209\131\209\128\208\190\208\178\208\181\208\189\209\140", -- "Время затраченное на уровень"
-		TOTAL = "\208\158\208\177\209\137\208\181\208\181", -- "Общее"
-		TOTAL_TIME = "\208\158\208\177\209\137\208\181\208\181 \208\178\209\128\208\181\208\188\209\143", -- "Общее время"
+		LEVEL_SPEED = "Скорость набора уровня", -- Needs review
+		LEVEL_TIME = "Время затраченное на уровень", -- Needs review
+		TOTAL = "Общее", -- Needs review
+		TOTAL_TIME = "Общее время", -- Needs review
 	},
 	zhCN = {
-		BROKER_CLICK = "|cffFFFFFF\231\130\185\229\135\187|r\230\137\147\229\188\128\233\128\137\233\161\185\232\143\156\229\141\149", -- "点击打开选项菜单"
-		BROKER_SHIFT_CLICK = "|cffFFFFFFShift-\231\130\185\229\135\187|r \229\144\175\231\148\168\230\136\150\231\166\129\231\148\168\230\143\146\228\187\182", -- "Shift-点击 启用或禁用插件"
+		GUILD_CHANGELOG = "公会更新日志",
+		LEVEL_GRAPH = "升级图表",
+		LEVEL_SPEED = "升级速度",
+		LEVEL_TIME = "升级时间",
+		MSG_PLAYER_DING = "升级! 等级 <LEVEL> 使用 <TIME>",
+		MSG_PLAYER_DING2 = "升级! 等级 <LEVEL>",
+		MSG_PLAYER_DING3 = "我在 <ZONE> 升级到等级 <LEVEL> !",
+		MSG_PLAYER_DING4 = "我已经升到等级 <LEVEL>，只剩 <LEVEL%> 级!",
+		RANDOM_MESSAGE = "随机讯息",
+		TIME_ABBREVIATE = "缩写",
+		TIME_FORMAT = "时间格式",
+		TIME_FORMAT_LEGACY = "标准时间格式",
+		TIME_LOWER_CASE = "小写英文字母",
+		TIME_MAX_UNITS = "最大时间单位",
+		TIME_OMIT_SECONDS = "省略秒数",
+		TIME_OMIT_ZERO_VALUE = "忽略零",
+		TIMESTAMP = "时间戳记",
+		TOTAL = "总共",
+		TOTAL_TIME = "总时间",
+
+		BROKER_CLICK = "|cffFFFFFF点击|r打开选项菜单",
+		BROKER_SHIFT_CLICK = "|cffFFFFFFShift-点击|r 启用或禁用插件",
 	},
 	zhTW = {
+		GUILD_CHANGELOG = "公會更新日誌",
+		LEVEL_GRAPH = "升級圖表",
+		LEVEL_SPEED = "升級速度",
+		LEVEL_TIME = "升級時間",
+		MSG_PLAYER_DING = "升級! 等級 <LEVEL> 使用 <TIME>",
+		MSG_PLAYER_DING2 = "升級! 等級 <LEVEL>",
+		MSG_PLAYER_DING3 = "我在 <ZONE> 升級到等級 <LEVEL> !",
+		MSG_PLAYER_DING4 = "我已經升到等級 <LEVEL>，只剩 <LEVEL%> 級!",
+		RANDOM_MESSAGE = "隨機訊息",
+		TIME_ABBREVIATE = "縮寫",
+		TIME_FORMAT = "時間格式",
+		TIME_FORMAT_LEGACY = "標準時間格式",
+		TIME_LOWER_CASE = "小寫英文字母",
+		TIME_MAX_UNITS = "最大時間單位",
+		TIME_OMIT_SECONDS = "省略秒數",
+		TIME_OMIT_ZERO_VALUE = "忽略零",
+		TIMESTAMP = "時間戳記",
+		TOTAL = "總共",
+		TOTAL_TIME = "總時間",
+		
+		BROKER_CLICK = "|cffFFFFFF點擊|r打開選項菜單",
+		BROKER_SHIFT_CLICK = "|cffFFFFFFShift-點擊|r 啟用或禁用插件",
 	},
 }
 

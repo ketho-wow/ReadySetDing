@@ -81,7 +81,8 @@ local dataobject = {
 	--- Text ---
 	------------
 
-local percent = ""
+-- Ticket #21: ChocolateBar might request the dataobject a tad too early, use placeholder number instead of string
+local percent = 0
 
 local function DataText()
 	dataobject.text = format("%s - |cffFFFFFF%.1f%%|r", MilitaryTime(S.curTPM + time() - S.lastPlayed), percent)

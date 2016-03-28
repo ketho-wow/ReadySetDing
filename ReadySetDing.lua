@@ -2,7 +2,7 @@
 --- Author: Ketho (EU-Boulderfist)		---
 --- License: Public Domain				---
 --- Created: 2009.09.01					---
---- Version: 2.2 [2016.03.27]			---
+--- Version: 2.3 [2016.03.28]			---
 -------------------------------------------
 --- Curse			http://mods.curse.com/addons/wow/readysetding
 --- WoWInterface	http://www.wowinterface.com/downloads/info16220-ReadySetDing.html
@@ -69,9 +69,6 @@ S.events = {
 	-- AFK Time
 	"CHAT_MSG_SYSTEM",
 	"PLAYER_LEAVING_WORLD",
-	
-	-- Deaths
-	"PLAYER_DEAD",
 }
 
 	--------------
@@ -316,23 +313,7 @@ S.legend = {}
 S.legend.show = "\n|cff71D5FFICON|r, |cffA8A8FFCHAN|r, |cffFFFFFFNAME|r, |cffADFF2FLEVEL|r"
 S.legend.chat = "\n|cffADFF2FLEVEL,|r |cffF6ADC6LEVEL-, LEVEL#, LEVEL%|r"
 	.."\n|cff71D5FFTIME, TOTAL,|r |cff0070DDDATE, DATE2|r"
-	.."\n|cffFFFF00AFK, AFK+,|r |cffFF0000DEATH, DEATH+|r\n"
-	
-	-------------
-	--- Stats ---
-	-------------
-
--- http://www.wowhead.com/achievements=2
-function RSD:AchievStat(info)
-	if info == "quest" then
-		local questsTotal = GetStatistic(98); questsTotal = (questsTotal == "--") and 0 or questsTotal -- 98 = Quests completed
-		local questsDaily = GetStatistic(97); questsDaily = (questsDaily == "--") and 0 or questsDaily -- 97 = Daily quests completed
-		return questsTotal - questsDaily -- thank you aldon@wowhead
-	elseif info == "death" then
-		local totalDeaths = GetStatistic(60); totalDeaths = (totalDeaths == "--") and 0 or totalDeaths -- 60 = Total Deaths
-		return totalDeaths
-	end
-end
+	.."\n|cffFFFF00AFK, AFK+,|r"
 
 	---------------
 	--- Replace ---

@@ -2,7 +2,7 @@
 --- Author: Ketho (EU-Boulderfist)		---
 --- License: Public Domain				---
 --- Created: 2009.09.01					---
---- Version: 2.3 [2016.03.28]			---
+--- Version: 2.4 [2016.03.30]			---
 -------------------------------------------
 --- Curse			http://mods.curse.com/addons/wow/readysetding
 --- WoWInterface	http://www.wowinterface.com/downloads/info16220-ReadySetDing.html
@@ -141,7 +141,7 @@ do
 	
 	function RSD:Time(v)
 		local s
-		if profile.LegacyTime then
+		if profile.NormalTime then
 			s = self:TimeString(v, not profile.TimeOmitZero)
 		else
 			s = self:SecondsTime(v)

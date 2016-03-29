@@ -2,35 +2,33 @@ local _, S = ...
 
 local L = {
 	enUS = {
+		BROKER_CLICK = "Click to open the options menu",
+		BROKER_SHIFT_CLICK = "Shift-click to toggle this AddOn",
+		GUILD_CHANGELOG = "Guild Changelog",
+		LEVEL_GRAPH = LEVEL.." Graph",
+		LEVEL_SPEED = LEVEL.." "..SPEED,
+		LEVEL_TIME = "Level Time",
 		MSG_PLAYER_DING = TUTORIAL_TITLE55.." "..LEVEL.." <LEVEL> in <TIME>",
 		MSG_PLAYER_DING2 = TUTORIAL_TITLE55.." "..LEVEL.." <LEVEL>",
 		MSG_PLAYER_DING3 = "I reached "..LEVEL.." <LEVEL> in <ZONE>!",
 		MSG_PLAYER_DING4 = "I reached "..LEVEL.." <LEVEL>, only <LEVEL%> to go!",
-		
-		LEVEL_TIME = "Level Time",
-		TOTAL_TIME = "Total Time",
-		TIMESTAMP = "Timestamp",
-		
-		TOTAL = "Total",
-		
+		RaidWarningFrame = "RaidWarningFrame",
+		RANDOM = "Random",
 		RANDOM_MESSAGE = "Random Message",
-		
+		TIME_ABBREVIATE = "Abbreviate",
 		TIME_FORMAT = "Time Format",
-		TIME_FORMAT_LEGACY = "Legacy Time Format",
-		TIME_OMIT_ZERO_VALUE = "Omit Zero Value",
+		TIME_FORMAT_NORMAL = "Normal Time Format",
+		TIME_LOWER_CASE = "Lower Case",
 		TIME_MAX_UNITS = "Max time units",
 		TIME_OMIT_SECONDS = "Omit "..SECONDS,
-		TIME_LOWER_CASE = "Lower Case",
-		TIME_ABBREVIATE = "Abbreviate",
-		
-		LEVEL_GRAPH = LEVEL.." Graph",
-		GUILD_CHANGELOG = GUILD.." Changelog",
-		LEVEL_SPEED = LEVEL.." "..SPEED,
-		
-		BROKER_CLICK = "|cffFFFFFFClick|r to open the options menu",
-		BROKER_SHIFT_CLICK = "|cffFFFFFFShift-click|r to toggle this AddOn",
+		TIME_OMIT_ZERO = "Omit Zero",
+		TIMESTAMP = "Timestamp",
+		TOTAL = "Total",
+		TOTAL_TIME = "Total Time",
 	},
 	deDE = {
+		BROKER_CLICK = "Klickt, um das Optionsmenü zu öffnen", -- Needs review
+		BROKER_SHIFT_CLICK = "Shift-klickt, um dieses AddOn ein-/auszuschalten", -- Needs review
 		GUILD_CHANGELOG = "Stufenunterschied Gildenmitglieder", -- Needs review
 		LEVEL_GRAPH = "Stufendiagramm", -- Needs review
 		LEVEL_SPEED = "Stufenaufstiegstempo",
@@ -42,19 +40,18 @@ local L = {
 		RANDOM_MESSAGE = "Zufällige Mitteilung",
 		TIME_ABBREVIATE = "Abkürzen",
 		TIME_FORMAT = "Zeitformat",
-		TIME_FORMAT_LEGACY = "Altes Zeitformat",
+		TIME_FORMAT_NORMAL = "Normal Zeitformat", -- Needs review
 		TIME_LOWER_CASE = "Kleinschrift", -- Needs review
 		TIME_MAX_UNITS = "Zeiteinheiten", -- Needs review
 		TIME_OMIT_SECONDS = "Sekunden auslassen", -- Needs review
-		TIME_OMIT_ZERO_VALUE = "Nullwerte auslassen", -- Needs review
+		TIME_OMIT_ZERO = "Nullwerte auslassen", -- Needs review
 		TIMESTAMP = "Zeitstempel",
 		TOTAL = "Insgesamt",
 		TOTAL_TIME = "Spielzeit insgesamt",
-		
-		BROKER_CLICK = "|cffFFFFFFKlickt|r, um das Optionsmen\195\188 zu \195\182ffnen",
-		BROKER_SHIFT_CLICK = "|cffFFFFFFShift-klickt|r, um dieses AddOn ein-/auszuschalten",
 	},
 	esES = {
+		BROKER_CLICK = "Haz clic para ver opciones", -- Needs review
+		BROKER_SHIFT_CLICK = "Mayús-clic para activar/desactivar", -- Needs review
 		LEVEL_SPEED = "Velocidad de Nivel", -- Needs review
 		LEVEL_TIME = "Tiempo de Nivel", -- Needs review
 		MSG_PLAYER_DING = "Ding! Nivel <LEVEL> en <TIME>", -- Needs review
@@ -85,6 +82,8 @@ local L = {
 		TOTAL_TIME = "Общее время", -- Needs review
 	},
 	zhCN = {
+		BROKER_CLICK = "点击打开选项菜单", -- Needs review
+		BROKER_SHIFT_CLICK = "Shift-点击启用或禁用插件", -- Needs review
 		GUILD_CHANGELOG = "公会更新日志",
 		LEVEL_GRAPH = "升级图表",
 		LEVEL_SPEED = "升级速度",
@@ -96,19 +95,18 @@ local L = {
 		RANDOM_MESSAGE = "随机讯息",
 		TIME_ABBREVIATE = "缩写",
 		TIME_FORMAT = "时间格式",
-		TIME_FORMAT_LEGACY = "标准时间格式",
+		TIME_FORMAT_BLIZZARD = "标准时间格式",
 		TIME_LOWER_CASE = "小写英文字母",
 		TIME_MAX_UNITS = "最大时间单位",
 		TIME_OMIT_SECONDS = "省略秒数",
-		TIME_OMIT_ZERO_VALUE = "忽略零",
+		TIME_OMIT_ZERO = "忽略零",
 		TIMESTAMP = "时间戳记",
 		TOTAL = "总共",
 		TOTAL_TIME = "总时间",
-
-		BROKER_CLICK = "|cffFFFFFF点击|r打开选项菜单",
-		BROKER_SHIFT_CLICK = "|cffFFFFFFShift-点击|r 启用或禁用插件",
 	},
 	zhTW = {
+		BROKER_CLICK = "左鍵打開選項選單", -- Needs review
+		BROKER_SHIFT_CLICK = "Shift-左鍵啟用或停用插件", -- Needs review
 		GUILD_CHANGELOG = "公會更新日誌",
 		LEVEL_GRAPH = "升級圖表",
 		LEVEL_SPEED = "升級速度",
@@ -117,20 +115,19 @@ local L = {
 		MSG_PLAYER_DING2 = "升級! 等級 <LEVEL>",
 		MSG_PLAYER_DING3 = "我在 <ZONE> 升級到等級 <LEVEL> !",
 		MSG_PLAYER_DING4 = "我已經升到等級 <LEVEL>，只剩 <LEVEL%> 級!",
+		RaidWarningFrame = "團隊警告", -- Needs review
+		RANDOM = "隨機", -- Needs review
 		RANDOM_MESSAGE = "隨機訊息",
 		TIME_ABBREVIATE = "縮寫",
 		TIME_FORMAT = "時間格式",
-		TIME_FORMAT_LEGACY = "標準時間格式",
+		TIME_FORMAT_NORMAL = "標準時間格式", -- Needs review
 		TIME_LOWER_CASE = "小寫英文字母",
 		TIME_MAX_UNITS = "最大時間單位",
 		TIME_OMIT_SECONDS = "省略秒數",
-		TIME_OMIT_ZERO_VALUE = "忽略零",
+		TIME_OMIT_ZERO = "忽略零", -- Needs review
 		TIMESTAMP = "時間戳記",
 		TOTAL = "總共",
 		TOTAL_TIME = "總時間",
-		
-		BROKER_CLICK = "|cffFFFFFF點擊|r打開選項菜單",
-		BROKER_SHIFT_CLICK = "|cffFFFFFFShift-點擊|r 啟用或禁用插件",
 	},
 }
 

@@ -2,7 +2,6 @@ local NAME, S = ...
 local RSD = ReadySetDing
 
 local ACD = LibStub("AceConfigDialog-3.0")
-local LSM = LibStub("LibSharedMedia-3.0")
 local LG = LibStub("LibGraph-2.0")
 
 local L = S.L
@@ -70,11 +69,11 @@ S.defaults = {
 		ShowOutput = 1,
 		Language = 1,
 		
-		LegacyTime = true,
+		NormalTime = true,
 		TimeMaxCount = 2,
 		
 		LevelGraph = true,
-		GuildMemberChangelog = true,
+		GuildChangelog = true,
 	}
 }
 
@@ -233,7 +232,7 @@ S.options = {
 							values = function()
 								local c = "|cff2E9AFE"
 								local t = {
-									c.."#|r  RaidWarningFrame",
+									c.."#|r  "..L.RaidWarningFrame,
 									c.."#|r  "..(SHOW_COMBAT_TEXT == "0" and "|cff979797" or "")..COMBAT_TEXT_LABEL,
 								}
 								for i = 1, NUM_CHAT_WINDOWS do
@@ -264,7 +263,7 @@ S.options = {
 							values = function()
 								local color, languages = "|cff2E9AFE", {}
 								languages[1] = color.."#|r  "..DEFAULT
-								languages[2] = color.."#|r  Random"
+								languages[2] = color.."#|r  "..L.RANDOM
 								for i = 1, GetNumLanguages() do
 									languages[i+2] = color..i..".|r "..GetLanguageByIndex(i)
 								end
@@ -282,53 +281,53 @@ S.options = {
 							type = "description", order = 1,
 							fontSize = "large",
 							name = function()
-								local s = profile.LegacyTime and RSD:TimeString(S.TimeOmitZero, not profile.TimeOmitZero) or RSD:Time(S.TimeUnits[profile.TimeMaxCount])
+								local s = profile.NormalTime and RSD:TimeString(S.TimeOmitZero, not profile.TimeOmitZero) or RSD:Time(S.TimeUnits[profile.TimeMaxCount])
 								return "|cffF6ADC6"..s.."|r"
 							end,
 						},
 						header1 = {type = "header", order = 2, name = ""},
-						LegacyTime = {
+						NormalTime = {
 							type = "toggle", order = 3,
 							width = "full", descStyle = "",
-							name = function() return (profile.LegacyTime and "" or "|cff979797")..L.TIME_FORMAT_LEGACY end,
+							name = function() return (profile.NormalTime and "" or "|cff979797")..L.TIME_FORMAT_NORMAL end,
 						},
 						TimeOmitZero = {
 							type = "toggle", order = 4,
 							width = "full",
 							desc = format("%s %s %s", RSD:TimeString(S.TimeOmitZero, true), arrow, RSD:TimeString(S.TimeOmitZero, false)),
-							name = L.TIME_OMIT_ZERO_VALUE,
-							hidden = function() return not profile.LegacyTime end,
+							name = L.TIME_OMIT_ZERO,
+							hidden = function() return not profile.NormalTime end,
+						},
+						TimeOmitSec = {
+							type = "toggle", order = 5,
+							width = "full",
+							desc = SECONDS.." "..arrow.." |cffFF0000"..NOT_APPLICABLE.."|r",
+							name = L.TIME_OMIT_SECONDS,
+							hidden = "NormalTime",
+						},
+						TimeLowerCase = {
+							type = "toggle", order = 6,
+							width = "full",
+							desc = format("%s %s %s", HOURS, arrow, HOURS:lower()),
+							name = L.TIME_LOWER_CASE,
+							hidden = "NormalTime",
+						},
+						TimeAbbrev = {
+							type = "toggle", order = 7,
+							width = "full",
+							desc = format("%s %s %s\n%s %s %s\n%s %s %s\n%s %s %s",
+								SECONDS, arrow, SECONDS_ABBR2, MINUTES, arrow, MINUTES_ABBR2, HOURS, arrow, HOURS_ABBR2, DAYS, arrow, DAYS_ABBR2),
+							name = L.TIME_ABBREVIATE,
+							hidden = "NormalTime",
 						},
 						TimeMaxCount = {
-							type = "range", order = 5,
+							type = "range", order = 8,
 							descStyle = "",
 							name = "   "..L.TIME_MAX_UNITS,
 							min = 1,
 							max = 4,
 							step = 1,
-							hidden = "LegacyTime",
-						},
-						TimeOmitSec = {
-							type = "toggle", order = 6,
-							width = "full",
-							desc = SECONDS.." "..arrow.." |cffFF0000"..NOT_APPLICABLE.."|r",
-							name = L.TIME_OMIT_SECONDS,
-							hidden = "LegacyTime",
-						},
-						TimeLowerCase = {
-							type = "toggle", order = 7,
-							width = "full",
-							desc = format("%s %s %s", HOURS, arrow, HOURS:lower()),
-							name = L.TIME_LOWER_CASE,
-							hidden = "LegacyTime",
-						},
-						TimeAbbrev = {
-							type = "toggle", order = 8,
-							width = "full",
-							desc = format("%s %s %s\n%s %s %s\n%s %s %s\n%s %s %s",
-								SECONDS, arrow, SECONDS_ABBR2, MINUTES, arrow, MINUTES_ABBR2, HOURS, arrow, HOURS_ABBR2, DAYS, arrow, DAYS_ABBR2),
-							name = L.TIME_ABBREVIATE,
-							hidden = "LegacyTime",
+							hidden = "NormalTime",
 						},
 					},
 				},
@@ -365,7 +364,7 @@ S.options = {
 						ReadySetDing_LevelGraph[v and "Show" or "Hide"](ReadySetDing_LevelGraph)
 					end,
 				},
-				GuildMemberChangelog = {
+				GuildChangelog = {
 					type = "toggle", order = 8,
 					width = "full", descStyle = "",
 					name = "|TInterface\\Icons\\INV_Misc_Book_07:16:16:1:0"..S.crop.."|t  "..L.GUILD_CHANGELOG,
@@ -390,8 +389,8 @@ function RSD:SetValue(i, v)
 	profile[i[#i]] = v
 end
 
-function RSD:LegacyTime()
-	return profile.LegacyTime
+function RSD:NormalTime()
+	return profile.NormalTime
 end
 
 	-----------------------
@@ -564,7 +563,7 @@ do
 				if not fstrings[k][k2] then
 					fstrings[k][k2] = CreateFrame("Frame", nil, level):CreateFontString()
 					local fs = fstrings[k][k2]
-					fs:SetFontObject("GameFontHighlightSmall")
+					fs:SetFontObject("GameFontHighlight")
 					fs:SetTextColor(unpack(graphcolor[k]))
 					fs:ClearAllPoints()
 					fs:SetPoint(v2, gr, v2, 0, -14)

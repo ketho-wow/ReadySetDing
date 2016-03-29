@@ -3,7 +3,6 @@ local RSD = ReadySetDing
 
 local ACR = LibStub("AceConfigRegistry-3.0")
 local ACD = LibStub("AceConfigDialog-3.0")
-local LSM = LibStub("LibSharedMedia-3.0")
 
 local L = S.L
 local options = S.options
@@ -465,7 +464,7 @@ function RSD:GUILD_ROSTER_UPDATE(event)
 					p[level] = {time(), date("%Y.%m.%d %H:%M:%S")}
 				else
 					-- level changed while user was offline
-					if profile.GuildMemberChangelog then
+					if profile.GuildChangelog then
 						if not showedHeader and char.LastCheck then
 							self:Print(format("|cffF6ADC6[%s]|r - |cffADFF2F[%s]|r", char.LastCheck, date("%Y.%m.%d %H:%M:%S")))
 							showedHeader = true; char.LastCheck = nil
@@ -521,9 +520,9 @@ function RSD:FRIENDLIST_UPDATE(event)
 	end
 end
 
-	---------------
-	--- Real ID ---
-	---------------
+	------------------
+	--- Battle.net ---
+	------------------
 
 local realid = {}
 

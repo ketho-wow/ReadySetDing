@@ -26,12 +26,6 @@ local format, gsub = format, gsub
 	--- GlobalStrings ---
 	---------------------
 
--- "<NAME> has reached level <LEVEL>!"
-local GUILD_NEWS_FORMAT6A = GUILD_NEWS_FORMAT6:gsub("%%s", "<NAME>"):gsub("%%d", "<LEVEL>")
-
--- "Congratulations, "<NAME>" has reached Level <LEVEL>!"
-local GUILD_LEVEL_UP2 = GUILD_LEVEL_UP:gsub("\"%%s\"", "<NAME>"):gsub("\124c.-\124h%[(.-)%]\124h\124r", "%1"):gsub("%%d", "<LEVEL>")
-
 -- coloring
 local TIME_PLAYED_TOTAL2 = gsub(TIME_PLAYED_TOTAL, "%%s", "|cff71D5FF%%s|r")
 local TIME_PLAYED_LEVEL2 = gsub(TIME_PLAYED_LEVEL, "%%s", "|cff71D5FF%%s|r")

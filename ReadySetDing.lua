@@ -2,7 +2,7 @@
 --- Author: Ketho (EU-Boulderfist)		---
 --- License: Public Domain				---
 --- Created: 2009.09.01					---
---- Version: 2.4 [2016.03.30]			---
+--- Version: 2.5 [2016.05.18]			---
 -------------------------------------------
 --- Curse			http://mods.curse.com/addons/wow/readysetding
 --- WoWInterface	http://www.wowinterface.com/downloads/info16220-ReadySetDing.html

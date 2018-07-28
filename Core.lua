@@ -40,9 +40,6 @@ local appValue = {
 function RSD:OnInitialize()
 	self.db = LibStub("AceDB-3.0"):New("ReadySetDingDB", S.defaults, true)
 	
-	self.db.global.version = S.VERSION
-	self.db.global.build = S.BUILD
-	
 	self.db.RegisterCallback(self, "OnProfileChanged", "RefreshDB")
 	self.db.RegisterCallback(self, "OnProfileCopied", "RefreshDB")
 	self.db.RegisterCallback(self, "OnProfileReset", "RefreshDB")

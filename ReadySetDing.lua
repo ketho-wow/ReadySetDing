@@ -11,8 +11,6 @@
 -- more advanced graphs, guildmember graphs
 
 local NAME, S = ...
-S.VERSION = GetAddOnMetadata(NAME, "Version")
-S.BUILD = "Release"
 
 ReadySetDing = LibStub("AceAddon-3.0"):NewAddon("ReadySetDing", "AceEvent-3.0", "AceTimer-3.0", "AceConsole-3.0")
 local RSD = ReadySetDing

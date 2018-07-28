@@ -50,7 +50,7 @@ function RSD:OnInitialize()
 	
 	ACR:RegisterOptionsTable("ReadySetDing_Parent", options)
 	ACD:AddToBlizOptions("ReadySetDing_Parent", NAME)
-	ACD:SetDefaultSize("ReadySetDing_Parent", 650, 575)
+	ACD:SetDefaultSize("ReadySetDing_Parent", 600, 620)
 	
 	-- setup profiles now, self reminder: requires db to be already defined
 	options.args.profiles = LibStub("AceDBOptions-3.0"):GetOptionsTable(self.db)

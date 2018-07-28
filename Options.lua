@@ -96,17 +96,17 @@ S.options = {
 					args = {
 						ShowGroup = {
 							type = "toggle", order = 1,
-							descStyle = "",
+							descStyle = "", width = "full",
 							name = " |cffA8A8FF"..GROUP.."|r",
 						},
 						ShowGuild = {
 							type = "toggle", order = 2,
-							descStyle = "",
+							descStyle = "", width = "full",
 							name = " |cff40FF40"..GUILD.."|r",
 						},
 						ShowFriend = {
 							type = "toggle", order = 3,
-							descStyle = "",
+							descStyle = "", width = "full",
 							name = " "..FRIENDS_WOW_NAME_COLOR_CODE..FRIENDS.."|r",
 						},
 						ShowMsg = {
@@ -140,17 +140,17 @@ S.options = {
 					args = {
 						ChatGroup = {
 							type = "toggle", order = 1,
-							descStyle = "",
+							descStyle = "", width = "full",
 							name = "|cffA8A8FF"..GROUP.."|r",
 						},
 						ChatGuild = {
 							type = "toggle", order = 2,
-							descStyle = "",
+							descStyle = "", width = "full",
 							name = "|cff40FF40"..GUILD.."|r",
 						},
 						DingRandom = {
 							type = "toggle", order = 4,
-							descStyle = "",
+							descStyle = "", width = "full",
 							name = "|cffF6ADC6"..L.RANDOM_MESSAGE.."|r",
 						},
 						NumRandomDing = {

@@ -148,12 +148,13 @@ function RSD:OnEnable()
 			self:UNIT_LEVEL()
 		end
 		if profile.ShowGuild and IsInGuild() then
-			GuildRoster() -- fires GUILD_ROSTER_UPDATE
+			C_GuildInfo.GuildRoster() -- fires GUILD_ROSTER_UPDATE
 		end
 		-- FRIENDLIST_UPDATE doesn't fire on actual friend levelups
 		-- the returns of GetFriendInfo() only get updated when FRIENDLIST_UPDATE fires
 		if profile.ShowFriend then
-			ShowFriends() -- fires FRIENDLIST_UPDATE
+			-- C_FriendList.ShowFriends() -- fires FRIENDLIST_UPDATE
+			-- self:FRIENDLIST_UPDATE()
 			-- BN_FRIEND_INFO_CHANGED doesn't fire on login; but it does on actual levelups; just to be sure
 			self:BN_FRIEND_INFO_CHANGED()
 		end
@@ -241,6 +242,20 @@ function RSD:PLAYER_LEVEL_UP(event, ...)
 	RequestTimePlayed() -- TIME_PLAYED_MSG
 end
 
+local requiresHw = {
+	SAY = true,
+	YELL = true,
+	CHANNEL = true,
+}
+
+local function CanSendChatMessage(chatType)
+	local _, instanceType = IsInInstance()
+	if instanceType == "none" and requiresHw[chatType or "SAY"]  then
+		return false
+	end
+	return true
+end
+
 function RSD:TIME_PLAYED_MSG(event, ...)
 	S.totalTPM, S.curTPM = ...
 	S.lastPlayed = time()
@@ -279,7 +294,7 @@ function RSD:TIME_PLAYED_MSG(event, ...)
 		-- Party/Raid Announce
 		if profile.ChatGroup then
 			local isBattleground = select(2, IsInInstance()) == "pvp"
-			local chan = (IsPartyLFG() or isBattleground) and "INSTANCE_CHAT" or IsInRaid() and "RAID" or IsInGroup() and "PARTY" or "SAY"
+			local chan = (IsPartyLFG() or isBattleground) and "INSTANCE_CHAT" or IsInRaid() and "RAID" or IsInGroup() and "PARTY" or CanSendChatMessage() and "SAY" or "EMOTE"
 			-- send in two messages
 			if strlen(text) > 255 then
 				SendChatMessage(strsub(text, 1, 255), chan, langId)
@@ -492,19 +507,22 @@ end
 	--- Friends ---
 	---------------
 
-local friend = {}
+friend = {}
 
 function RSD:FRIENDLIST_UPDATE(event)
+	--[=[
 	if not profile.ShowFriend then return end
 	
 	if time() > (cd.friend or 0) then
 		cd.friend = time() + 1
 		local chan = FRIENDS_WOW_NAME_COLOR_CODE..FRIEND.."|r"
 		
-		for i = 1, select(2, GetNumFriends()) do
-			local name, level, class = GetFriendInfo(i)
+		for i = 1, C_FriendList.GetNumOnlineFriends() do
+			local info = C_FriendList.GetFriendInfoByIndex(i)
+			local name, level, class = info.name, info.level, info.className
+			-- print(name, level)
 			if name then -- name is sometimes nil
-				if friend[name] and level > friend[name] then
+				if friend[name] and level > 0 and level > friend[name] then
 					args.icon = S.GetClassIcon(S.revLOCALIZED_CLASS_NAMES[class], 1, 1)
 					args.chan = chan
 					args.name = format("|cff%s|Hplayer:%s|h%s|h|r", S.classCache[S.revLOCALIZED_CLASS_NAMES[class]], name, name)
@@ -515,6 +533,7 @@ function RSD:FRIENDLIST_UPDATE(event)
 			end
 		end
 	end
+	]=]
 end
 
 	------------------
@@ -531,10 +550,12 @@ function RSD:BN_FRIEND_INFO_CHANGED()
 		local chan = FRIENDS_BNET_NAME_COLOR_CODE..BATTLENET_FRIEND.."|r"
 		
 		for i = 1, select(2, BNGetNumFriends()) do
-			local presenceID, presenceName = BNGetFriendInfo(i)
+			local info = C_BattleNet.GetFriendAccountInfo(i)
+			local presenceID, presenceName = info.gameAccountInfo.gameAccountID, info.accountName
 			
 			-- ToDo: add support for multiple online toons / BNGetFriendToonInfo
-			local _, toonName, client, realm, _, _, race, class, _, _, level = BNGetGameAccountInfo(presenceID)
+			local ginfo = C_BattleNet.GetGameAccountInfoByID(presenceID)
+			local toonName, client, realm, class, level = ginfo.characterName, ginfo.clientProgram, ginfo.realmName, ginfo.className, ginfo.characterLevel
 			if not realm then return end -- sanity check (reported by featalene-Curse)
 			
 			-- avoid misrecognizing characters that share the same name, but are from different servers

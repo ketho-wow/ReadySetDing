@@ -77,7 +77,7 @@ S.player = {
 	englishClass = select(2, UnitClass("player")),
 	faction = select(2, UnitFactionGroup("player")),
 	level = UnitLevel("player"),
-	maxlevel = MAX_PLAYER_LEVEL_TABLE[GetExpansionLevel()],
+	maxlevel = GetMaxLevelForPlayerExpansion(),
 	maxxp = UnitXPMax("player"),
 	name = UnitName("player"),
 	race = UnitRace("player"),
@@ -85,7 +85,7 @@ S.player = {
 }
 local player = S.player
 
-S.maxlevel = MAX_PLAYER_LEVEL_TABLE[#MAX_PLAYER_LEVEL_TABLE]
+S.maxlevel = GetMaxLevelForLatestExpansion()
 
 	------------
 	--- Time ---

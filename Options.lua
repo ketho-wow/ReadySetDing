@@ -104,11 +104,13 @@ S.options = {
 							descStyle = "", width = "full",
 							name = " |cff40FF40"..GUILD.."|r",
 						},
+						--[[
 						ShowFriend = {
 							type = "toggle", order = 3,
 							descStyle = "", width = "full",
 							name = " "..FRIENDS_WOW_NAME_COLOR_CODE..FRIENDS.."|r",
 						},
+						]]
 						ShowMsg = {
 							type = "input", order = 6,
 							width = "full", usage = legend.show,
@@ -571,6 +573,7 @@ do
 	-- maybe make graphs customizable in some way in the future
 	function RSD:UpdateGraph(level, total)
 		local minLvl = getLowestLevel()
+		if not minLvl then return end
 		local hasLevelOne = char.LevelTimeList[2] -- if we have level 2, then we can show level 1 (0;0) too
 		local offset = hasLevelOne and 1 or 0
 		

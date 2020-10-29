@@ -1,4 +1,4 @@
-## Interface: 80000
+## Interface: 90001
 ## Version: @project-version@
 ## Title: ReadySetDing
 ## Notes: Ding!
@@ -7,6 +7,8 @@
 ## OptionalDeps: Ace3
 ## X-Embeds: Ace3
 ## X-Category: Leveling
+## X-Curse-Project-ID: 21877
+## X-WoWI-ID: 16220
 
 #@no-lib-strip@
 Libs\LibStub\LibStub.lua

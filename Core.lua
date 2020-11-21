@@ -39,16 +39,16 @@ local appValue = {
 
 function RSD:OnInitialize()
 	self.db = LibStub("AceDB-3.0"):New("ReadySetDingDB", S.defaults, true)
-	
+
 	self.db.RegisterCallback(self, "OnProfileChanged", "RefreshDB")
 	self.db.RegisterCallback(self, "OnProfileCopied", "RefreshDB")
 	self.db.RegisterCallback(self, "OnProfileReset", "RefreshDB")
 	self:RefreshDB()
-	
+
 	ACR:RegisterOptionsTable("ReadySetDing_Parent", options)
 	ACD:AddToBlizOptions("ReadySetDing_Parent", NAME)
 	ACD:SetDefaultSize("ReadySetDing_Parent", 600, 620)
-	
+
 	-- setup profiles now, self reminder: requires db to be already defined
 	options.args.profiles = LibStub("AceDBOptions-3.0"):GetOptionsTable(self.db)
 	local profiles = options.args.profiles
@@ -56,48 +56,48 @@ function RSD:OnInitialize()
 	profiles.name = "|TInterface\\Icons\\INV_Misc_Note_01:16:16:-2:-1"..S.crop.."|t "..profiles.name
 	tinsert(appKey, "ReadySetDing_Profiles")
 	appValue.ReadySetDing_Profiles = profiles
-	
+
 	for _, v in ipairs(appKey) do
 		ACR:RegisterOptionsTable(v, appValue[v])
 		ACD:AddToBlizOptions(v, appValue[v].name, NAME)
 	end
-	
+
 	----------------------
 	--- Slash Commands ---
 	----------------------
-	
+
 	for _, v in ipairs({"rsd", "readyset", "readysetding"}) do
 		self:RegisterChatCommand(v, "SlashCommand")
 	end
-	
+
 	-----------------------------
 	--- Custom SavedVariables ---
 	-----------------------------
-	
+
 	char.LevelTimeList = char.LevelTimeList or {}
 	char.TotalTimeList = char.TotalTimeList or {}
 	char.DateStampList = char.DateStampList or {}
 	char.UnixTimeList = char.UnixTimeList or {}
 	self.db.global.maxxp = self.db.global.maxxp or {}
-	
+
 	self.db.global.member = setmetatable(self.db.global.member or {}, {__index = function(t, k)
 			local v = {}
 			rawset(t, k, v)
 			return v
 		end
 	})
-	member = self.db.global.member 
-	
+	member = self.db.global.member
+
 	-- character specific
 	char.timeAFK = char.timeAFK or 0
 	char.totalAFK = char.totalAFK or 0
-	
+
 	-- level 1 init
 	if player.level == 1 then
 		char.DateStampList[1] = char.DateStampList[1] or date("%Y.%m.%d %H:%M:%S")
 		char.UnixTimeList[1] = char.UnixTimeList[1] or time()
 	end
-	
+
 	-- v1.16: remove pre-connected realms guild member data
 	wipe(self.db.realm)
 end
@@ -126,22 +126,22 @@ function RSD:OnEnable()
 			self:RegisterEvent(v)
 		end
 	end
-	
+
 	-- filter /played message
 	S.filterPlayed = true
-	
+
 	-- support [Class Colors] by Phanx
 	if CUSTOM_CLASS_COLORS then
 		CUSTOM_CLASS_COLORS:RegisterCallback("WipeCache", self)
 	end
-	
+
 	--------------
 	--- Timers ---
 	--------------
-	
+
 	-- standalone OnUpdate is more stable than AceTimer on client startup imho
 	f:SetScript("OnUpdate", f.WaitPlayed)
-	
+
 	self:ScheduleRepeatingTimer(function()
 		-- the returns of UnitLevel() aren't yet updated on UNIT_LEVEL
 		if profile.ShowGroup then
@@ -173,27 +173,27 @@ function RSD:RefreshDB()
 	-- table shortcuts
 	profile = self.db.profile
 	char = self.db.char
-	
+
 	-- update table references in other files
 	for i = 1, 2 do
 		self["RefreshDB"..i](self)
 	end
-	
+
 	-- init random messages
 	self["SetupRandomDing"](self, profile["NumRandomDing"])
-	
+
 	-- stopwatch (only on changing profiles; it's not yet initialized at start)
 	-- but don't hide stopwatch, we'd want a library for that lol
 	local v = S.curTPM + time() - S.lastPlayed
 	if profile.Stopwatch and S.curTPM > 0 and S.CanUseStopwatch(v) then
 		S.StopwatchStart(v)
 	end
-	
+
 	-- graphs
 	if ReadySetDing_LevelGraph then
 		ReadySetDing_LevelGraph[profile.LevelGraph and "Show" or "Hide"](ReadySetDing_LevelGraph)
 	end
-	
+
 	-- clear random message preview
 	wipe(S.activePreview)
 end
@@ -259,10 +259,10 @@ end
 function RSD:TIME_PLAYED_MSG(event, ...)
 	S.totalTPM, S.curTPM = ...
 	S.lastPlayed = time()
-	
+
 	if playerDinged then
 		playerDinged = false
-		
+
 		local levelTime
 		local prevTime = char.TotalTimeList[player.level-1]
 		if prevTime then
@@ -272,7 +272,7 @@ function RSD:TIME_PLAYED_MSG(event, ...)
 			-- undinged LevelTime + (dinged TotalTime - undinged TotalTime)
 			levelTime = curTPM2 + (S.totalTPM - totalTPM2)
 		end
-		
+
 		-- update player data
 		local level = player.level
 		char.LevelTimeList[level] = levelTime
@@ -280,7 +280,7 @@ function RSD:TIME_PLAYED_MSG(event, ...)
 		char.UnixTimeList[level] = time()
 		char.DateStampList[level] = date("%Y.%m.%d %H:%M:%S")
 		self.db.global.maxxp[level-1] = player.maxxp
-		
+
 		-- Language
 		local _, langId
 		if profile.Language == 2 then
@@ -288,9 +288,9 @@ function RSD:TIME_PLAYED_MSG(event, ...)
 		elseif profile.Language > 2 then
 			_, langId = GetLanguageByIndex(profile.Language-2)
 		end
-		
+
 		local text = self:ChatDing(levelTime)
-		
+
 		-- Party/Raid Announce
 		if profile.ChatGroup then
 			local isBattleground = select(2, IsInInstance()) == "pvp"
@@ -305,19 +305,19 @@ function RSD:TIME_PLAYED_MSG(event, ...)
 		else -- for people that rather like a local notification instead of announce
 			RaidNotice_AddMessage(RaidWarningFrame, text, S.white)
 		end
-		
+
 		-- Guild Announce
 		if profile.ChatGuild and IsInGuild() then
 			SendChatMessage(text, "GUILD", langId)
 		end
-		
+
 		-- Screenshot
 		if profile.Screenshot then
 			self:ScheduleTimer(function()
 				Screenshot()
 			end, 1)
 		end
-		
+
 		if profile.Stopwatch and S.CanUseStopwatch(S.curTPM) then
 			-- temporarily pause
 			Stopwatch_Pause()
@@ -326,38 +326,38 @@ function RSD:TIME_PLAYED_MSG(event, ...)
 				S.StopwatchStart(S.curTPM + time() - S.lastPlayed)
 			end, 60)
 		end
-		
+
 		-- reset current level specific data
 		char.timeAFK = 0
-		
+
 	--------------
 	--- Graphs ---
 	--------------
-		
+
 		local level = ReadySetDing_LevelGraph
 		local total = ReadySetDing_TotalGraph
-		
+
 		if level and profile.LevelGraph then
 			level:ResetData()
 			total:ResetData()
 			self:UpdateGraph(level, total)
 		end
-		
+
 	else
 		-- Blizzard_TimeManager is not yet loaded, but we're being delayed anyway
 		if profile.Stopwatch and S.CanUseStopwatch(S.curTPM) then
 			S.StopwatchStart(S.curTPM)
 		end
 	end
-	
+
 	-- update config if currently shown
 	if ACD.OpenFrames.ReadySetDing_Parent then
 		ACR:NotifyChange("ReadySetDing_Parent")
 	end
-	
+
 	-- update for next levelup
 	totalTPM2, curTPM2 = S.totalTPM, S.curTPM
-	
+
 	-- UnitXPMax is not yet readily updated
 	self:ScheduleTimer(function()
 		player.maxxp = UnitXPMax("player")
@@ -377,7 +377,7 @@ function RSD:ChatDing(levelTime)
 	args.afk = self:Time(char.timeAFK)
 	args["afk+"] = self:Time(char.totalAFK)
 	args.zone = GetRealZoneText() or GetSubZoneText() or ZONE
-	
+
 	-- fallback to default in case of blank (nil) random message
 	local msg = profile.DingRandom and profile.DingMsg[random(profile.NumRandomDing)] or profile.DingMsg[1]
 	return self:ReplaceArgs(msg, args)
@@ -391,14 +391,14 @@ local group = {}
 
 function RSD:UNIT_LEVEL()
 	if not profile.ShowGroup then return end
-	
+
 	local isRaid = IsInRaid()
 	local isParty = IsInGroup()
-	
+
 	local numGroup = isRaid and GetNumGroupMembers() or isParty and GetNumSubgroupMembers() or 0
 	local groupType = isRaid and "raid" or isParty and "party"
 	local chan = isRaid and "|cffFF7F00"..RAID.."|r" or isParty and "|cffA8A8FF"..PARTY.."|r"
-	
+
 	for i = 1, numGroup do
 		local guid = UnitGUID(groupType..i)
 		local name, realm = UnitName(groupType..i)
@@ -409,18 +409,18 @@ function RSD:UNIT_LEVEL()
 				local class = select(2, UnitClass(groupType..i))
 				local race = select(2, UnitRace(groupType..i))
 				local sex = UnitSex(groupType..i)
-				
+
 				local raceIcon = S.GetRaceIcon(strupper(race).."_"..S.sexremap[sex], 1, 1)
 				local classIcon = S.GetClassIcon(class, 1, 1)
 				args.icon = raceIcon..classIcon
-				
+
 				args.chan = chan
-				
+
 				local classColor = S.classCache[select(2, UnitClass(groupType..i))]
 				args.name = format("|cff%s|Hplayer:%s|h%s|h|r", classColor, name..(realm and "-"..realm or ""), name)
-				
+
 				args.level = "|cffADFF2F"..level.."|r"
-				
+
 				self:ShowLevelup(profile.ShowMsg, args)
 			end
 			group[guid] = level
@@ -439,19 +439,19 @@ local firstGRU, secondGRU, showedHeader
 -- now this is an even bigger mess than before ._.
 function RSD:GUILD_ROSTER_UPDATE(event)
 	if not profile.ShowGuild then return end
-	
+
 	if not (time() > (cd.guild or 0)) then return end
 	cd.guild = time() + 10
-	
+
 	local chan = "|cff40FF40"..GUILD.."|r"
-	
+
 	for i = 1, GetNumGuildMembers() do
 		local fullName, rank, _, level, class, zone, _, _, _, _, englishClass = GetGuildRosterInfo(i)
 		local charName, charRealm = strmatch(fullName or "", "(.+)%-(.+)") -- is this different on non-connected realms?..
-		
+
 		if charName and charRealm then -- sanity checks
 			local p = member[charRealm][charName]
-			
+
 			-- sanity checks everywhere~
 			if p and #p > 0 and level > p[1] and charName ~= player.name then
 				if secondGRU then
@@ -459,7 +459,7 @@ function RSD:GUILD_ROSTER_UPDATE(event)
 					if level-1 ~= 1 and p[level-1] then
 						realtime = time() - p[level-1][1]
 					end
-					
+
 					-- args for ShowGuild specifically
 					args.icon = S.GetClassIcon(englishClass, 1, 1)
 					args.chan = chan
@@ -467,11 +467,11 @@ function RSD:GUILD_ROSTER_UPDATE(event)
 					args.level = "|cffADFF2F"..level.."|r"
 					args.zone = zone
 					args.realtime = realtime
-					
+
 					if profile.ShowGuild then
 						self:ShowLevelup(profile.ShowMsg, args)
 					end
-					
+
 					-- save time & date
 					p[level] = {time(), date("%Y.%m.%d %H:%M:%S")}
 				else
@@ -488,7 +488,7 @@ function RSD:GUILD_ROSTER_UPDATE(event)
 					p[level] = false
 				end
 			end
-			
+
 			-- dont save already maxed characters
 			if level ~= S.maxlevel or (p and #p > 0) then
 				member[charRealm][charName] = member[charRealm][charName] or {}
@@ -496,7 +496,7 @@ function RSD:GUILD_ROSTER_UPDATE(event)
 			end
 		end
 	end
-	
+
 	-- even more awful delaying
 	-- a lot of bunnies were sacrificed for this
 	if firstGRU then secondGRU = true end
@@ -512,11 +512,11 @@ friend = {}
 function RSD:FRIENDLIST_UPDATE(event)
 	--[=[
 	if not profile.ShowFriend then return end
-	
+
 	if time() > (cd.friend or 0) then
 		cd.friend = time() + 1
 		local chan = FRIENDS_WOW_NAME_COLOR_CODE..FRIEND.."|r"
-		
+
 		for i = 1, C_FriendList.GetNumOnlineFriends() do
 			local info = C_FriendList.GetFriendInfoByIndex(i)
 			local name, level, class = info.name, info.level, info.className
@@ -544,37 +544,37 @@ local realid = {}
 
 function RSD:BN_FRIEND_INFO_CHANGED()
 	if not profile.ShowFriend then return end
-	
+
 	if time() > (cd.realid or 0) then
 		cd.realid = time() + 1
 		local chan = FRIENDS_BNET_NAME_COLOR_CODE..BATTLENET_FRIEND.."|r"
-		
+
 		for i = 1, select(2, BNGetNumFriends()) do
 			local info = C_BattleNet.GetFriendAccountInfo(i)
 			local presenceID, presenceName = info.gameAccountInfo.gameAccountID, info.accountName
-			
+
 			-- ToDo: add support for multiple online toons / BNGetFriendToonInfo
 			local ginfo = C_BattleNet.GetGameAccountInfoByID(presenceID)
 			local toonName, client, realm, class, level = ginfo.characterName, ginfo.clientProgram, ginfo.realmName, ginfo.className, ginfo.characterLevel
 			if not realm then return end -- sanity check (reported by featalene-Curse)
-			
+
 			-- avoid misrecognizing characters that share the same name, but are from different servers
 			realid[realm] = realid[realm] or {}
 			local bnet = realid[realm]
-			
+
 			if client == BNET_CLIENT_WOW then
 				level = tonumber(level) -- why is level a string type
 				if toonName and bnet[toonName] and bnet[toonName] > 0 and level and level > bnet[toonName] then
 					args.icon = S.GetClassIcon(S.revLOCALIZED_CLASS_NAMES[class], 1, 1)
-					
+
 					args.chan = chan
-					
+
 					-- "|Kg49|k00000000|k": f BNplayer; g firstname; s surname; default f in 5.0.4
 					-- the "BNplayer" hyperlink might maybe taint whatever it calls on right-click
 					args.name = format("|cff%s|HBNplayer:%s:%s|h%s|r |cff%s%s|h|r", "82C5FF", presenceName, presenceID, presenceName, S.classCache[S.revLOCALIZED_CLASS_NAMES[class]], toonName)
-					
+
 					args.level = "|cffADFF2F"..level.."|r"
-					
+
 					self:ShowLevelup(profile.ShowMsg, args)
 				end
 				bnet[toonName] = level
@@ -610,7 +610,7 @@ function RSD:PLAYER_LEAVING_WORLD(event)
 	if UnitIsAFK("player") and afk then
 		LeaveAFK()
 	end
-	
+
 	-- time/date at logout for showing levelDiffs
 	char.LastCheck = date("%Y.%m.%d %H:%M:%S")
 end

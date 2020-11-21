@@ -18,7 +18,7 @@ local function MilitaryTime(v)
 	local minute = floor(v/60) % 60
 	local hour = floor(v/3600) % 24
 	local day = floor(v/86400)
-	
+
 	if v >= 86400 then
 		return format("%d:%02.f:%02.f:%02.f", day, hour, minute, sec)
 	elseif v >= 3600 then
@@ -63,15 +63,15 @@ local dataobject = {
 	end,
 	OnTooltipShow = function(tt)
 		tt:AddLine("|cffADFF2F"..NAME.."|r")
-		
+
 		tt:AddDoubleLine("|cffFFFFFF"..EXPERIENCE_COLON.."|r", PlayerXP())
 		if GetXPExhaustion() then
 			tt:AddDoubleLine("|cffF6ADC6"..select(2, GetRestState())..":|r", RestedXP())
 		end
-		
+
 		tt:AddDoubleLine(TIME_PLAYED_LEVEL2, format("|cffADFF2F"..TIME_DAYHOURMINUTESECOND.."|r", unpack( {ChatFrame_TimeBreakDown(S.curTPM + time() - S.lastPlayed)} )))
 		tt:AddDoubleLine(TIME_PLAYED_TOTAL2, format("|cff71D5FF"..TIME_DAYHOURMINUTESECOND.."|r", unpack( {ChatFrame_TimeBreakDown(S.totalTPM + time() - S.lastPlayed)} )))
-		
+
 		tt:AddLine(L.BROKER_CLICK)
 		tt:AddLine(L.BROKER_SHIFT_CLICK)
 	end,

@@ -48,9 +48,9 @@ S.defaults = {
 		ShowGuild = true,
 		ShowFriend = true,
 		ShowMsg = "<ICON> [<CHAN>] [<NAME>]: "..LEVEL.." <LEVEL>",
-		
+
 		ChatGroup = true,
-		
+
 		NumRandomDing = 5,
 		DingMsg = {
 			L.MSG_PLAYER_DING,
@@ -59,13 +59,13 @@ S.defaults = {
 			L.MSG_PLAYER_DING3,
 			L.MSG_PLAYER_DING4,
 		},
-		
+
 		ShowOutput = 1,
 		Language = 1,
-		
+
 		NormalTime = true,
 		TimeMaxCount = 2,
-		
+
 		LevelGraph = true,
 		GuildChangelog = true,
 	}
@@ -398,7 +398,7 @@ S.activePreview = {}
 
 function RSD:SetupRandomDing(num)
 	local ding = options.args.main.args.inline2.args
-	
+
 	-- create new options
 	for i = prev[1] or 2, num do
 		ding["DingMsg"..i] = {
@@ -425,7 +425,7 @@ function RSD:SetupRandomDing(num)
 			hidden = function() return not profile.DingRandom or S.activePreview[1] ~= i end,
 		}
 	end
-	
+
 	-- discard unused options
 	for i = num+1, prev[1] or 0 do
 		ding["DingMsg"..i] = nil
@@ -440,7 +440,7 @@ end
 
 function RSD:ValidateLength(msg)
 	msg = msg:gsub("|c%x%x%x%x%x%x%x%x(.-)|r", "%1")
-	
+
 	-- notify if message length exceeds 255 chars
 	local length = strlen(msg)-2 -- account for the two prepending blank spaces in preview
 	if length > 255 then
@@ -465,7 +465,7 @@ function RSD:PreviewDing(i)
 	args.afk = "|cffFFFF00"..self:Time(char.timeAFK).."|r"
 	args["afk+"] = "|cffFFFF00"..self:Time(char.totalAFK).."|r"
 	args.zone = GetRealZoneText() or GetSubZoneText() or ZONE
-	
+
 	return "  "..self:ReplaceArgs(profile.DingMsg[i], args)
 end
 
@@ -479,7 +479,7 @@ do
 
 	function RSD:ShowGraph(parent)
 		if not profile.LevelGraph or not next(char.LevelTimeList) then return end
-		
+
 		if not ReadySetDing_LevelGraph then
 			-- if there are multiple ACD frames shown, this seems to parent to the first one instead, when the second one is opened
 			local level = LG:CreateGraphLine("ReadySetDing_LevelGraph", parent, "TOPLEFT", "TOPRIGHT", x1, y1, 0, 200)
@@ -500,13 +500,13 @@ end
 -- some dirty hooks
 do
 	local hasHook
-	
+
 	-- AceConfigDialog frames are created on opening
 	hooksecurefunc(ACD, "Open", function(self, appName)
 		if appName ~= "ReadySetDing_Parent" or not ACD.OpenFrames.ReadySetDing_Parent then return end
-		
+
 		RSD:ShowGraph(ACD.OpenFrames.ReadySetDing_Parent.frame)
-		
+
 		-- ACD frames get "recycled", so the graphs could possibly show up next to another addon as well
 		-- There is the physical "Close" button and ACD.CloseAll, this hook accounts for both methods
 		if not hasHook then
@@ -532,10 +532,10 @@ end)
 
 do
 	local startCoord = {0, 0}
-	
+
 	local levelColor = {.68, 1, .18, .7}
 	local totalColor = {.44, .84, 1, .7}
-	
+
 	local function getLowestLevel()
 		for i = 2, player.maxlevel do
 			if char.LevelTimeList[i] then
@@ -543,17 +543,17 @@ do
 			end
 		end
 	end
-	
+
 	local graphs
 	local fstrings = {{}, {}} -- keep track of and reuse fontstrings
 	local graphcolor = {levelColor, totalColor}
 	local xpoints = {"BOTTOMLEFT", "BOTTOM", "BOTTOMRIGHT"}
-	
+
 	local function UpdateXLabels(level, total, ...)
 		-- hack some X-axis labels in, since LibGraph doesnt really support it
 		-- no idea how they would properly implement it though, if they did
 		graphs = graphs or {level, total}
-		
+
 		for k, gr in pairs(graphs) do
 			for k2, v2 in pairs(xpoints) do
 				if not fstrings[k][k2] then
@@ -569,30 +569,30 @@ do
 			end
 		end
 	end
-	
+
 	-- maybe make graphs customizable in some way in the future
 	function RSD:UpdateGraph(level, total)
 		local minLvl = getLowestLevel()
 		if not minLvl then return end
 		local hasLevelOne = char.LevelTimeList[2] -- if we have level 2, then we can show level 1 (0;0) too
 		local offset = hasLevelOne and 1 or 0
-		
+
 		local MaxLvl = table.maxn(char.LevelTimeList)
 		local XLevels = MaxLvl - minLvl + offset
 		local XRealWidth = min(XLevels * 25, 500)
-		
+
 		level:SetWidth(XRealWidth)
 		total:SetWidth(XRealWidth)
-		
+
 		local YLevelHeight = 0
 		local YTotalHeight = char.TotalTimeList[table.maxn(char.TotalTimeList)]
-		
+
 		local t1 = S.recycle[4]; wipe(t1)
-		
+
 		if hasLevelOne then
 			t1[1] = startCoord
 		end
-		
+
 		for i = minLvl, player.maxlevel do
 			local levelTime = char.LevelTimeList[i]
 			if levelTime then
@@ -600,32 +600,32 @@ do
 				YLevelHeight = levelTime > YLevelHeight and levelTime or YLevelHeight
 			end
 		end
-		
+
 		level:AddDataSeries(t1, levelColor)
-		
+
 		local t2 = S.recycle[5]; wipe(t2)
-		
+
 		if hasLevelOne then
 			t2[1] = startCoord
 		end
-		
+
 		for i = minLvl, player.maxlevel do
 			if char.TotalTimeList[i] then
 				tinsert(t2, {i-minLvl+offset, char.TotalTimeList[i]})
 			end
 		end
 		total:AddDataSeries(t2, totalColor)
-		
+
 		level.XMin = 0; level.XMax = XLevels
 		level.YMin = 0; level.YMax = YLevelHeight
 		level:SetGridSpacing(1, YLevelHeight / 4)
 		level:SetYLabels(nil, 1) -- no idea how this actually works...
-		
+
 		total.XMin = 0; total.XMax = XLevels
 		total.YMin = 0; total.YMax = YTotalHeight
 		total:SetGridSpacing(1, YTotalHeight / 4)
 		total:SetYLabels(nil, 1)
-		
+
 		local realMinLvl = hasLevelOne and 1 or minLvl
 		local midLvl = floor((MaxLvl+realMinLvl)/2) -- the spacing is kinda off when we round down values
 		UpdateXLabels(level, total, realMinLvl, midLvl, MaxLvl)
@@ -642,7 +642,7 @@ function RSD:DataFrame()
 	if not ReadySetDingData then
 		local f = CreateFrame("Frame", "ReadySetDingData", UIParent, "DialogBoxFrame")
 		f:SetPoint("CENTER"); f:SetSize(600, 500)
-		
+
 		f:SetBackdrop({
 			bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
 			edgeFile = "Interface\\PVPFrame\\UI-Character-PVP-Highlight", -- this one is neat
@@ -650,11 +650,11 @@ function RSD:DataFrame()
 			insets = { left = 8, right = 6, top = 8, bottom = 8 },
 		})
 		f:SetBackdropBorderColor(0, .44, .87, 0.5)
-		
+
 	---------------
 	--- Movable ---
 	---------------
-		
+
 		f:EnableMouse(true) -- also seems to be automatically enabled when setting the OnMouseDown script
 		f:SetMovable(true); f:SetClampedToScreen(true)
 		f:SetScript("OnMouseDown", function(self, button)
@@ -663,24 +663,24 @@ function RSD:DataFrame()
 			end
 		end)
 		f:SetScript("OnMouseUp", f.StopMovingOrSizing)
-		
+
 	-------------------
 	--- ScrollFrame ---
 	-------------------
-		
+
 		local sf = CreateFrame("ScrollFrame", "ReadySetDingDataScrollFrame", ReadySetDingData, "UIPanelScrollFrameTemplate")
 		sf:SetPoint("LEFT", 16, 0)
 		sf:SetPoint("RIGHT", -32, 0)
 		sf:SetPoint("TOP", 0, -16)
 		sf:SetPoint("BOTTOM", ReadySetDingDataButton, "TOP", 0, 0)
-		
+
 	---------------
 	--- EditBox ---
 	---------------
-		
+
 		local eb = CreateFrame("EditBox", "ReadySetDingDataEditBox", ReadySetDingDataScrollFrame)
 		eb:SetSize(sf:GetSize()) -- seems inheriting the points won't automatically set the width/size
-		
+
 		eb:SetMultiLine(true)
 		eb:SetFontObject("ChatFontNormal")
 		eb:SetAutoFocus(false) -- make keyboard not automatically focused to this editbox
@@ -688,27 +688,27 @@ function RSD:DataFrame()
 			--self:ClearFocus()
 			f:Hide() -- rather hide, since we only use it for copying to clipboard
 		end)
-		
+
 		sf:SetScrollChild(eb)
-		
+
 	-----------------
 	--- Resizable ---
 	-----------------
-		
+
 		f:SetResizable(true)
 		f:SetMinResize(150, 100) -- at least show the "okay" button
-		
+
 		local rb = CreateFrame("Button", "ReadySetDingDataResizeButton", ReadySetDingData)
 		rb:SetPoint("BOTTOMRIGHT", -6, 7); rb:SetSize(16, 16)
-		
+
 		rb:SetNormalTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up")
 		rb:SetHighlightTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Highlight")
 		rb:SetPushedTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Down")
-		
+
 		rb:SetScript("OnMouseDown", function(self, button)
 			if button == "LeftButton" then
 				f:StartSizing("BOTTOMRIGHT")
-				self:GetHighlightTexture():Hide() -- we only want to see the PushedTexture now 
+				self:GetHighlightTexture():Hide() -- we only want to see the PushedTexture now
 				SetCursor("UI-Cursor-Size") -- hide the cursor
 			end
 		end)
@@ -718,17 +718,17 @@ function RSD:DataFrame()
 			SetCursor(nil) -- show the cursor again
 			eb:SetWidth(sf:GetWidth()) -- update editbox to the new scrollframe width
 		end)
-		
+
 		f:Show()
 	else
 		ReadySetDingData:Show()
 	end
-	
+
 	if ACD.OpenFrames.ReadySetDing_Parent then
 		-- the ACD window's Strata is "FULLSCREEN_DIALOG", and changing FrameLevels seems troublesome
 		ReadySetDingData:SetFrameStrata("TOOLTIP")
 	end
-	
+
 	ReadySetDingDataEditBox:SetText(self:GetData())
 	GameTooltip:Hide() -- most likely the popup frame will prevent the GameTooltip's OnLeave script from firing
 end
@@ -736,11 +736,11 @@ end
 function RSD:GetData()
 	local t = S.recycle[6]; wipe(t)
 	local s = S.recycle[7]; wipe(s)
-	
+
 	for i = 1, 6 do
 		t[i] = S.recycle[i+7]; wipe(t[i])
 	end
-	
+
 	-- Summary
 	t[1][1] = "# "..ACHIEVEMENT_SUMMARY_CATEGORY
 	for i = 2, player.maxlevel do
@@ -750,7 +750,7 @@ function RSD:GetData()
 				LEVEL, i-1, i, self:Time(char.LevelTimeList[i]), L.TOTAL, self:Time(char.TotalTimeList[i])))
 		end
 	end
-	
+
 	-- Level Time
 	t[2][1] = "# "..L.LEVEL_TIME
 	for i = 2, player.maxlevel do
@@ -758,7 +758,7 @@ function RSD:GetData()
 			tinsert(t[2], format("|cffF6ADC6%d|r-|cffB6CA00%d|r: |cff71D5FF%s|r", i-1, i, char.LevelTimeList[i]))
 		end
 	end
-	
+
 	-- Total Time
 	t[3][1] = "# "..L.TOTAL_TIME
 	for i = 2, player.maxlevel do
@@ -766,7 +766,7 @@ function RSD:GetData()
 			tinsert(t[3], format("|cffB6CA00%d|r: |cff71D5FF%s|r", i, char.TotalTimeList[i]))
 		end
 	end
-		
+
 	-- Timestamp
 	t[4][1] = "# "..L.TIMESTAMP
 	for i = 1, player.maxlevel do
@@ -774,7 +774,7 @@ function RSD:GetData()
 			tinsert(t[4], format("|cffB6CA00%d|r: |cff71D5FF%s|r", i, char.DateStampList[i]))
 		end
 	end
-	
+
 	-- Unix Timestamp
 	t[5][1] = "# Unix "..L.TIMESTAMP
 	for i = 1, player.maxlevel do
@@ -782,7 +782,7 @@ function RSD:GetData()
 			tinsert(t[5], format("|cffB6CA00%d|r: |cff71D5FF%s|r", i, char.UnixTimeList[i]))
 		end
 	end
-	
+
 	-- Experience / Hour
 	t[6][1] = format("# %s / %s", XP, S.HOUR)
 	for i = 2, player.maxlevel do
@@ -794,11 +794,11 @@ function RSD:GetData()
 			tinsert(t[6], format("|cffF6ADC6%d|r-|cffB6CA00%d|r: |cffFFFF00%s|r / |cff0070DD%.2f|r = |cff71D5FF%s|r", i-1, i, maxxp, levelTime, floor(maxxp / levelTime)))
 		end
 	end
-	
+
 	for i = 1, #t do
 		s[i] = strjoin("\n", unpack(t[i]))
 	end
-	
+
 	-- I suppose the color codes make the string kinda long -- gsub("|", "||")
 	return strjoin("\n\n", unpack(s))
 end

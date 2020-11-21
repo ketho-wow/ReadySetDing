@@ -52,17 +52,17 @@ S.events = {
 	-- Player Level Up
 	"PLAYER_LEVEL_UP",
 	"TIME_PLAYED_MSG",
-	
+
 	-- Group Member Level Up
 	"UNIT_LEVEL",
-	
+
 	-- Guild Member Level Up
 	"GUILD_ROSTER_UPDATE",
-	
+
 	-- (Real ID) Friend Level Up
 	"FRIENDLIST_UPDATE",
 	"BN_FRIEND_INFO_CHANGED",
-	
+
 	-- AFK Time
 	"CHAT_MSG_SYSTEM",
 	"PLAYER_LEAVING_WORLD",
@@ -95,13 +95,13 @@ do
 	function RSD:SecondsTime(v)
 		return SecondsToTime(v, profile.TimeOmitSec, not profile.TimeAbbrev, profile.TimeMaxCount)
 	end
-	
+
 	-- not capitalized
 	local D_SECONDS = strlower(D_SECONDS)
 	local D_MINUTES = strlower(D_MINUTES)
 	local D_HOURS = strlower(D_HOURS)
 	local D_DAYS = strlower(D_DAYS)
-	
+
 	-- exception for German capitalization
 	if GetLocale() == "deDE" then
 		D_SECONDS = _G.D_SECONDS
@@ -109,18 +109,18 @@ do
 		D_HOURS = _G.D_HOURS
 		D_DAYS = _G.D_DAYS
 	end
-	
+
 	function RSD:TimeString(v, full)
 		local sec = floor(v) % 60
 		local minute = floor(v/60) % 60
 		local hour = floor(v/3600) % 24
 		local day = floor(v/86400)
-		
+
 		local fsec = format(D_SECONDS, sec)
 		local fmin = format(D_MINUTES, minute)
 		local fhour = format(D_HOURS, hour)
 		local fday = format(D_DAYS, day)
-		
+
 		if v >= 86400 then
 			return (hour > 0 or full) and format("%s, %s", fday, fhour) or fday
 		elseif v >= 3600 then
@@ -133,9 +133,9 @@ do
 			return v
 		end
 	end
-	
+
 	local b = CreateFrame("Button")
-	
+
 	function RSD:Time(v)
 		local s
 		if profile.NormalTime then
@@ -147,7 +147,7 @@ do
 		-- sanitize for SendChatMessage by removing any pipe characters
 		return b:GetText(b:SetText(s)) or ""
 	end
-	
+
 	-- singular hour
 	S.HOUR = gsub(b:GetText(b:SetFormattedText(_G.D_HOURS, 1)), "1 ", "")
 end
@@ -158,14 +158,14 @@ end
 
 do
 	local tday, thour, tmin, tsec = random(9), random(23), random(59), random(59)
-	
+
 	S.TimeUnits = {
 		60*tmin,
 		60*tmin + tsec,
 		3600*thour + 60*tmin + tsec,
 		86400*tday + 3600*thour + 60*tmin + tsec,
 	}
-	
+
 	S.TimeOmitZero = 3600*thour
 end
 
@@ -341,16 +341,16 @@ S.legend.chat = "\n|cffADFF2FLEVEL,|r |cffF6ADC6LEVEL-, LEVEL#, LEVEL%|r"
 function RSD:ReplaceArgs(msg, args)
 	-- new random messages init as nil
 	if not msg then return "" end
-	
+
 	for k in gmatch(msg, "%b<>") do
 		-- remove <>, make case insensitive
 		local s = strlower(gsub(k, "[<>]", ""))
-		
+
 		-- escape special characters
 		-- a maybe better alternative to %p is "[%%%.%-%+%?%*%^%$%(%)%[%]%{%}]"
 		s = gsub(args[s] or s, "(%p)", "%%%1")
 		k = gsub(k, "(%p)", "%%%1")
-		
+
 		msg = msg:gsub(k, s)
 	end
 	wipe(args)
@@ -369,7 +369,7 @@ local sinks = {
 function RSD:ShowLevelup(msg, args)
 	local v = profile.ShowOutput
 	msg = msg and self:ReplaceArgs(msg, args) or sinks[v] -- fallback to example; does not include chat windows
-	
+
 	if v == 1 then
 		-- RaidWarningFrame shows max 2 messages at the same time
 		-- they're called "slots" as in "RaidWarningFrameSlot1"

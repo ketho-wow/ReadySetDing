@@ -556,7 +556,7 @@ function RSD:BN_FRIEND_INFO_CHANGED()
 			-- ToDo: add support for multiple online toons / BNGetFriendToonInfo
 			local ginfo = C_BattleNet.GetGameAccountInfoByID(presenceID)
 			local toonName, client, realm, class, level = ginfo.characterName, ginfo.clientProgram, ginfo.realmName, ginfo.className, ginfo.characterLevel
-			if not realm then return end -- sanity check (reported by featalene-Curse)
+			if not realm or not info.gameAccountInfo.isOnline then return end -- sanity checks
 
 			-- avoid misrecognizing characters that share the same name, but are from different servers
 			realid[realm] = realid[realm] or {}

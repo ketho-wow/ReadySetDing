@@ -1,12 +1,10 @@
-## Interface: 90002
+## Interface: 100002
 ## Version: @project-version@
 ## Title: ReadySetDing
 ## Notes: Ding!
 ## Author: Ketho @ EU-Boulderfist
 ## SavedVariables: ReadySetDingDB
-## OptionalDeps: Ace3
-## X-Embeds: Ace3
-## X-Category: Leveling
+## OptionalDeps: Ace3, LibGraph-2.0
 ## X-Curse-Project-ID: 21877
 ## X-WoWI-ID: 16220
 
@@ -21,9 +19,9 @@ Libs\AceDBOptions-3.0\AceDBOptions-3.0.xml
 Libs\AceConsole-3.0\AceConsole-3.0.xml
 Libs\AceGUI-3.0\AceGUI-3.0.xml
 Libs\AceConfig-3.0\AceConfig-3.0.xml
+Libs\LibGraph-2.0\LibGraph-2.0.lua
 #@end-no-lib-strip@
 
-Libs\LibGraph-2.0\LibGraph-2.0.lua
 Libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
 
 Locales.lua

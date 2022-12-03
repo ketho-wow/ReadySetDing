@@ -5,7 +5,6 @@ local ACD = LibStub("AceConfigDialog-3.0")
 local LG = LibStub("LibGraph-2.0")
 
 local L = S.L
-local cd = S.cd
 local player = S.player
 local legend = S.legend
 local args = S.args
@@ -25,10 +24,6 @@ local format, gsub = format, gsub
 	---------------------
 	--- GlobalStrings ---
 	---------------------
-
--- coloring
-local TIME_PLAYED_TOTAL2 = gsub(TIME_PLAYED_TOTAL, "%%s", "|cff71D5FF%%s|r")
-local TIME_PLAYED_LEVEL2 = gsub(TIME_PLAYED_LEVEL, "%%s", "|cff71D5FF%%s|r")
 
 -- remove "%d"
 local SECONDS_ABBR2 = gsub(SECONDS_ABBR, "%%d ", "")
@@ -123,14 +118,16 @@ S.options = {
 							type = "description", order = 7,
 							fontSize = "medium",
 							name = function()
-								local args = args
-								local raceIcon = S.GetRaceIcon(strupper(select(2, UnitRace("player"))).."_"..S.sexremap[UnitSex("player")], 1, 3)
+								local info = args
+								local raceFile = select(2, UnitRace("player"))
+								local sex = UnitSex("player")
+								local raceIcon = S.GetRaceIcon(raceFile, sex, 1, 3)
 								local classIcon = S.GetClassIcon(select(2, UnitClass("player")), 2, 3)
-								args.icon = raceIcon..classIcon
-								args.chan = IsInRaid() and "|cffFF7F00"..RAID.."|r" or "|cffA8A8FF"..PARTY.."|r"
-								args.name = "|cff"..S.classCache[player.englishClass].._G.NAME.."|r"
-								args.level = "|cffADFF2F"..player.level + (player.level == player.maxlevel and 0 or 1).."|r"
-								return "  "..RSD:ReplaceArgs(profile.ShowMsg, args)
+								info.icon = raceIcon..classIcon
+								info.chan = IsInRaid() and "|cffFF7F00"..RAID.."|r" or "|cffA8A8FF"..PARTY.."|r"
+								info.name = "|cff"..S.classCache[player.englishClass].._G.NAME.."|r"
+								info.level = "|cffADFF2F"..player.level + (player.level == player.maxlevel and 0 or 1).."|r"
+								return "  "..RSD:ReplaceArgs(profile.ShowMsg, info)
 							end,
 						},
 					},
@@ -186,7 +183,6 @@ S.options = {
 						},
 					},
 				},
-				spacing1 = {type = "description", order = 3, name = ""},
 				Summary = {
 					type = "description", order = 4,
 					fontSize = "medium",
@@ -201,7 +197,7 @@ S.options = {
 						return strjoin("\n", unpack(t))
 					end,
 				},
-				spacing1 = {type = "description", order = 5, name = ""},
+				spacing = {type = "description", order = 5, name = ""},
 				Data = {
 					type = "execute", order = 6,
 					name = "|TInterface\\Icons\\INV_Misc_Note_01:16:16:1:-1"..S.crop.."|t  |cffFFFFFF"..HISTORY.."|r",
@@ -444,7 +440,7 @@ function RSD:ValidateLength(msg)
 	-- notify if message length exceeds 255 chars
 	local length = strlen(msg)-2 -- account for the two prepending blank spaces in preview
 	if length > 255 then
-		self:Print("|cffFF0000Message > 255 chars|r ("..len..")")
+		self:Print("|cffFF0000Message > 255 chars|r ("..length..")")
 	end
 end
 
@@ -520,15 +516,15 @@ do
 	end)
 end
 
-hooksecurefunc("InterfaceOptionsList_DisplayPanel", function(frame)
-	if InterfaceOptionsFramePanelContainer.displayedPanel.name == NAME then
-		RSD:ShowGraph(InterfaceOptionsFrame)
-	else
-		if ReadySetDing_LevelGraph then -- sanity check
-			ReadySetDing_LevelGraph:Hide()
-		end
-	end
-end)
+-- hooksecurefunc("InterfaceOptionsList_DisplayPanel", function(frame)
+-- 	if InterfaceOptionsFramePanelContainer.displayedPanel.name == NAME then
+-- 		RSD:ShowGraph(InterfaceOptionsFrame)
+-- 	else
+-- 		if ReadySetDing_LevelGraph then -- sanity check
+-- 			ReadySetDing_LevelGraph:Hide()
+-- 		end
+-- 	end
+-- end)
 
 do
 	local startCoord = {0, 0}
@@ -696,7 +692,11 @@ function RSD:DataFrame()
 	-----------------
 
 		f:SetResizable(true)
-		f:SetMinResize(150, 100) -- at least show the "okay" button
+		if S.isRetail then
+			f:SetResizeBounds(150, 100)
+		else
+			f:SetMinResize(150, 100) -- at least show the "okay" button
+		end
 
 		local rb = CreateFrame("Button", "ReadySetDingDataResizeButton", ReadySetDingData)
 		rb:SetPoint("BOTTOMRIGHT", -6, 7); rb:SetSize(16, 16)

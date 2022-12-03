@@ -16,10 +16,7 @@ ReadySetDing = LibStub("AceAddon-3.0"):NewAddon("ReadySetDing", "AceEvent-3.0", 
 local RSD = ReadySetDing
 RSD.S = S -- debug purpose
 
-local ACR = LibStub("AceConfigRegistry-3.0")
-local ACD = LibStub("AceConfigDialog-3.0")
-
-local L = S.L
+S.isRetail = (WOW_PROJECT_ID == WOW_PROJECT_MAINLINE)
 
 local profile, char
 
@@ -211,79 +208,29 @@ end
 	--- Race Icons ---
 	------------------
 
-S.racePath = "Interface\\Glues\\CharacterCreate\\UI-CharacterCreate-Races"
-
-local RACE_ICON_TCOORDS = { -- GlueXML\CharacterCreate.lua 8.0.1
-	["HUMAN_MALE"]		= {0, 0.125, 0, 0.25},
-	["DWARF_MALE"]		= {0.125, 0.25, 0, 0.25},
-	["GNOME_MALE"]		= {0.25, 0.375, 0, 0.25},
-	["NIGHTELF_MALE"]	= {0.375, 0.5, 0, 0.25},
-
-	["TAUREN_MALE"]		= {0, 0.125, 0.25, 0.5},
-	["SCOURGE_MALE"]	= {0.125, 0.25, 0.25, 0.5},
-	["TROLL_MALE"]		= {0.25, 0.375, 0.25, 0.5},
-	["ORC_MALE"]		= {0.375, 0.5, 0.25, 0.5},
-
-	["HUMAN_FEMALE"]	= {0, 0.125, 0.5, 0.75},
-	["DWARF_FEMALE"]	= {0.125, 0.25, 0.5, 0.75},
-	["GNOME_FEMALE"]	= {0.25, 0.375, 0.5, 0.75},
-	["NIGHTELF_FEMALE"]	= {0.375, 0.5, 0.5, 0.75},
-
-	["TAUREN_FEMALE"]	= {0, 0.125, 0.75, 1.0},
-	["SCOURGE_FEMALE"]	= {0.125, 0.25, 0.75, 1.0},
-	["TROLL_FEMALE"]	= {0.25, 0.375, 0.75, 1.0},
-	["ORC_FEMALE"]		= {0.375, 0.5, 0.75, 1.0},
-
-	["BLOODELF_MALE"]	= {0.5, 0.625, 0.25, 0.5},
-	["BLOODELF_FEMALE"]	= {0.5, 0.625, 0.75, 1.0},
-
-	["DRAENEI_MALE"]	= {0.5, 0.625, 0, 0.25},
-	["DRAENEI_FEMALE"]	= {0.5, 0.625, 0.5, 0.75},
-
-	["GOBLIN_MALE"]		= {0.629, 0.750, 0.25, 0.5},
-	["GOBLIN_FEMALE"]	= {0.629, 0.750, 0.75, 1.0},
-
-	["WORGEN_MALE"]		= {0.629, 0.750, 0, 0.25},
-	["WORGEN_FEMALE"]	= {0.629, 0.750, 0.5, 0.75},
-
-	["PANDAREN_MALE"]	= {0.756, 0.881, 0, 0.25},
-	["PANDAREN_FEMALE"]	= {0.756, 0.881, 0.5, 0.75},
-
-	["NIGHTBORNE_MALE"]	= {0.375, 0.5, 0, 0.25},
-	["NIGHTBORNE_FEMALE"]	= {0.375, 0.5, 0.5, 0.75},
-
-	["HIGHMOUNTAINTAUREN_MALE"]		= {0, 0.125, 0.25, 0.5},
-	["HIGHMOUNTAINTAUREN_FEMALE"]	= {0, 0.125, 0.75, 1.0},
-
-	["VOIDELF_MALE"]	= {0.5, 0.625, 0.25, 0.5},
-	["VOIDELF_FEMALE"]	= {0.5, 0.625, 0.75, 1.0},
-
-	["LIGHTFORGEDDRAENEI_MALE"]	= {0.5, 0.625, 0, 0.25},
-	["LIGHTFORGEDDRAENEI_FEMALE"]	= {0.5, 0.625, 0.5, 0.75},
-
-	["DARKIRONDWARF_MALE"]		= {0.125, 0.25, 0, 0.25},
-	["DARKIRONDWARF_FEMALE"]	= {0.125, 0.25, 0.5, 0.75},
-
-	["MAGHARORC_MALE"]			= {0.375, 0.5, 0.25, 0.5},
-	["MAGHARORC_FEMALE"]		= {0.375, 0.5, 0.75, 1.0},
-
-	["ZANDALARITROLL_MALE"]		= {0.25, 0.375, 0.25, 0.5},
-	["ZANDALARITROLL_FEMALE"]	= {0.25, 0.375, 0.75, 1.0},
+-- For these races, the names are shortened for the atlas
+local fixedRaceAtlasNames = {
+	["highmountaintauren"] = "highmountain",
+	["lightforgeddraenei"] = "lightforged",
+	["scourge"] = "undead",
+	["zandalaritroll"] = "zandalari",
 }
 
-S.sexremap = {nil, "MALE", "FEMALE"}
+-- GetRaceAtlas was removed from framexml in 10.0.0
+local function GetRaceAtlas(raceName, gender, useHiRez)
+	if (fixedRaceAtlasNames[raceName]) then
+		raceName = fixedRaceAtlasNames[raceName]
+	end
+	local formatingString = useHiRez and "raceicon128-%s-%s" or "raceicon-%s-%s"
+	return formatingString:format(raceName, gender)
+end
 
-local raceIconCache = setmetatable({}, {__index = function(t, k)
-	local top, bottom, left, right = unpack(RACE_ICON_TCOORDS[k])
-	local coords = strjoin(":", top*256, bottom*256, left*512, right*512)
-	local v = format("|T%s:16:16:%%s:%%s:256:512:%s|t", S.racePath, coords)
-	rawset(t, k, v)
-	return v
-end})
+S.sexName = {nil, "male", "female"}
 
--- x and y vary so we can't cache that
-function S.GetRaceIcon(k, x, y)
-	return format(raceIconCache[k], x, y)
+function S.GetRaceIcon(name, genderID, x, y)
+	local atlas = GetRaceAtlas(name:lower(), S.sexName[genderID])
+	local icon = CreateAtlasMarkup(atlas, 16, 16, x, y)
+	return icon
 end
 
 	-------------------

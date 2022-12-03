@@ -410,7 +410,7 @@ function RSD:UNIT_LEVEL()
 				local race = select(2, UnitRace(groupType..i))
 				local sex = UnitSex(groupType..i)
 
-				local raceIcon = S.GetRaceIcon(strupper(race).."_"..S.sexremap[sex], 1, 1)
+				local raceIcon = S.GetRaceIcon(race, sex, 1, 1)
 				local classIcon = S.GetClassIcon(class, 1, 1)
 				args.icon = raceIcon..classIcon
 
